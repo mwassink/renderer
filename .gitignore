@@ -4,3 +4,7 @@ test*
 *.obj
 *.pdb
 *.exe
+*~
+*.log
+*.sln
+.gitignore
