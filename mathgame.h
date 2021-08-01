@@ -1,0 +1,1 @@
+typedef float f32;
