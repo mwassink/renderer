@@ -6,5 +6,4 @@ test*
 *.exe
 *~
 *.log
-*.sln
 .gitignore
