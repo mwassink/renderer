@@ -6,17 +6,7 @@
 #include <stdio.h>
 #include "glwrangler.h"
 #include "entry.h" // TODO move this somewhere else
-// Notes from Handmade hero: 
-// Need to link with opengl32.lib
-// this gives the ability to call the operating system functions that we have
-// the platform specific part needs to be set up here, like wglMakeCurrent
-// Device context is the state of the graphics at a specific time, stores mode stuff
-// opengl has an "rc", which sits on top of the device context to the user, THEN can do the opengl calls but with a caveat
-// the whole state of the gl is implicit to your THREAD
-// any time a thread opens an gl call it needs to have an rc associated with it, which is done with wglMakeCurrent
-// the make current is not enough. because of leagcyish reasons we need to ask Windows choose the pixel formats
-//wglGetProcAddress will allow you to load any openGL function
-// then a typedef and a #define will allow for different functions to be used and loaded
+
 typedef float f32;
 static int64_t ctr = 0;
 typedef uint8_t uint8;
