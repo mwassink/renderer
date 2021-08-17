@@ -1,4 +1,4 @@
-// do opengl 3.3 as it was the last minor release of OpenGL 3
+// do opengl 4.5 as it was the last minor release of OpenGL
 #include <windows.h>
 #include <gl/gl.h>
 #include "glwrangler.h"
@@ -40,8 +40,8 @@ const int pixelAttribList[] =
 
 const int glAttribList[] = {
     
-    WGL_CONTEXT_MAJOR_VERSION_ARB, 3, 
-    WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+    WGL_CONTEXT_MAJOR_VERSION_ARB, 4, 
+    WGL_CONTEXT_MINOR_VERSION_ARB, 5,
     0
         
 };
@@ -58,7 +58,7 @@ void loadInitialContext(void) {
         
         HWND windowHandle = CreateWindowExA(0, 
                                             setup.lpszClassName,
-                                            "Test window",
+                                            "Window",
                                             0,
                                             CW_USEDEFAULT,
                                             CW_USEDEFAULT,

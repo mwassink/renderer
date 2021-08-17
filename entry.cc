@@ -31,11 +31,7 @@ static int bitMapWidth;
 
 static void initOpenGL(HWND Window ) {
     HDC WindowDC = GetDC(Window);
-    setPixelAttrs(WindowDC); // it can do this because we have ALREADY MADE A CONTEXT
-    
-    
-    
-    
+    setPixelAttrs(WindowDC); // it can do this because we have ALREADY MADE A CONTEXT    
     HGLRC OpenGLRC = 0;
     
     
@@ -44,9 +40,7 @@ static void initOpenGL(HWND Window ) {
         
     }
     if (!OpenGLRC) {
-        
         FAIL();
-        
     }
     
     if (wglMakeCurrent(WindowDC, OpenGLRC)) {
@@ -54,7 +48,6 @@ static void initOpenGL(HWND Window ) {
     }
     else {
         FAIL();
-        
     }
     ReleaseDC(Window, WindowDC);
     
@@ -183,14 +176,14 @@ static void UpdateWindow(HDC deviceContext, RECT* windowRect, int x, int y, int 
     int windowHeight = windowRect->bottom - windowRect->top;
     
     StretchDIBits(
-                  deviceContext,
-                  0, 0, bitMapWidth, bitMapHeight,
-                  0, 0, windowWidth, windowHeight,
-                  bitMapMemory,
-                  &bitMapInfo,
-                  DIB_RGB_COLORS,
-                  SRCCOPY
-                  );
+        deviceContext,
+        0, 0, bitMapWidth, bitMapHeight,
+        0, 0, windowWidth, windowHeight,
+        bitMapMemory,
+        &bitMapInfo,
+        DIB_RGB_COLORS,
+        SRCCOPY
+        );
     
     
 }
@@ -206,62 +199,62 @@ LRESULT CALLBACK MainCallback(HWND window,
     LRESULT result = 0;
     switch (msg) {
         
-        case WM_SIZE:
-        {
-            RECT newRect;
-            GetClientRect(window, &newRect);
-            int width = newRect.right - newRect.left;
-            int height = newRect.bottom - newRect.top;
-            ResizeDIBSection(width, height, window);
-            OutputDebugStringA("wm size\n");
-        } break;
+    case WM_SIZE:
+    {
+        RECT newRect;
+        GetClientRect(window, &newRect);
+        int width = newRect.right - newRect.left;
+        int height = newRect.bottom - newRect.top;
+        ResizeDIBSection(width, height, window);
+        OutputDebugStringA("wm size\n");
+    } break;
         
-        case WM_CLOSE:
-        {
-            runnable = 0;
-            OutputDebugStringA("wm close\n");
-        } break;
+    case WM_CLOSE:
+    {
+        runnable = 0;
+        OutputDebugStringA("wm close\n");
+    } break;
         
-        case WM_ACTIVATEAPP:
-        {
-            // (TODO) something here
-            OutputDebugStringA("activate app\n");
+    case WM_ACTIVATEAPP:
+    {
+        // (TODO) something here
+        OutputDebugStringA("activate app\n");
             
-        } break;
+    } break;
         
-        case WM_DESTROY:
-        {
-            runnable = 0;
-            OutputDebugStringA("wm destroy\n");
-        } break;
-        // this is not the only place where we do the paintinbg, but it is one of them
-        case WM_PAINT:
-        {
-            PAINTSTRUCT paint;
-            HDC deviceContext = BeginPaint(window, &paint);
-            int x = paint.rcPaint.left;
-            int y = paint.rcPaint.top;
-            int width = paint.rcPaint.right - paint.rcPaint.left;
-            int height = paint.rcPaint.bottom - paint.rcPaint.top;
+    case WM_DESTROY:
+    {
+        runnable = 0;
+        OutputDebugStringA("wm destroy\n");
+    } break;
+    // this is not the only place where we do the paintinbg, but it is one of them
+    case WM_PAINT:
+    {
+        PAINTSTRUCT paint;
+        HDC deviceContext = BeginPaint(window, &paint);
+        int x = paint.rcPaint.left;
+        int y = paint.rcPaint.top;
+        int width = paint.rcPaint.right - paint.rcPaint.left;
+        int height = paint.rcPaint.bottom - paint.rcPaint.top;
             
             
             
             
-            RECT clientRect;
-            GetClientRect(window, &clientRect);
-            //windows wants us to upate the window when we do this
-            UpdateWindow(deviceContext, &clientRect,  x, y, width, height);
+        RECT clientRect;
+        GetClientRect(window, &clientRect);
+        //windows wants us to upate the window when we do this
+        UpdateWindow(deviceContext, &clientRect,  x, y, width, height);
             
             
             
             
-            EndPaint(window, &paint);
-        }break;
+        EndPaint(window, &paint);
+    } break;
         
-        default:
-        {
-            result = DefWindowProc(window, msg, wparam, lparam);
-        }
+    default:
+    {
+        result = DefWindowProc(window, msg, wparam, lparam);
+    }
     }
     
     
@@ -286,18 +279,18 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     if (RegisterClass(&WindowClass)) {
         
         HWND windowHandle = CreateWindowExA (
-                                             0,
-                                             "My class name",
-                                             "hello",
-                                             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-                                             CW_USEDEFAULT,
-                                             CW_USEDEFAULT,
-                                             CW_USEDEFAULT,
-                                             CW_USEDEFAULT,
-                                             0,
-                                             0,
-                                             hInstance,
-                                             0);
+            0,
+            "My class name",
+            "hello",
+            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            CW_USEDEFAULT,
+            0,
+            0,
+            hInstance,
+            0);
         
         
         if (windowHandle) {
