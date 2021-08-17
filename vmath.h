@@ -5,9 +5,8 @@ typedef float f32;
 #define ASSERT(expr) if (!(expr)) { *((volatile int*)0) = 0;}
 
 #include <math.h>
-
 #include <intrin.h>
-
+#include <string.h>
 
 
 
@@ -20,9 +19,8 @@ struct Vector3 {
         f32 arr[3];
         f32 data[3];
     };
-    Vector3(f32 x, f32 y, f32 z) {
-        x = x; y = y; z = z;
-    }
+    Vector3() {}
+    Vector3(f32 x, f32 y, f32 z) : x(x), y(y), z(z){}
     f32& operator[](int index) {
         return data[index];
     }
@@ -48,13 +46,12 @@ struct Vector4 {
         f32 data[4];
         f32 arr[4];
     };
-    Vector4(f32 x, f32 y, f32 z, f32 w) {
-        x = x; y = y; z = z; w = w;
-    }
+    Vector4(f32 x, f32 y, f32 z, f32 w) : x(x), y(y), z(z), w(w) {}
     Vector4(f32 f) {
         arr[0] = f; arr[1] = f; arr[2] = f; arr[3] = f;
     }
 
+    Vector4() {}
     f32& operator[](int index) {
         return data[index];
     }
@@ -86,12 +83,12 @@ struct Matrix3 {
         };
     };
     
-    Matrix3(f32 _00, f32 _01, f32 _02, 
-            f32 _10, f32 _11, f32 _12, 
-            f32 _20, f32 _21, f32 _22) {
-        _00 = _00; _01 = _10; _02 = _20;
-        _10 = _01; _11 = _11; _12 = _21;
-        _20 = _02; _21 = _12; _22 = _22;
+    Matrix3(f32 __00, f32 __01, f32 __02, 
+            f32 __10, f32 __11, f32 __12, 
+            f32 __20, f32 __21, f32 __22) {
+        _00 = __00; _01 = __10; _02 = __20;
+        _10 = __01; _11 = __11; _12 = __21;
+        _20 = __02; _21 = __12; _22 = __22;
     }
 
     f32& operator()(int i, int j) {
@@ -122,14 +119,14 @@ struct alignas(64) Matrix4 {
     // When the user wants 10, I need to give them mat(1,0), which is data[0][1]
     // According to RTR 4, the last 4 values in memory are the translations
     // This implies I should do this type of storage, so the vectors are contiguous
-    Matrix4(f32 _00, f32 _01, f32 _02, f32 _03,
-            f32 _10, f32 _11, f32 _12, f32 _13,
-            f32 _20, f32 _21, f32 _22, f32 _23,
-            f32 _30, f32 _31, f32 _32, f32 _33) {
-        _00 = _00; _01 = _10; _02 = _20; _03 = _30;
-        _10 = _01; _11 = _11; _12 = _21; _13 = _31;
-        _20 = _02; _21 = _12; _22 = _22; _23 = _32;
-        _30 = _03; _31 = _13; _32 = _23; _33 = _33;
+    Matrix4(f32 __00, f32 __01, f32 __02, f32 __03,
+            f32 __10, f32 __11, f32 __12, f32 __13,
+            f32 __20, f32 __21, f32 __22, f32 __23,
+            f32 __30, f32 __31, f32 __32, f32 __33) {
+        _00 = __00; _01 = __10; _02 = __20; _03 = __30;
+        _10 = __01; _11 = __11; _12 = __21; _13 = __31;
+        _20 = __02; _21 = __12; _22 = __22; _23 = __32;
+        _30 = __03; _31 = __13; _32 = __23; _33 = __33;
     }
     
     Matrix4(const Vector4& v1, const Vector4& v2, const Vector4& v3, const Vector4& v4) {
@@ -301,6 +298,7 @@ inline Quaternion operator* (f32 scale, Quaternion& in) {
 }
 
 // with (4x4)(4x1) = 4x1
+/*
 inline Vector4 operator*( Matrix4& lhs, Vector4&rhs) {
     f32 a, b, c, d;
     a = lhs(0,0)*rhs.data[0] + lhs(0, 1)* rhs.data[1] + lhs(0, 2)* rhs.data[2] + lhs(0, 3) * rhs.data[3];
@@ -310,7 +308,7 @@ inline Vector4 operator*( Matrix4& lhs, Vector4&rhs) {
     return Vector4(a, b, c, d);
     
 }
-
+*/
 /* det 2x2 */
 inline f32 det(f32 ul, f32 ur, f32 ll, f32 lr) {
     return ul*lr - ll*ur;
@@ -401,7 +399,7 @@ inline Matrix3 operator* ( Matrix3 &lhs,  Matrix3& rhs) {
 
 inline Matrix4 operator*(Matrix4& lhs, Matrix4& rhs) {
     // The column vectors are actually contiguous
-    // mm_mul_ps, mm_load_ps, mm_add_ps
+
     Matrix4 emptyMatrix;
     __m128 col0 = _mm_load_ps(&lhs.data[0][0]);
     __m128 col1 = _mm_load_ps(&lhs.data[1][0]);
@@ -413,18 +411,31 @@ inline Matrix4 operator*(Matrix4& lhs, Matrix4& rhs) {
         __m128 b1 = _mm_set1_ps(rhs.data[i][1]);
         __m128 b2 = _mm_set1_ps(rhs.data[i][2]);
         __m128 b3 = _mm_set1_ps(rhs.data[i][3]);
-
-        __m128 A = _mm_mul_ps(col0, b0);
-        __m128 B = _mm_mul_ps(col1, b1);
-        __m128 C = _mm_mul_ps(col2, b2);
-        __m128 D = _mm_mul_ps(col3, b3);
-        __m128 res = _mm_add_ps(_mm_add_ps(A, B), _mm_add_ps(C, D));
+        __m128 res = _mm_add_ps(_mm_add_ps(_mm_mul_ps(col0, b0), _mm_mul_ps(col1, b1)), _mm_add_ps(_mm_mul_ps(col2, b2), _mm_mul_ps(col3, b3)));
         _mm_store_ps(&emptyMatrix.data[i][0], res);
     }
-    
+
+    return emptyMatrix;
     
 }
+ 
+inline Vector4 operator*(Matrix4& lhs, Vector4& rhs) {
+    Vector4 targetVector;
+    
+    __m128 col0 = _mm_load_ps(&lhs.data[0][0]);
+    __m128 col1 = _mm_load_ps(&lhs.data[1][0]);
+    __m128 col2 = _mm_load_ps(&lhs.data[2][0]);
+    __m128 col3 = _mm_load_ps(&lhs.data[3][0]);
 
+    __m128 bv0 = _mm_set1_ps(rhs.data[0]);
+    __m128 bv1 = _mm_set1_ps(rhs.data[1]);
+    __m128 bv2 = _mm_set1_ps(rhs.data[2]);
+    __m128 bv3 = _mm_set1_ps(rhs.data[3]);
+
+    __m128 res = _mm_add_ps(_mm_add_ps(_mm_mul_ps(col0, bv0), _mm_mul_ps(col1, bv1)), _mm_add_ps(_mm_mul_ps(col2, bv2), _mm_mul_ps(col3, bv3)));
+    _mm_store_ps(&targetVector.data[0], res);
+    return targetVector;
+}
 
 inline Quaternion operator* (Quaternion& lhs, Quaternion& rhs) {
     Vector3 lhs_v = Vector3(lhs.i, lhs.j, lhs.k);
@@ -526,44 +537,47 @@ inline Matrix4 glModelViewProjection(const CoordinateSpace& objSpace, const Coor
     return (p*(v*m));
 }
 
-inline operator==(const Matrix4& lhs, const Matrix4& rhs) {
-    void* p1 = (void*)&lhs.data;
-    void* p2 = (void*)&rhs.data;
-    return (memcmp(p1, p2, 16*sizeof(f32)) == 0);
+inline bool fcmp(f32* p1, f32* p2, int cnt) {
+    for (int i = 0; i < cnt; ++i) {
+        if (fabs(p1[i] - p2[i]) > .01) {
+            return false;
+        }
+    }
+    return true;
+}
+inline bool operator==(const Matrix4& lhs, const Matrix4& rhs) {
+    f32* p1 = (f32*)&lhs.data;
+    f32* p2 = (f32*)&rhs.data;
+    return (fcmp(p1, p2, 16));
 }
 
 
-inline operator==(const Matrix3& lhs, const Matrix3& rhs) {
-    void* p1 = (void*)&lhs.data;
-    void* p2 = (void*)&rhs.data;
-    return (memcmp(p1, p2, 9*sizeof(f32)) == 0);
+inline bool operator==(const Matrix3& lhs, const Matrix3& rhs) {
+    f32* p1 = (f32*)&lhs.data;
+    f32* p2 = (f32*)&rhs.data;
+    return (fcmp(p1, p2, 9));
 }
 
 
-inline operator==(const Quaternion& lhs, const Quaternion& rhs) {
-    void* p1 = (void*)&lhs.data;
-    void* p2 = (void*)&rhs.data;
-    return (memcmp(p1, p2, 4*sizeof(f32)) == 0);
+inline bool operator==(const Quaternion& lhs, const Quaternion& rhs) {
+    f32* p1 = (f32*)&lhs.data;
+    f32* p2 = (f32*)&rhs.data;
+    return (fcmp(p1, p2, 4));
 }
 
 
-inline operator==(const Vector4& lhs, const Vector4& rhs) {
-    void* p1 = (void*)&lhs.data;
-    void* p2 = (void*)&rhs.data;
-    return (memcmp(p1, p2, 4*sizeof(f32)) == 0);
+inline bool operator==(const Vector4& lhs, const Vector4& rhs) {
+    f32* p1 = (f32*)&lhs.data;
+    f32* p2 = (f32*)&rhs.data;
+    return (fcmp(p1, p2, 4));
 }
 
 
-inline operator==(const Vector3& lhs, const Vector3& rhs) {
-    void* p1 = (void*)&lhs.data;
-    void* p2 = (void*)&rhs.data;
-    return (memcmp(p1, p2, 3*sizeof(f32)) == 0);
+inline bool operator==(const Vector3& lhs, const Vector3& rhs) {
+    f32* p1 = (f32*)&lhs.data;
+    f32* p2 = (f32*)&rhs.data;
+    return (fcmp(p1, p2, 3));
 }
-
-
-
-
-
 
 
 
