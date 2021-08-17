@@ -1,6 +1,14 @@
 #include <stdlib.h>
 #include <windows.h>
 
+typedef float f32;
+typedef double f64;
+typedef int s32l
+typedef uint u32;
+typedef short int s16;
+typedef short unsigned int u16;
+typedef unsigned char u8;
+
 <typename Type>
 struct Array {
     // can this be limited to plain old types?
@@ -29,4 +37,22 @@ struct Array {
         cap = sz;
         
     }
+};
+
+struct Texture {
+    char* fileName;
+    s32 id;
 }
+
+struct Vertex {
+    Vector3 coord;
+    Vector3 norm;
+    f32 u, v;
+};
+
+struct Mesh {
+    Vertex* vertices;
+    u32* indices;
+    Texture* textures;
+    
+};
