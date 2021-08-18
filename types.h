@@ -45,8 +45,8 @@ struct Texture {
 }
 
 struct Vertex {
-    Vector3 coord;
-    Vector3 norm;
+    f32 coord[3];
+    f32 norm[3];
     f32 u, v;
 };
 

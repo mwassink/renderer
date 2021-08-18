@@ -77,7 +77,7 @@ int checkFailure(int shader) {
 
 int setShaders(const char* vertexFile, const char* fragmentFile) {
     char* vertexShaderSrc = 0; char* fragmentShaderSrc = 0;
-    Gluint v, f, program;
+    GLuint v, f, program;
     if (vertexFile) {
         vertexShaderSrc = readFile(vertexFile);
         v = glCreateShader(GL_VERTEX_SHADER);
@@ -110,6 +110,23 @@ int setShaders(const char* vertexFile, const char* fragmentFile) {
     
 }
 
-void addVerticesToPosition(Vertex* vertices, u32* indices, u32 position) {
+void addBasicVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices u32 positionCoord, u32 positionNorm, u32 positionUV) {
+    GLuint ebo, vao, vbo;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices* sizeof(u32), indices
+                 , GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*numVertices, vertices);
+
+    glEnableVertexAttribArray(positionCoord);
+    glEnableVertexAttribArray(positionNorm);
+    glEnableVertexAttribArray(positionUV);
+    glVertexAttribPointer(positionCoord, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)));
+    glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, norm)));
+    glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, u)));
     
 }
