@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "glwrangler.h"
-#include "entry.h" // TODO move this somewhere else
+#include "utilities.h" // TODO 
 
 typedef float f32;
 static int64_t ctr = 0;
@@ -63,13 +63,13 @@ void gltest(void) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // should return a char* ptr to the 
-    glVertexSrc = readFile("test_vertex.glsl");
+    glVertexSrc = readFile("shaders/test_vertex.glsl");
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &glVertexSrc, NULL);
     glCompileShader(vertexShader);
     checkFailure(vertexShader);
     
-    glPixelShaderSrc = readFile("test_pixel.glsl");
+    glPixelShaderSrc = readFile("shaders/test_pixel.glsl");
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &glPixelShaderSrc, NULL);
     glCompileShader(fragmentShader);
@@ -97,41 +97,6 @@ void gltest(void) {
     
 }
 
-
-
-char* readFile(const char* name) {
-    FILE* fp = fopen(name, "r");
-    int size;
-    char* buf = 0;
-    if (!fp) 
-        return 0;
-    
-    fseek(fp, 0, SEEK_END);
-    size = ftell(fp);
-    buf = (char*)malloc(size);
-    fseek(fp, 0, SEEK_SET);
-    fread(buf, 1, size, fp);
-    fclose(fp);
-    
-    
-    return buf;
-    
-}
-
-
-void checkFailure(int shader) {
-    
-    int success = 0;
-    char log[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    
-    if(!success ){
-        glGetShaderInfoLog(shader, 512, NULL, log);
-        FILE* fp = fopen("error.log", "w");
-        fwrite( log, 1, 512, fp);
-        fclose(fp);
-    }
-}
 
 static void ResizeDIBSection(int width, int height, HWND wind) {
     
