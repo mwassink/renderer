@@ -2,7 +2,7 @@
 
 #ifndef GLWRANGLER_H
 #define GLWRANGLER_H
-
+#include <gl/gl.h>
 extern const int pixelAttribList[];
 extern const int glAttribList[];
 
