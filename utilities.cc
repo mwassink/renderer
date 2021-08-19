@@ -11,6 +11,19 @@
 #include "utilities.h"
 
 
+int countOccurrences(const char* s, char ch, char delim = 0) {
+    int ctr = 0;
+    while (*s && *s != delim) ctr += (*s == ch);
+    return ctr;
+}
+
+int checkDoubleSlash(const char* s) {
+    while (s[0] && s[1]) {
+        if (s[0] == s[1] && s[1] == '/')
+            return true;
+    }
+    return false;
+}
 bool operator==(const TripleKeyVal& l, const TripleKeyVal& r) {
     // compare the keys for equality
     for (int i = 0; i < 3; ++i) {
@@ -29,6 +42,16 @@ bool fileExists(const char* str) {
     return true;
 }
 
+// (TODO) make this better
+int countTrianglesOccurences(const char* f) {
+    int sz, ctr = 0;
+    char* ptr = readFile(f, &sz);
+    for (int i = 0; i < sz; ++i) {
+        ctr += (*ptr++ == 'f');
+    }
+    free(ptr);
+    return ctr;   
+}
 
 
 u8* loadBitmap(const char* fileName) {
@@ -50,39 +73,90 @@ u8* loadBitmap(const char* fileName) {
     return bitMap;
 }
 
+void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,Array<TripleF>* coords, Array<TripleF>* normals, Array<UV>* uvcoords,
+                Array<Vertex>* vertices) {
+    unsigned int p, t, n, occurences;
+    occurences = countOccurrences(s, '/', 0);
+    if (occurences == 2) {
+        if (sscanf(s, "%u/%u/%u", &p, &t, &n ) != 3) {
+            t = 0xFFFFFFFF;
+            sscanf(s, "%u//%u", &p, &n );
+        }
+    }
+    else if (occurences == 1) {
+        n = 0xFFFFFFFF;
+        sscanf(s, "%u/%u", &p, &t);
+    }
+    else {
+        t = 0xFFFFFFFF; n = 0xFFFFFFFF;
+        sscanf(s, "%u", &p);
+    }
+    // Put the res in the hash table
+    int val = indexHashTable->at(p, t, n, 0) == -1;
+    if (val == -1) {
+        val = indexHashTable->insert(p, t, n, 0);
+        vertices->push(constructVertex(coords, normals, uvcoords, p, t, n));
+    }
+    
+    indices->push(val);
 
-// Should check for a malicious file that has A > 100 start to it
-void parseObj(FILE* fp) {
+
+}
+
+Vertex constructVertex(Array<TripleF>* coords, Array<TripleF>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  ) {
+    Vertex v;
+    v.coord = (*coords)[p];
+    v.normal = (*normals)[n];
+    v.uv = (*uvcoords)[t];
+    return v;
+
+}
+// Should check for a malicious file
+Mesh parseObj(const char* f, const char* texture) {
     Array<TripleF> coords, normals;
     Array<UV> tcoords;
     Array<Vertex> verticesList;
-    char arr[100];
+    Array<u32> indices;
+    HashTable mappingTable(countTrianglesOccurences(f));
+
+    FILE* fp = fopen(f, "rb");
+    char arr[200];
     char type[100];
+    char tri1[80]; char tri2[80]; char tri3[80];
     TripleF tr;
+    UV df;
     while (fgets(arr, 100, fp)) {
         sscanf(arr, "%s", type );
         if (!strcmp(type, "v")) {
-            
+            sscanf(arr, "%s %f %f %f", type, &tr.x, &tr.y, &tr.z);
+            coords.push(tr);
         }
         else if (!strcmp(type, "vt")) {
-
+            sscanf(arr, "%s %f %f", type, &df.u, &df.v);
+            tcoords.push(df);
         }
         else if (!strcmp(type, "vn")) {
-
+            sscanf(arr, "%s %f %f %f", type, &tr.x, &tr.y, &tr.z);
+            normals.push(tr);
         }
         else if (!strcmp(type, "f")) {
-
+            sscanf(arr, "%s %s %s %s", type, tri1, tri2, tri3);
+            parseVertex(tri1, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList );
         }
     }
+    coords.release();
+    normals.release();
+    tcoords.release();
+    TextureName name(texture);
+    Mesh mesh(verticesList.data, indices.data, name);
+    return mesh;
 }
 
 
-void loadMesh(const char* objFile, const char* textureFile, Mesh* mesh ) {
+Mesh loadMesh(const char* objFile, const char* textureFile) {
     f32 c1, c2, c3;
     int size;
-    
-    FILE* fp = fopen(objFile, "rb");
-    // 1. Collect list of coords, normals, texture coords
+    return parseObj(objFile, textureFile);
 
 }
 
@@ -177,8 +251,8 @@ void addBasicVerticesToShader(Vertex* vertices, u32* indices, int numVertices, i
     glEnableVertexAttribArray(positionNorm);
     glEnableVertexAttribArray(positionUV);
     glVertexAttribPointer(positionCoord, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)));
-    glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, norm)));
-    glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, u)));
+    glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, normal)));
+    glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, uv)));
     
 }
 
@@ -209,7 +283,7 @@ HashTable::HashTable(int sz) {
         }
 }
 
-void HashTable::insert(u32 a, u32 b, u32 c, u32 empty) {
+int32 HashTable::insert(u32 a, u32 b, u32 c, u32 empty) {
         TripleKeyVal tkv(a, b, c, empty);
         u32 bucketIndex = hash432(a, b, c, empty);
         while (arr[bucketIndex].arr[3] != -1) {
@@ -218,7 +292,9 @@ void HashTable::insert(u32 a, u32 b, u32 c, u32 empty) {
         arr[bucketIndex].arr[0] = a;
         arr[bucketIndex].arr[1] = b;
         arr[bucketIndex].arr[2] = c;
-        arr[bucketIndex].arr[3] = ctr++;
+        arr[bucketIndex].arr[3] = ctr;
+        return ctr++;
+
         
         
 }
@@ -226,7 +302,8 @@ void HashTable::insert(u32 a, u32 b, u32 c, u32 empty) {
 int32 HashTable::at(u32 a, u32 b, u32 c, u32 empty ) {
         TripleKeyVal tkv(a, b, c, empty );
         u32 bucketIndex = hash432(a, b, c, empty);
-        while (!(arr[bucketIndex] == tkv )) {
+        // If we find an empty index or our bucket we stop
+        while ((!(arr[bucketIndex] == tkv )) && arr[bucketIndex].arr[3] != -1) {
              bucketIndex = ((bucketIndex + 1) % sz);
         }
         return arr[bucketIndex].arr[3];

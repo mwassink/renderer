@@ -43,10 +43,10 @@ struct Array {
     
     void push(const Type& in) {
         if (sz == cap) {
-            data = realloc(data, cap*1.5*sizeof(Type));
+            data = (Type*)realloc(data, cap*1.5*sizeof(Type));
             cap *= 1.5;
         }
-        data[sz++] = obj;
+        data[sz++] = in;
     }
     
     void pop() {
@@ -83,7 +83,7 @@ struct HashTable {
     int ctr;
     int sz;
     HashTable(int sz);
-    void insert(u32 a, u32 b, u32 c, u32 empty);
+    int32 insert(u32 a, u32 b, u32 c, u32 empty);
     int32 at(u32 a, u32 b, u32 c, u32 empty );
     void release();
     
@@ -91,22 +91,26 @@ struct HashTable {
 
 
 
-struct Texture {
-    char* fileName;
-    s32 id;
+struct TextureName {
+    const char* fileName;
+    TextureName(const char* fileName)  : fileName(fileName) {}
+    TextureName () {}
 };
 
 struct Vertex {
     
-    f32 coord[3];
-    f32 norm[3];
-    f32 u, v;
+    TripleF coord;
+    TripleF normal;
+    UV uv;
 };
 
 struct Mesh {
+    Mesh() {};
     Vertex* vertices;
     u32* triangles;
-    Texture* textures;
+    TextureName textures;
+
+    Mesh(Vertex* v, u32* tr, TextureName tx) : vertices(v), triangles(tr), textures(tx) {}
     
 };
 #endif

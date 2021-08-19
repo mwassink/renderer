@@ -7,8 +7,9 @@ char* readFile(const char* name, int* size);
 int checkFailure(int shader);
 bool fileExists(const char* str);
 u8* loadBitmap(const char* fileName);
-void loadMesh(const char* objPrefix, Mesh* mesh );
+Mesh loadMesh(const char* objPrefix);
 u32 hash432(u32 a, u32 b, u32 c, u32 d);
+Vertex constructVertex(Array<TripleF>* coords, Array<TripleF>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  );
 
 #pragma pack(push, 1)
 
