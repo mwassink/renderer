@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "glwrangler.h"
-#include "utilities.h" // TODO
+#include "utilities.h" 
 
 
 typedef float f32;
@@ -18,17 +18,16 @@ static   BITMAPINFO bitMapInfo;
 static void* bitMapMemory;
 static int bitMapHeight;
 static int bitMapWidth;
+
+#define RUNTESTS 1
 // this should give us a buffer that we can draw into
 
 static void initOpenGL(HWND Window ) {
     HDC WindowDC = GetDC(Window);
     setPixelAttrs(WindowDC); // it can do this because we have ALREADY MADE A CONTEXT    
     HGLRC OpenGLRC = 0;
-    
-    
     if (wglCreateContextAttribsARB) {
         OpenGLRC = wglCreateContextAttribsARB(WindowDC, 0, glAttribList); //can we get a modern context
-        
     }
     if (!OpenGLRC) {
         FAIL();
@@ -40,19 +39,16 @@ static void initOpenGL(HWND Window ) {
     else {
         FAIL();
     }
-    ReleaseDC(Window, WindowDC);
-    
+    ReleaseDC(Window, WindowDC);   
 }
 
 #if RUNTESTS
 #include "tests/gltest2.cc"
-
+//#include "tests/gltest3.cc"
 
 #endif
 
 static void ResizeDIBSection(int width, int height, HWND wind) {
-    
-    
     HDC windowDC = GetDC(wind);
     glViewport(0, 0, width, height);
     glClearColor(0.0f, 0.0f , 0.0f, 1.0f);
@@ -60,40 +56,8 @@ static void ResizeDIBSection(int width, int height, HWND wind) {
     glFlush();
     SwapBuffers(windowDC);
     ReleaseDC(wind, windowDC);
-    
-    
 }
 
-void callOpenGL(HWND wind, f32 r, f32 g, f32 b) {
-    HDC windowDC = GetDC(wind);
-    glViewport(0, 0, 1920, 1080);
-    glClearColor(r, g, b, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glFlush();
-    SwapBuffers(windowDC);
-    ReleaseDC(wind, windowDC);
-}
-
-// we are going to call a function here
-// this creates a dib section that we can write to directly somewhere in here
-// takes one window, puts it onto the otherk window, and stretches it along the way
-static void UpdateWindow(HDC deviceContext, RECT* windowRect, int x, int y, int width, int height)
-{
-    int windowWidth = windowRect->right - windowRect->left;
-    int windowHeight = windowRect->bottom - windowRect->top;
-    
-    StretchDIBits(
-        deviceContext,
-        0, 0, bitMapWidth, bitMapHeight,
-        0, 0, windowWidth, windowHeight,
-        bitMapMemory,
-        &bitMapInfo,
-        DIB_RGB_COLORS,
-        SRCCOPY
-        );
-    
-    
-}
 LRESULT CALLBACK MainCallback(HWND window,
                               UINT msg,
                               WPARAM wparam,
@@ -126,21 +90,11 @@ LRESULT CALLBACK MainCallback(HWND window,
     } break;
     case WM_PAINT:
     {
+
         PAINTSTRUCT paint;
         HDC deviceContext = BeginPaint(window, &paint);
-        int x = paint.rcPaint.left;
-        int y = paint.rcPaint.top;
-        int width = paint.rcPaint.right - paint.rcPaint.left;
-        int height = paint.rcPaint.bottom - paint.rcPaint.top;
-        RECT clientRect;
-        GetClientRect(window, &clientRect);
-        //windows wants us to upate the window when we do this
-        UpdateWindow(deviceContext, &clientRect,  x, y, width, height);
-            
-            
-            
-            
         EndPaint(window, &paint);
+
     } break;
         
     default:
@@ -148,11 +102,7 @@ LRESULT CALLBACK MainCallback(HWND window,
         result = DefWindowProc(window, msg, wparam, lparam);
     }
     }
-    
-    
-    
     return (result);
-    
 }
 
 
@@ -169,22 +119,8 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     WindowClass.lpszClassName = "Renderer";
     
     if (RegisterClass(&WindowClass)) {
-        
-        HWND windowHandle = CreateWindowExA (
-            0,
-            "Renderer",
-            "Renderer Test",
-            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
-            0,
-            0,
-            hInstance,
-            0);
-        
-        
+        HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
         if (windowHandle) {
 
             initOpenGL(windowHandle);
@@ -209,10 +145,3 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     }
     return (0);
 }
-
-
-
-
-
-
-

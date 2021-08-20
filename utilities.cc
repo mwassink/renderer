@@ -11,6 +11,16 @@
 #include "utilities.h"
 #define MAXU32 0xFFFFFFFF
 
+
+QuadF extend(const TripleF* in) {
+    QuadF hCoord;
+    hCoord.x = in->x; 
+    hCoord.y = in->y;
+    hCoord.z = in->z;
+    hCoord.w = 1.0f;
+    return hCoord;
+}
+
 int countOccurrences(const char* s, char ch, char delim = 0) {
     int ctr = 0;
     while (*s && *s != delim) ctr += (*s++ == ch);
@@ -106,7 +116,7 @@ void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,A
 
 Vertex constructVertex(Array<TripleF>* coords, Array<TripleF>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  ) {
     Vertex v;
-    v.coord = (*coords)[p];
+    v.coord = extend(&(*coords)[p]);
     if (n != MAXU32)
         v.normal = (*normals)[n];
     else
@@ -169,8 +179,7 @@ Mesh parseObj(const char* f, const char* texture) {
 
 
 Mesh loadMesh(const char* objFile, const char* textureFile) {
-    f32 c1, c2, c3;
-    int size;
+
     return parseObj(objFile, textureFile);
 
 }

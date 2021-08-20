@@ -30,6 +30,10 @@ struct TripleF {
     f32 x, y, z;
 };
 
+struct QuadF {
+    f32 x, y, z, w;
+};
+
 struct UV {
     f32 u, v;
 };
@@ -102,7 +106,7 @@ struct TextureName {
 
 struct Vertex {
     
-    TripleF coord;
+    QuadF coord;
     TripleF normal;
     UV uv;
 };
