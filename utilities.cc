@@ -245,7 +245,7 @@ int setShaders(const char* vertexFile, const char* fragmentFile) {
 
     
     
-    return 0;
+    return program;
 
 }
 
