@@ -1,8 +1,8 @@
-#ifndef VMATH
-#define VMATH
+#ifndef VMATH_H
+#define VMATH_H
 typedef float f32;
 #define FLOAT_MIN 0.0001
-#define ASSERT(expr) if (!(expr)) { *((volatile int*)0) = 0;}
+#define ASSERT(expr) if (!(expr)) { *(volatile int*)0 = 0;}
 
 #include <math.h>
 #include <intrin.h>
@@ -518,22 +518,22 @@ inline Matrix4 ObjectWorldMatrix(const CoordinateSpace& modelCoordSpace) {
 
 // gl asks for the near and far plane to be expressed positively, but it still represents direction along negative z axis
 // therefore the 3rd column of the usual projection matrix has its sign flipped
-inline Matrix4 glProjectionMatrix(f32 vFOV, f32 aspectRatio, f32 near, f32 far) {
-    ASSERT(near > -.001f); 
-    ASSERT(far > -.001f);
+inline Matrix4 glProjectionMatrix(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane) {
+
+    ASSERT(farPlane > -.001f);
+    ASSERT(nearPlane > -.001f);
     f32 c = 1.0f/ tanf(vFOV/2);
     return Matrix4(c/aspectRatio, 0, 0, 0,
                    0, c, 0, 0,
-                   0, 0, -(far + near)/(far - near), -2*(far*near)/(far - near),
+                   0, 0, -(farPlane + nearPlane)/(farPlane - nearPlane), -2*(farPlane*nearPlane)/(farPlane - nearPlane),
                    0, 0, -1, 0);
-    
 }
 
 // PVM is the right order? Make sure that after division by w these are all in the unit cube
-inline Matrix4 glModelViewProjection(const CoordinateSpace& objSpace, const CoordinateSpace& cameraSpace, f32 vFOV, f32 aspectRatio, f32 near, f32 far) {
+inline Matrix4 glModelViewProjection(const CoordinateSpace& objSpace, const CoordinateSpace& cameraSpace, f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane) {
     Matrix4 m = ObjectWorldMatrix(objSpace);
     Matrix4 v = WorldObjectMatrix(cameraSpace);
-    Matrix4 p = glProjectionMatrix(vFOV, aspectRatio, near, far);
+    Matrix4 p = glProjectionMatrix(vFOV, aspectRatio, nearPlane, farPlane);
     return (p*(v*m));
 }
 

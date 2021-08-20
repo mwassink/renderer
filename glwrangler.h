@@ -31,6 +31,8 @@ void setPixelAttrs(HDC windowDC);
 #define GL_ELEMENT_ARRAY_BUFFER           0x8893
 #define GL_TEXTURE_2D_ARRAY               0x8C1A
 #define GL_RGBA32F                        0x8814
+#define GL_LINK_STATUS                    0x8B82
+
 
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
@@ -75,6 +77,20 @@ typedef void WINAPI t_TextureParameteri( GLenum target,
  	GLenum pname,
  	GLint param);
 typedef void WINAPI t_GenerateTextureMipmap(GLuint texture);
+typedef void WINAPI t_UniformMatrix4fv(	GLint location,
+ 	GLsizei count,
+ 	GLboolean transpose,
+ 	const GLfloat *value);
+typedef GLuint WINAPI t_GetUniformLocation(	GLuint program,
+ 	const GLchar *name);
+
+typedef void WINAPI t_GetProgramInfoLog(GLuint program,
+ 	GLsizei maxLength,
+ 	GLsizei *length,
+ 	GLchar *infoLog);
+typedef void WINAPI  t_GetProgramiv(	GLuint program,
+ 	GLenum pname,
+ 	GLint *params);
 
 
 #define CONSTIFY(name) #name
@@ -115,6 +131,11 @@ EXPORT( TextureStorage2D);
 EXPORT( TextureSubImage2D);
 EXPORT( TextureParameteri);
 EXPORT( GenerateTextureMipmap);
+EXPORT( UniformMatrix4fv);
+EXPORT( GetUniformLocation);
+EXPORT( GetProgramInfoLog);
+EXPORT( GetProgramiv);
+
 void setPixelAttrs(HDC windowDC);
 void wrangleSetup(void);
 void wrangle(void);

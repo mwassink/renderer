@@ -29,7 +29,10 @@ DECLARE( TextureStorage2D);
 DECLARE( TextureSubImage2D);
 DECLARE( TextureParameteri);
 DECLARE( GenerateTextureMipmap);
-
+DECLARE( UniformMatrix4fv);
+DECLARE( GetUniformLocation);
+DECLARE( GetProgramInfoLog);
+DECLARE( GetProgramiv);
 const int pixelAttribList[] =
 {
     WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -165,6 +168,10 @@ void wrangle(void) {
     WRANGLE(TextureSubImage2D);
     WRANGLE(TextureParameteri);
     WRANGLE(GenerateTextureMipmap);
+    WRANGLE(UniformMatrix4fv);
+    WRANGLE(GetUniformLocation);
+    WRANGLE(GetProgramInfoLog);
+    WRANGLE(GetProgramiv);
     
     
 }

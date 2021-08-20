@@ -6,25 +6,20 @@
 #include <stdio.h>
 #include "glwrangler.h"
 #include "utilities.h" 
+#include "types.h"
+#include "vecmath.h"
 
 
-typedef float f32;
-static int64_t ctr = 0;
-typedef uint8_t uint8;
+
 static bool runnable = 1;
-static HBITMAP bitMapHandle; // initialized to 0
-static HDC compatibleContext;
-static   BITMAPINFO bitMapInfo;
-static void* bitMapMemory;
-static int bitMapHeight;
-static int bitMapWidth;
+
 
 #define RUNTESTS 1
 // this should give us a buffer that we can draw into
 
 static void initOpenGL(HWND Window ) {
     HDC WindowDC = GetDC(Window);
-    setPixelAttrs(WindowDC); // it can do this because we have ALREADY MADE A CONTEXT    
+    setPixelAttrs(WindowDC); // it can do this because we have already made a context    
     HGLRC OpenGLRC = 0;
     if (wglCreateContextAttribsARB) {
         OpenGLRC = wglCreateContextAttribsARB(WindowDC, 0, glAttribList); //can we get a modern context
@@ -43,8 +38,8 @@ static void initOpenGL(HWND Window ) {
 }
 
 #if RUNTESTS
-#include "tests/gltest2.cc"
-//#include "tests/gltest3.cc"
+//#include "tests/gltest2.cc"
+#include "tests/gltest3.cc"
 
 #endif
 
@@ -117,14 +112,15 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     WindowClass.lpfnWndProc = MainCallback;
     WindowClass.hInstance = hInstance;
     WindowClass.lpszClassName = "Renderer";
-    
+    bool ran = false;
+    Mesh mesh;
     if (RegisterClass(&WindowClass)) {
         HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
         if (windowHandle) {
 
             initOpenGL(windowHandle);
-            Mesh mesh = loadMesh("../tests/models/tiefighter/star-wars-vader-tie-fighter.obj", NULL);
+            
             for (; runnable; ) {
 
                 MSG msg;
@@ -134,11 +130,18 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
                 }
-                #if RUNTESTS
-                gltest();
-                #endif
+                if (!ran) {
+#if RUNTESTS
+                    mesh = gltest3();
+#endif
+                    HDC windowDC = GetDC(windowHandle);
+                    SwapBuffers(windowDC);
+                }
+                doDraw(mesh);
                 HDC windowDC = GetDC(windowHandle);
                 SwapBuffers(windowDC);
+                
+                ran = true;
             }
         }
         return (0);

@@ -184,8 +184,35 @@ Mesh loadMesh(const char* objFile, const char* textureFile) {
 
 }
 
+char*  readFileWindows(const char* name, int* sz) {
+    char* mem;
+    HANDLE hFile;
+    union _LARGE_INTEGER size;
+
+
+    DWORD  read;
+
+
+    hFile = CreateFileA(name, GENERIC_READ, 0, 0, OPEN_EXISTING,0 , 0 );
+    if (!GetFileSizeEx(hFile, &size )) {
+        printf("Failure getting file size for %s!\n", name);
+        exit(1);
+    }
+    mem = (char*)VirtualAlloc(NULL, size.QuadPart + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE );
+    if (!ReadFile(hFile, mem, size.QuadPart, &read, 0)) {
+        printf("Failure reading %s!\n", name);
+        exit(1);
+    }
+    *sz = read;
+    return mem;
+    
+    
+    
+
+}
+
 char* readFile(const char* name, int32* sizePtr) {
-    FILE* fp = fopen(name, "r");
+    FILE* fp = fopen(name, "rb");
     int size;
     char* buf = 0;
     if (!fp) 
@@ -193,7 +220,8 @@ char* readFile(const char* name, int32* sizePtr) {
     
     fseek(fp, 0, SEEK_END);
     size = ftell(fp);
-    buf = (char*)malloc(size);
+    buf = (char*)malloc(size+1);
+    memset(buf, 0, size+1);
     fseek(fp, 0, SEEK_SET);
     fread(buf, 1, size, fp);
     fclose(fp);
@@ -204,16 +232,31 @@ char* readFile(const char* name, int32* sizePtr) {
 }
 
 // Returns 0 on success
-int checkFailure(int shader) {
+int checkFailure(int shader, GLenum status) {
     
     int success = 0;
     char log[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(shader, status, &success);
     
     if(!success ){
         glGetShaderInfoLog(shader, 512, NULL, log);
         FILE* fp = fopen("error.log", "w");
         fwrite( log, 1, 512, fp);
+        fclose(fp);
+        return -1;
+    }
+    return 0;
+}
+
+int checkFailureLink(int shader, GLenum status) {
+    int success = 0;
+    char log[512];
+    glGetProgramiv(shader, status, &success);
+
+    if (!success) {
+        glGetProgramInfoLog(shader, 512, NULL, log);
+        FILE* fp = fopen("error.log", "w");
+        fwrite(log, 1, 512, fp);
         fclose(fp);
         return -1;
     }
@@ -226,29 +269,37 @@ int setShaders(const char* vertexFile, const char* fragmentFile) {
     GLuint v, f, program;
     if (vertexFile) {
         vertexShaderSrc = readFile(vertexFile, &size);
+        if (!vertexShaderSrc)
+            return -1;
         v = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(v, 1, &vertexShaderSrc, NULL);
         glCompileShader(v);
-        free((void*)fragmentShaderSrc);
-        if (checkFailure(v)) {
+        
+        if (checkFailure(v, GL_COMPILE_STATUS)) {
+            free((void*)vertexShaderSrc);
             return -1;
         }
+        free((void*)vertexShaderSrc);
     }
     if (fragmentFile) {
         fragmentShaderSrc = readFile(fragmentFile, &size);
+        if (!fragmentShaderSrc)
+            return -1;
         f = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(f, 1, &fragmentShaderSrc, NULL  );
         glCompileShader(f);
-        free((void*)vertexShaderSrc);
-        if (checkFailure(f)) {
+        
+        if (checkFailure(f, GL_COMPILE_STATUS)) {
+            free((void*)fragmentShaderSrc);
             return -1;
         }
+        free((void*)fragmentShaderSrc);
     }
     program = glCreateProgram();
     glAttachShader(program, v);
     glAttachShader(program, f);
     glLinkProgram(program);
-    if (checkFailure(program)) {
+    if (checkFailureLink(program, GL_LINK_STATUS)) {
         return -1;
     }
 
@@ -271,14 +322,29 @@ void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVer
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*numVertices, vertices, GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(positionCoord);
-    glEnableVertexAttribArray(positionNorm);
-    glEnableVertexAttribArray(positionUV);
-    glVertexAttribPointer(positionCoord, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)));
+
+    glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)));
     glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, normal)));
     glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, uv)));
+
+    glEnableVertexAttribArray(positionCoord);
+    glEnableVertexAttribArray(positionNorm); 
+    glEnableVertexAttribArray(positionUV);
+
     
 }
+
+void addThings(f32* verts, int numVerts) {
+    GLuint vao, vbo;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(f32) * numVerts * 4, verts, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 3*sizeof(float), NULL);
+    glEnableVertexAttribArray(0);
+}
+
 
 void setupBitmapTexture(const char* textureString, int width, int height, int mips, GLuint* tex) {
 

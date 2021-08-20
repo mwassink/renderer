@@ -14,6 +14,9 @@ void setupTexture(const char*);
 void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV, glTriangleNames* names );
 void setupBitmapTexture(const char* textureString, int width, int height, int mips, GLuint* tex);
 QuadF extend(const TripleF* in);
+int setShaders(const char*, const char*);
+
+
 #pragma pack(push, 1)
 
 struct BMPFileHeader {
