@@ -24,6 +24,11 @@ DECLARE( GetShaderiv);
 WDECLARE( ChoosePixelFormatARB);
 WDECLARE( CreateContextAttribsARB);
 DECLARE( GetShaderInfoLog);
+DECLARE( CreateTextures);
+DECLARE( TextureStorage2D);
+DECLARE( TextureSubImage2D);
+DECLARE( TextureParameteri);
+DECLARE( GenerateTextureMipmap);
 
 const int pixelAttribList[] =
 {
@@ -154,8 +159,12 @@ void wrangle(void) {
     WRANGLE(EnableVertexAttribArray);
     WRANGLE(UseProgram);
     WRANGLE(GetShaderiv);    
-    WRANGLE( GetShaderInfoLog);
-    
+    WRANGLE(GetShaderInfoLog);
+    WRANGLE(CreateTextures);
+    WRANGLE(TextureStorage2D);
+    WRANGLE(TextureSubImage2D);
+    WRANGLE(TextureParameteri);
+    WRANGLE(GenerateTextureMipmap);
     
     
 }

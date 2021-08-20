@@ -9,11 +9,11 @@
 #include "types.h"
 #include "glwrangler.h"
 #include "utilities.h"
-
+#define MAXU32 0xFFFFFFFF
 
 int countOccurrences(const char* s, char ch, char delim = 0) {
     int ctr = 0;
-    while (*s && *s != delim) ctr += (*s == ch);
+    while (*s && *s != delim) ctr += (*s++ == ch);
     return ctr;
 }
 
@@ -46,8 +46,9 @@ bool fileExists(const char* str) {
 int countTrianglesOccurences(const char* f) {
     int sz, ctr = 0;
     char* ptr = readFile(f, &sz);
+    if (!ptr) return -1;
     for (int i = 0; i < sz; ++i) {
-        ctr += (*ptr++ == 'f');
+        ctr += (ptr[i] == 'f');
     }
     free(ptr);
     return ctr;   
@@ -79,20 +80,20 @@ void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,A
     occurences = countOccurrences(s, '/', 0);
     if (occurences == 2) {
         if (sscanf(s, "%u/%u/%u", &p, &t, &n ) != 3) {
-            t = 0xFFFFFFFF;
+            t = MAXU32;
             sscanf(s, "%u//%u", &p, &n );
         }
     }
     else if (occurences == 1) {
-        n = 0xFFFFFFFF;
+        n = MAXU32;
         sscanf(s, "%u/%u", &p, &t);
     }
     else {
-        t = 0xFFFFFFFF; n = 0xFFFFFFFF;
+        t = MAXU32; n = MAXU32;
         sscanf(s, "%u", &p);
     }
     // Put the res in the hash table
-    int val = indexHashTable->at(p, t, n, 0) == -1;
+    int val = indexHashTable->at(p, t, n, 0);
     if (val == -1) {
         val = indexHashTable->insert(p, t, n, 0);
         vertices->push(constructVertex(coords, normals, uvcoords, p, t, n));
@@ -106,8 +107,14 @@ void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,A
 Vertex constructVertex(Array<TripleF>* coords, Array<TripleF>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  ) {
     Vertex v;
     v.coord = (*coords)[p];
-    v.normal = (*normals)[n];
-    v.uv = (*uvcoords)[t];
+    if (n != MAXU32)
+        v.normal = (*normals)[n];
+    else
+        v.normal = {0.0f, 0.0f, 0.0f};
+    if (n != MAXU32)
+        v.uv = (*uvcoords)[t];
+    else
+        v.uv = {.5f, .5f};
     return v;
 
 }
@@ -117,7 +124,11 @@ Mesh parseObj(const char* f, const char* texture) {
     Array<UV> tcoords;
     Array<Vertex> verticesList;
     Array<u32> indices;
-    HashTable mappingTable(countTrianglesOccurences(f));
+    int triangles = countTrianglesOccurences(f);
+    if (triangles == -1) {
+        return Mesh(0, 0, TextureName(0), 0, 0);
+    }
+    HashTable mappingTable(triangles * 3);
 
     FILE* fp = fopen(f, "rb");
     char arr[200];
@@ -125,6 +136,7 @@ Mesh parseObj(const char* f, const char* texture) {
     char tri1[80]; char tri2[80]; char tri3[80];
     TripleF tr;
     UV df;
+    int debugCtr = 0;
     while (fgets(arr, 100, fp)) {
         sscanf(arr, "%s", type );
         if (!strcmp(type, "v")) {
@@ -142,13 +154,16 @@ Mesh parseObj(const char* f, const char* texture) {
         else if (!strcmp(type, "f")) {
             sscanf(arr, "%s %s %s %s", type, tri1, tri2, tri3);
             parseVertex(tri1, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList );
+            parseVertex(tri2, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
+            parseVertex(tri3, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
+            debugCtr++;
         }
     }
     coords.release();
     normals.release();
     tcoords.release();
-    TextureName name(texture);
-    Mesh mesh(verticesList.data, indices.data, name);
+    
+    Mesh mesh(verticesList.data, indices.data, TextureName(texture), verticesList.sz, indices.sz);
     return mesh;
 }
 
@@ -234,17 +249,17 @@ int setShaders(const char* vertexFile, const char* fragmentFile) {
 
 }
 
-void addBasicVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV) {
-    GLuint ebo, vao, vbo;
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV, glTriangleNames* names ) {
+    
+    glGenBuffers(1, &names->ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices* sizeof(u32), indices
                  , GL_STATIC_DRAW);
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glGenVertexArrays(1, &names->vao);
+    glBindVertexArray(names->vao);
+    glGenBuffers(1, &names->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*numVertices, vertices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(positionCoord);
@@ -255,6 +270,24 @@ void addBasicVerticesToShader(Vertex* vertices, u32* indices, int numVertices, i
     glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, uv)));
     
 }
+
+void setupBitmapTexture(const char* textureString, int width, int height, int mips, GLuint* tex) {
+
+    
+    u8* bitmapTexture = loadBitmap(textureString);
+
+    glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, tex);
+    glBindTexture(GL_TEXTURE_2D, *tex);
+    glTextureStorage2D(*tex, mips, GL_RGBA32F, width, height   );
+    glTextureSubImage2D(*tex, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, bitmapTexture );
+    free(bitmapTexture);
+    glTextureParameteri(*tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glGenerateTextureMipmap(*tex);
+    
+        
+}
+
+
 
 u32 hash432(u32 a, u32 b, u32 c, u32 d) {
     unsigned char seed[16] {
@@ -281,11 +314,12 @@ HashTable::HashTable(int sz) {
         for (int i = 0; i < sz; ++i) {
             arr[i] = tkv;
         }
+        this->sz = sz;
 }
 
 int32 HashTable::insert(u32 a, u32 b, u32 c, u32 empty) {
         TripleKeyVal tkv(a, b, c, empty);
-        u32 bucketIndex = hash432(a, b, c, empty);
+        u32 bucketIndex = hash432(a, b, c, empty) % sz;
         while (arr[bucketIndex].arr[3] != -1) {
             bucketIndex = ((bucketIndex + 1) % sz);
         }
@@ -301,7 +335,7 @@ int32 HashTable::insert(u32 a, u32 b, u32 c, u32 empty) {
 
 int32 HashTable::at(u32 a, u32 b, u32 c, u32 empty ) {
         TripleKeyVal tkv(a, b, c, empty );
-        u32 bucketIndex = hash432(a, b, c, empty);
+        u32 bucketIndex = hash432(a, b, c, empty) % sz;
         // If we find an empty index or our bucket we stop
         while ((!(arr[bucketIndex] == tkv )) && arr[bucketIndex].arr[3] != -1) {
              bucketIndex = ((bucketIndex + 1) % sz);

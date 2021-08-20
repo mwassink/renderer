@@ -34,6 +34,9 @@ struct UV {
     f32 u, v;
 };
 
+struct glTriangleNames {
+    GLuint ebo, vao, vbo;
+};
 
 template <typename Type>
 struct Array {
@@ -104,13 +107,20 @@ struct Vertex {
     UV uv;
 };
 
+struct PlainVertex {
+    TripleF coord;
+    TripleF norm;
+};
+
 struct Mesh {
     Mesh() {};
     Vertex* vertices;
     u32* triangles;
     TextureName textures;
+    u32 numVertices;
+    u32 numIndices;
 
-    Mesh(Vertex* v, u32* tr, TextureName tx) : vertices(v), triangles(tr), textures(tx) {}
+    Mesh(Vertex* v, u32* tr, TextureName tx, u32 numV, u32 numI) : vertices(v), triangles(tr), textures(tx), numVertices(numV), numIndices(numI) {}
     
 };
 #endif

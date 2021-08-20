@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "glwrangler.h"
-#include "utilities.h" // TODO 
+#include "utilities.h" // TODO
+
 
 typedef float f32;
 static int64_t ctr = 0;
@@ -43,61 +44,11 @@ static void initOpenGL(HWND Window ) {
     
 }
 
+#if RUNTESTS
+#include "tests/gltest2.cc"
 
-void gltest(void) {
-    
-    float vertices[] = { -.5f, -.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f,  0.5f, 0.0f
-    };  
-    
-    unsigned int VBO, vertexShader, fragmentShader, VAO, shaderProgram = 0;
-    int success = 0;
-    int size;
-    char log[512]; // is this long enough?
-    const char* glVertexSrc = 0; const char* glPixelShaderSrc = 0;
-    glGenVertexArrays(1, &VAO);  
-    glBindVertexArray(VAO);
-    
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // should return a char* ptr to the 
-    glVertexSrc = readFile("shaders/test_vertex.glsl", &size);
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &glVertexSrc, NULL);
-    glCompileShader(vertexShader);
-    checkFailure(vertexShader);
-    
-    glPixelShaderSrc = readFile("shaders/test_pixel.glsl", &size);
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &glPixelShaderSrc, NULL);
-    glCompileShader(fragmentShader);
-    checkFailure(fragmentShader);
-    
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    checkFailure(shaderProgram);
-    
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);  
-    
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-    
-    
-    
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    
-    
-    
-    
-    
-}
-
+#endif
 
 static void ResizeDIBSection(int width, int height, HWND wind) {
     
@@ -109,7 +60,7 @@ static void ResizeDIBSection(int width, int height, HWND wind) {
     glFlush();
     SwapBuffers(windowDC);
     ReleaseDC(wind, windowDC);
-    // set the opengl viewport to this
+    
     
 }
 
@@ -143,8 +94,6 @@ static void UpdateWindow(HDC deviceContext, RECT* windowRect, int x, int y, int 
     
     
 }
-
-// switch statement over the possible messages that get passed in to this
 LRESULT CALLBACK MainCallback(HWND window,
                               UINT msg,
                               WPARAM wparam,
@@ -170,20 +119,11 @@ LRESULT CALLBACK MainCallback(HWND window,
         runnable = 0;
         OutputDebugStringA("wm close\n");
     } break;
-        
-    case WM_ACTIVATEAPP:
-    {
-        // (TODO) something here
-        OutputDebugStringA("activate app\n");
-            
-    } break;
-        
     case WM_DESTROY:
     {
         runnable = 0;
         OutputDebugStringA("wm destroy\n");
     } break;
-    // this is not the only place where we do the paintinbg, but it is one of them
     case WM_PAINT:
     {
         PAINTSTRUCT paint;
@@ -192,10 +132,6 @@ LRESULT CALLBACK MainCallback(HWND window,
         int y = paint.rcPaint.top;
         int width = paint.rcPaint.right - paint.rcPaint.left;
         int height = paint.rcPaint.bottom - paint.rcPaint.top;
-            
-            
-            
-            
         RECT clientRect;
         GetClientRect(window, &clientRect);
         //windows wants us to upate the window when we do this
@@ -230,14 +166,14 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     WNDCLASS  WindowClass = {};
     WindowClass.lpfnWndProc = MainCallback;
     WindowClass.hInstance = hInstance;
-    WindowClass.lpszClassName = "My class name";
+    WindowClass.lpszClassName = "Renderer";
     
     if (RegisterClass(&WindowClass)) {
         
         HWND windowHandle = CreateWindowExA (
             0,
-            "My class name",
-            "hello",
+            "Renderer",
+            "Renderer Test",
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
@@ -250,43 +186,28 @@ int CALLBACK WinMain(HINSTANCE hInstance,
         
         
         if (windowHandle) {
-            
+
             initOpenGL(windowHandle);
-            for (; runnable; ){
-                
+            Mesh mesh = loadMesh("../tests/models/tiefighter/star-wars-vader-tie-fighter.obj", NULL);
+            for (; runnable; ) {
+
                 MSG msg;
                 BOOL msg_res = PeekMessage(&msg, windowHandle, 0, 1000, PM_REMOVE);
                 if (msg_res > 0) {
-                    
+
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
-                    
-                    
                 }
-                else {
-                    //break;
-                    
-                }
-                
-
-                
+                #if RUNTESTS
                 gltest();
+                #endif
                 HDC windowDC = GetDC(windowHandle);
                 SwapBuffers(windowDC);
-                
-                Sleep(1000);                
-                
-                
             }
-            
         }
-        
-        
         return (0);
     }
-
     return (0);
-    
 }
 
 
