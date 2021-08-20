@@ -332,6 +332,7 @@ void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVer
     glEnableVertexAttribArray(positionUV);
 
     
+    
 }
 
 void addThings(f32* verts, int numVerts) {
