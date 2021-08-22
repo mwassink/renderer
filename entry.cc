@@ -11,11 +11,17 @@
 
 
 
+
+
 static bool runnable = 1;
 
 
 #define RUNTESTS 1
-// this should give us a buffer that we can draw into
+#if RUNTESTS
+//#include "tests/gltest2.cc"
+#include "tests/gltest3.cc"
+
+#endif
 
 static void initOpenGL(HWND Window ) {
     HDC WindowDC = GetDC(Window);
@@ -37,11 +43,7 @@ static void initOpenGL(HWND Window ) {
     ReleaseDC(Window, WindowDC);   
 }
 
-#if RUNTESTS
-//#include "tests/gltest2.cc"
-#include "tests/gltest3.cc"
 
-#endif
 
 static void ResizeDIBSection(int width, int height, HWND wind) {
     HDC windowDC = GetDC(wind);
@@ -52,6 +54,53 @@ static void ResizeDIBSection(int width, int height, HWND wind) {
     SwapBuffers(windowDC);
     ReleaseDC(wind, windowDC);
 }
+
+void orientCameraFromInput(UINT msg, WPARAM wparam, CoordinateSpace* cameraSpace) {
+
+    switch (msg) {
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_KEYUP:
+    case WM_KEYDOWN:
+    {
+        u32 code = (u32)wparam;
+        switch (code) {
+        case 'W': {
+            cameraSpace->origin.z -= 1.0f;
+        } break;
+        case 'S': {
+            cameraSpace->origin.z += 1.0f;
+        } break;
+        case 'A': {
+            cameraSpace->origin.x -= 1.0f;
+        } break;
+        case 'D': {
+            cameraSpace->origin.x += 1.0f;
+        } break;
+            // Rotation about the x axis
+        case VK_UP: {
+            Matrix3 m = rotateX3(3.14f/20.0f);
+            cameraSpace->rotate(m);  
+        } break;
+        case VK_LEFT: {
+            Matrix3 m = rotateY3(-3.14/20.0f);
+            cameraSpace->rotate(m);
+        } break;
+        case VK_DOWN: {
+            Matrix3 m = rotateX3(-3.14f/20.0f);
+            cameraSpace->rotate(m);
+        } break;
+        case VK_RIGHT: {
+            Matrix3 m = rotateY3(3.14/20.0f);
+            cameraSpace->rotate(m);
+        } break;
+          
+            
+        }
+    } break;
+    }
+}
+
 
 LRESULT CALLBACK MainCallback(HWND window,
                               UINT msg,
@@ -83,6 +132,8 @@ LRESULT CALLBACK MainCallback(HWND window,
         runnable = 0;
         OutputDebugStringA("wm destroy\n");
     } break;
+    
+    
     case WM_PAINT:
     {
 
@@ -123,12 +174,22 @@ int CALLBACK WinMain(HINSTANCE hInstance,
             
             for (; runnable; ) {
 
-                MSG msg;
+                MSG msg = {};
                 BOOL msg_res = PeekMessage(&msg, windowHandle, 0, 1000, PM_REMOVE);
                 if (msg_res > 0) {
 
-                    TranslateMessage(&msg);
-                    DispatchMessage(&msg);
+                    if (msg.message ==  WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP ||
+                        msg.message ==  WM_KEYDOWN || msg.message == WM_KEYUP) {
+#if RUNTESTS
+                        orientCameraFromInput(msg.message, msg.wParam, &cameraSpace);
+#else
+                        orientCameraFromInput(msg.message, msg.wParam, 0);
+#endif
+                    }
+                    else {
+                        TranslateMessage(&msg);
+                        DispatchMessage(&msg);
+                    }
                 }
                 if (!ran) {
 #if RUNTESTS

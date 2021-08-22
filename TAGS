@@ -1,0 +1,307 @@
+
+entry.cc,192
+static bool runnable 16,273
+#define RUNTESTS 19,304
+static void initOpenGL(26,410
+static void ResizeDIBSection(48,960
+LRESULT CALLBACK MainCallback(58,1257
+int CALLBACK WinMain(119,2499
+
+glwrangler.cc,240
+const int pixelAttribList[pixelAttribList36,858
+const int glAttribList[glAttribList49,1199
+void loadInitialContext(58,1330
+void initialPixelAttrs(98,2726
+void setPixelAttrs(124,3447
+void wrangleSetup(143,3914
+void wrangle(148,4018
+
+glwrangler.h,2530
+#define GLWRANGLER_H4,58
+#define FAIL(12,223
+#define WGL_DRAW_TO_WINDOW_ARB 13,262
+#define WGL_SUPPORT_OPENGL_ARB 14,300
+#define WGL_DOUBLE_BUFFER_ARB 15,349
+#define WGL_PIXEL_TYPE_ARB 16,398
+#define WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB 17,447
+#define WGL_COLOR_BITS_ARB 18,496
+#define WGL_DEPTH_BITS_ARB 19,545
+#define WGL_STENCIL_BITS_ARB 20,594
+#define WGL_ACCELERATION_ARB 21,643
+#define WGL_FULL_ACCELERATION_ARB 22,692
+#define WGL_TYPE_RGBA_ARB 23,741
+#define WGL_CONTEXT_MAJOR_VERSION_ARB 24,790
+#define WGL_CONTEXT_MINOR_VERSION_ARB 25,839
+#define GL_ARRAY_BUFFER 26,888
+#define GL_STATIC_DRAW 27,937
+#define GL_VERTEX_SHADER 28,983
+#define GL_FRAGMENT_SHADER 29,1029
+#define GL_COMPILE_STATUS 30,1078
+#define GL_ELEMENT_ARRAY_BUFFER 31,1127
+#define GL_TEXTURE_2D_ARRAY 32,1176
+#define GL_RGBA32F 33,1225
+#define GL_LINK_STATUS 34,1274
+typedef ptrdiff_t GLsizeiptr;37,1325
+typedef ptrdiff_t GLintptr;38,1355
+typedef char GLchar;39,1383
+typedef void WINAPI t_GenVertexArrays(41,1405
+typedef void WINAPI t_BindVertexArray(42,1471
+typedef void WINAPI t_GenBuffers(43,1524
+typedef void WINAPI t_BindBuffer(44,1589
+typedef void WINAPI t_BufferData(45,1653
+typedef GLuint WINAPI t_CreateShader(46,1752
+typedef void WINAPI t_ShaderSource(47,1809
+typedef void WINAPI t_CompileShader(48,1919
+typedef GLuint WINAPI t_CreateProgram(49,1971
+typedef void WINAPI t_AttachShader(50,2016
+typedef void WINAPI t_LinkProgram(51,2084
+typedef void WINAPI t_VertexAttribPointer(52,2135
+typedef void WINAPI t_EnableVertexAttribArray(53,2285
+typedef void WINAPI t_UseProgram(54,2346
+typedef void WINAPI t_BindVertexArray(55,2396
+typedef void WINAPI t_GetShaderiv(57,2505
+typedef BOOL WINAPI t_ChoosePixelFormatARB(58,2584
+typedef HGLRC WINAPI t_CreateContextAttribsARB(60,2746
+typedef void WINAPI  t_GetShaderInfoLog(62,2899
+typedef void WINAPI t_CreateTextures(64,3008
+typedef void WINAPI t_TextureStorage2D(65,3091
+typedef void WINAPI t_TextureSubImage2D(66,3218
+typedef void WINAPI t_TextureParameteri(76,3415
+typedef void WINAPI t_GenerateTextureMipmap(79,3503
+typedef void WINAPI t_UniformMatrix4fv(80,3564
+typedef GLuint WINAPI t_GetUniformLocation(84,3685
+typedef void WINAPI t_GetProgramInfoLog(87,3769
+typedef void WINAPI  t_GetProgramiv(91,3885
+#define CONSTIFY(96,3974
+#define MAKESTRING(98,4004
+#define EXPORT(99,4074
+#define DECLARE(100,4122
+#define WRANGLE(101,4165
+#define WMAKESTRING(105,4261
+#define WEXPORT(106,4332
+#define WDECLARE(107,4382
+#define WWRANGLE(108,4426
+
+types.h,1535
+#define TYPES_H2,17
+typedef float f32;5,76
+typedef double f64;6,96
+typedef int s32;7,117
+typedef unsigned int u32;8,135
+typedef short int s16;9,162
+typedef short unsigned int u16;10,186
+typedef unsigned char u8;11,219
+typedef int32_t int32;13,248
+struct TripleKeyVal 18,280
+    int32 arr[arr19,303
+    TripleKeyVal(20,322
+    TripleKeyVal(21,345
+struct TripleF 29,500
+    f32 x,30,518
+    f32 x, y,30,518
+    f32 x, y, z;30,518
+struct QuadF 33,542
+    f32 x,34,558
+    f32 x, y,34,558
+    f32 x, y, z,34,558
+    f32 x, y, z, w;34,558
+struct UV 37,585
+    f32 u,38,598
+    f32 u, v;38,598
+struct glTriangleNames 41,619
+    GLuint ebo,42,645
+    GLuint ebo, vao,42,645
+    GLuint ebo, vao, vbo;42,645
+struct Array 46,704
+    Type* data;48,768
+    int sz,49,785
+    int sz, cap;49,785
+    void push(51,809
+    void pop(59,1007
+    Array(67,1126
+    Array(74,1257
+    void release(80,1367
+struct HashTable 88,1472
+    TripleKeyVal* arr;89,1492
+    int ctr;90,1516
+    int sz;91,1530
+struct TextureName 101,1703
+    const char* fileName;102,1725
+    TextureName(103,1752
+    TextureName 104,1816
+struct Vertex 107,1845
+    QuadF coord;109,1868
+    TripleF normal;110,1886
+    UV uv;111,1907
+struct PlainVertex 114,1925
+    TripleF coord;115,1947
+    TripleF norm;116,1967
+struct Mesh 119,1992
+    Mesh(120,2007
+    Vertex* vertices;121,2023
+    u32* triangles;122,2046
+    TextureName textures;123,2067
+    u32 numVertices;124,2094
+    u32 numIndices;125,2116
+    Mesh(127,2139
+
+utilities.cc,762
+#define MAXU32 12,201
+QuadF extend(15,232
+int countOccurrences(24,403
+int checkDoubleSlash(30,559
+bool operator==(operator==37,723
+bool fileExists(46,953
+int countTrianglesOccurences(56,1137
+u8* loadBitmap(68,1386
+void parseVertex(87,1828
+Vertex constructVertex(117,2741
+Mesh parseObj(132,3170
+Mesh loadMesh(181,4858
+char*  readFileWindows(187,4974
+char* readFile(214,5614
+int checkFailure(235,6048
+int checkFailureLink(251,6416
+int setShaders(266,6780
+void addBasicTexturedVerticesToShader(312,8133
+void addThings(338,9328
+void setupBitmapTexture(350,9731
+u32 hash432(368,10311
+HashTable::HashTable(HashTable386,10867
+int32 HashTable::insert(insert396,11156
+int32 HashTable::at(at412,11632
+void HashTable::release(release423,12052
+
+utilities.h,217
+#define UTILITIES_H2,21
+typedef unsigned char u8;4,62
+struct BMPFileHeader 22,887
+    u16 fileType;24,938
+    u32 fileSize;25,957
+    u16 reserved1;26,976
+    u16 reserved2;27,996
+    u32 bitmapOffset;28,1016
+
+utilities.h~,25
+#define UTILITIES_H2,21
+
+vecmath.h,3915
+#define VMATH_H2,17
+typedef float f32;3,34
+#define FLOAT_MIN 4,54
+#define ASSERT(5,80
+struct Vector3 14,212
+            f32 x,17,261
+            f32 x,y,17,261
+            f32 x,y,z;17,261
+        f32 arr[arr19,297
+        f32 data[data20,318
+    Vector3(22,348
+    Vector3(23,366
+    f32& operator[operator24,421
+    Vector3& operator*operator27,491
+    Vector3& operator*operator33,634
+struct Vector4 41,780
+            f32 x,44,829
+            f32 x,y,44,829
+            f32 x,y,z,44,829
+            f32 x,y,z,w;44,829
+        f32 data[data46,867
+        f32 arr[arr47,889
+    Vector4(49,918
+    Vector4(50,987
+    Vector4(54,1075
+    f32& operator[operator55,1093
+    Vector4& operator*operator58,1163
+    Vector4& operator*operator65,1327
+struct Matrix3 76,1506
+        f32 data[data78,1537
+            f32 _00,80,1580
+            f32 _00,  _01,80,1580
+            f32 _00,  _01,  _02,80,1580
+            _10,81,1614
+            _10,  _11,81,1614
+            _10,  _11,  _12,81,1614
+            _20,82,1644
+            _20,  _21,82,1644
+            _20,  _21,  _22;82,1644
+    Matrix3(86,1700
+    f32& operator(94,1977
+        f32 data[data104,2112
+            f32 _00,106,2155
+            f32 _00,  _01,106,2155
+            f32 _00,  _01,  _02,106,2155
+            f32 _00,  _01,  _02,  _03,106,2155
+            _10,107,2195
+            _10,  _11,107,2195
+            _10,  _11,  _12,107,2195
+            _10,  _11,  _12,  _13,107,2195
+            _20,108,2231
+            _20,  _21,108,2231
+            _20,  _21,  _22,108,2231
+            _20,  _21,  _22,  _23,108,2231
+            _30,109,2267
+            _30,  _31,109,2267
+            _30,  _31,  _32,109,2267
+            _30,  _31,  _32,  _33;109,2267
+            Vector4 _v1,112,2333
+            Vector4 _v1, _v2,112,2333
+            Vector4 _v1, _v2, _v3,112,2333
+            Vector4 _v1, _v2, _v3, _v4;112,2333
+struct Quaternion 152,3705
+            f32 i,155,3757
+            f32 i, j,155,3757
+            f32 i, j, k,155,3757
+            f32 i, j, k, w;155,3757
+        f32 data[data157,3798
+    Quaternion(160,3834
+    Quaternion(164,3930
+    Quaternion(171,4084
+    f32 operator[operator177,4233
+struct CoordinateSpace 184,4400
+    Vector3 origin;185,4426
+    Vector3 r,186,4477
+    Vector3 r, s,186,4477
+    Vector3 r, s, t;186,4477
+inline Vector4 cross(190,4507
+inline Vector3 cross(194,4653
+inline Vector3 operator*operator215,5385
+inline Vector4 operator*operator225,5675
+inline Vector4 operator*operator234,5993
+inline Vector4 operator*operator243,6275
+inline Vector3 operator*operator253,6560
+inline Vector3 operator*operator262,6812
+inline f32 dot(273,7069
+inline f32 dot(278,7189
+inline Quaternion operator*operator283,7325
+inline Quaternion operator*operator292,7515
+inline f32 det(313,8296
+inline f32 det(318,8409
+inline bool isReflection(328,8800
+inline Quaternion conjugate(336,9145
+inline Matrix4 constructTranslation(341,9280
+inline Matrix4 rotateX(350,9577
+inline Matrix4 rotateY(362,9832
+inline Matrix4 rotateZ(373,10081
+inline Matrix3 operator*operator385,10304
+inline Matrix4 operator*operator400,11189
+inline Vector4 operator*operator422,12002
+inline Quaternion operator*operator440,12691
+inline Matrix3 adjointUpper3x3(452,13128
+inline Matrix3 adjoint3x3(458,13619
+inline f32 lerp(469,14233
+inline Quaternion rotationQuaternion(480,14763
+inline Vector4 quaternionRotatePoint(490,15065
+inline Matrix4 changeOfBasis(499,15360
+inline Matrix4 WorldObjectMatrix(504,15556
+inline Matrix4 ObjectWorldMatrix(512,16188
+inline Matrix4 glProjectionMatrix(521,16804
+inline Matrix4 glModelViewProjection(533,17328
+inline bool fcmp(540,17693
+inline bool operator=548,17885
+inline bool operator=555,18054
+inline bool operator=562,18222
+inline bool operator=569,18396
+inline bool operator=576,18564
+
+wrangler.bat,0

@@ -50,6 +50,9 @@ struct Vector4 {
     Vector4(f32 f) {
         arr[0] = f; arr[1] = f; arr[2] = f; arr[3] = f;
     }
+    Vector4(const Vector3& in, f32 h) {
+        x = in.x, y = in.y, z = in.z, w = h;
+    }
 
     Vector4() {}
     f32& operator[](int index) {
@@ -81,6 +84,9 @@ struct Matrix3 {
             _10,  _11,  _12,
             _20,  _21,  _22;
         };
+        struct {
+            Vector3 c1, c2, c3;
+        };
     };
     
     Matrix3(f32 __00, f32 __01, f32 __02, 
@@ -91,8 +97,22 @@ struct Matrix3 {
         _20 = __02; _21 = __12; _22 = __22;
     }
 
+    Matrix3(Vector3 x, Vector3 y, Vector3 z) : c1(x), c2(y), c3(z) {}
+
+    Matrix3 transpose() {
+        return Matrix3(_00, _01, _02, _10, _11, _12, _20, _21, _22);
+        
+    }
+
     f32& operator()(int i, int j) {
         return data[j][i];
+    }
+    const f32& operator()(int i, int j) const {
+        return data[j][i];
+    }
+
+    Vector3& operator[](int vec) {
+        return *(reinterpret_cast<Vector3*>(&data[vec][0]));
     }
     
     
@@ -137,9 +157,12 @@ struct alignas(64) Matrix4 {
     f32& operator()(int i, int j) {
         return data[j][i];
     }
+    const f32& operator()(int i, int j) const {
+        return data[j][i];
+    }
     
     
-    Vector4 operator[](int vec) {
+    Vector4& operator[](int vec) {
         return *(reinterpret_cast<Vector4*>(&data[vec][0]));
     }
     
@@ -184,6 +207,9 @@ struct Quaternion {
 struct CoordinateSpace {
     Vector3 origin; // in world space coordinates
     Vector3 r, s, t;
+    
+    void rotate(Matrix3& rotation);
+    
 };
 
 
@@ -324,6 +350,7 @@ inline f32 det(Matrix3& in) {
     return l - c + r;
 }
 
+
 /* determines if the given rotation does a reflection. If it does, then this will put the vertices in the wrong order */
 inline bool isReflection(Matrix4 transform) {
     Matrix3 upper3x3 = Matrix3(transform(0, 0), transform(0, 1), transform(0,2),
@@ -346,7 +373,7 @@ inline Matrix4 constructTranslation(const Vector3 &linearTranslation){
                    0, 0, 0, 1);
 }
 
-/* Rotate about the x axis */
+/* Rotates CCW about x axis */
 inline Matrix4 rotateX(float t) {
     f32 c = cosf(t);
     f32 s = sinf(t);
@@ -372,13 +399,46 @@ inline Matrix4 rotateY(float t) {
 /* Rotate about the Z axis */
 inline Matrix4 rotateZ(float t){
     f32 c = cosf(t);
-    f32 s = cosf(t);
+    f32 s = sinf(t);
     
     return Matrix4(c, -s, 0, 0,
                    s, c, 0, 0,
                    0, 0, 1, 0,
                    0, 0, 0, 0);
 }
+
+inline Matrix3 rotateX3(float t) {
+    f32 c = cosf(t);
+    f32 s = sinf(t);
+    return Matrix3(1.0f ,0.0f, 0.0f,
+                   0.0f, c, -s,
+                   0.0f, s, c);
+
+    
+    
+}
+
+/* Rotate about the y axis */
+inline Matrix3 rotateY3(float t) {
+    f32 c = cosf(t);
+    f32 s = sinf(t);
+    return Matrix3(c,0.0f, s,
+                   0.0f, 1.0f, 0.0f, 
+                   -s, 0.0f, c);
+                  
+    
+}
+
+/* Rotate about the Z axis */
+inline Matrix3 rotateZ3(float t){
+    f32 c = cosf(t);
+    f32 s = sinf(t);
+    
+    return Matrix3(c, -s, 0.0f,
+                   s, c, 0.0f, 
+                   0.0f, 0.0f, 1.0f);
+}
+
 
 
 
@@ -388,7 +448,7 @@ inline Matrix3 operator* ( Matrix3 &lhs,  Matrix3& rhs) {
     f32 _02 = lhs(0,0)* rhs(0,2) + lhs(0,1)*rhs(1,2) + lhs(0, 2) * rhs(2,2);
     f32 _10 = lhs(1,0)* rhs(0,0) + lhs(1,1)*rhs(1,0) + lhs(1, 2) * rhs(2,0);
     f32 _11 = lhs(1,0)* rhs(0,1) + lhs(1,1)*rhs(1,1) + lhs(1, 2) * rhs(2,1); // same column as 01
-    f32 _12 = lhs(1,0)* rhs(0,2) + lhs(1,1)*rhs(1,2) + lhs(2, 2) * rhs(2,2);// same column as 02
+    f32 _12 = lhs(1,0)* rhs(0,2) + lhs(1,1)*rhs(1,2) + lhs(1, 2) * rhs(2,2);// same column as 02
     f32 _20 = lhs(2,0)* rhs(0,0) + lhs(2,1)*rhs(1,0) + lhs(2, 2) * rhs(2,0);
     f32 _21 = lhs(2,0)* rhs(0,1) + lhs(2,1)*rhs(1,1) + lhs(2, 2) * rhs(2,1);
     f32 _22 = lhs(2,0)* rhs(0,2) + lhs(2,1)*rhs(1,2) + lhs(2, 2) * rhs(2,2);
@@ -579,6 +639,12 @@ inline bool operator==(const Vector3& lhs, const Vector3& rhs) {
     return (fcmp(p1, p2, 3));
 }
 
-
+void CoordinateSpace::rotate( Matrix3& rotation) {
+        Matrix3 m(r, s, t);
+        m = m.transpose();
+        m = rotation * m;
+        m = m.transpose();
+        r = m[0]; s = m[1]; t = m[2];
+    }
 
 #endif
