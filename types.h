@@ -2,6 +2,7 @@
 #define TYPES_H
 #include <stdlib.h>
 #include <stdint.h>
+#include "vecmath.h"
 typedef float f32;
 typedef double f64;
 typedef int s32;
@@ -26,12 +27,27 @@ struct TripleKeyVal {
     }
 };
 
-struct TripleF {
-    f32 x, y, z;
+struct RGB {
+    union {
+        struct {
+            f32 x, y, z;
+        };
+        struct {
+            f32 r, g, b;
+        };
+    }
+    
 };
 
-struct QuadF {
-    f32 x, y, z, w;
+struct RGBA {
+    union {
+        struct {
+            f32 x, y, z, w;
+        };
+        struct {
+            f32 r, g, b, a;
+        };
+    };
 };
 
 struct UV {
@@ -44,7 +60,7 @@ struct glTriangleNames {
 
 template <typename Type>
 struct Array {
-    // can this be limited to plain old types?
+    // can this be limited to plain old data types?
     Type* data;
     int sz, cap;
     
@@ -106,14 +122,14 @@ struct TextureName {
 
 struct Vertex {
     
-    QuadF coord;
-    TripleF normal;
+    Vector4 coord;
+    Vector3 normal;
     UV uv;
 };
 
 struct PlainVertex {
-    TripleF coord;
-    TripleF norm;
+    Vector3 coord;
+    Vector3 norm;
 };
 
 struct Mesh {
@@ -121,10 +137,23 @@ struct Mesh {
     Vertex* vertices;
     u32* triangles;
     TextureName textures;
+    TextureName normalMap;
     u32 numVertices;
     u32 numIndices;
+    Vector3 defaultColor;
 
     Mesh(Vertex* v, u32* tr, TextureName tx, u32 numV, u32 numI) : vertices(v), triangles(tr), textures(tx), numVertices(numV), numIndices(numI) {}
     
 };
+
+struct Model {
+    Mesh mesh;
+    CoordinateSpace modelSpace;
+};
+
+struct Light {
+    Vector3 worldSpaceCoord;
+    f32 irradiance;
+}
 #endif
+

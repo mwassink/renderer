@@ -9,11 +9,11 @@ bool fileExists(const char* str);
 u8* loadBitmap(const char* fileName);
 Mesh loadMesh(const char* objPrefix, const char* textureFile);
 u32 hash432(u32 a, u32 b, u32 c, u32 d);
-Vertex constructVertex(Array<TripleF>* coords, Array<TripleF>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  );
+Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  );
 void setupTexture(const char*);
 void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV, glTriangleNames* names );
 void setupBitmapTexture(const char* textureString, int width, int height, int mips, GLuint* tex);
-QuadF extend(const TripleF* in);
+Vector4 extend(const Vector3* in);
 int setShaders(const char*, const char*);
 int32 clampRangei(int32 min, int32 max, int32 in);
 

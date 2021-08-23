@@ -1,10 +1,19 @@
 /* 8/21/2021 */
-
+#include "types.h"
+struct OpenGL {
+    f32 vFOV = 3.14/6.0f;
+    f32 aspectRatio = 16.0f/9.0f;
+    f32 znear = .5f;
+    f32 zfar = 50.0f;
+    CoordinateSpace cameraSpace;
+    GLuint basicLightingShader;
+    
+} OpenGL;
 // Return a normal map from the height map
 // it shouldn't matter the height map's range
 // since this should point out we shoudl 
-void normalMap(f32* heightMap, TripleF* normalMap, int32 height, int32 map ) {
-    TripleF tmp;
+void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 map ) {
+    Vector3 tmp;
     for (int h = 0; h < height; ++h) {
         int32 hup = clampRangei(0, height, h-1);
         int32 hdown = clampRangei(0, height, h+1);
@@ -24,9 +33,36 @@ void normalMap(f32* heightMap, TripleF* normalMap, int32 height, int32 map ) {
         }
     }
 }
+
+void shadeLightBasic(Model* model, Light* light) {
+    GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow;
+    Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace   );
+    Matrix4 mvp = glModelViewProjection(model->objSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
+    Matrix4 normalMatrix = normalTransform(mv);
+    Vector3 l = light->worldSpaceCoord * mv;
+    Vector3 dColor = {};
+    OpenGL.basicLightingShader = setShaders("../shaders/test_vertex3.glsl", "../shaders/test_pixel3.glsl");
+    glUseProgram(OpenGL.basicLightingShader);
+    mvLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelView");
+    mvpLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelViewProjection");
+    normMatrix = glGetUniformLocation(OpenGL.basicLightingShader, "normalMatrix");
+    lightPos = glGetUniformLocation(OpenGL.basicLightingShader, "lightCameraSpace");
+    diffCol = glGetUniformLocation(OpenGL.basicLightingShader, "diffColor");
+    specCol = glGetUniformLocation(OpenGL.basicLightingShader, "specularColor");
+    lightCol = glGetUniformLocation(OpenGL.basicLightingShader, "lightColor");
+    lightPow = glGetUniformLocation(OpenGL.basicLightingShader, "lightBrightness");
+    if (mvpLoc * mvLoc * normMatrix * lightPos * diffCol * specCol * lightCol * lightPow < 0) {
+        ASSERT(0);
+    }
+    
+    
+    
+}
 // So it can be drawn later, returns the GLuint for the ebo used to bind that buffer
-GLuint addMesh(const char* fileName, const char* textureName);
-GLuint addMeshNormalMap(const char* fileName, const char* textureName, const char* normalMap);
+Model addModel(const char* fileName, const char* textureName) {
+    
+}
+GLuint addModelNormalMap(const char* fileName, const char* textureName, const Vector3* normalMap);
 void removeMesh(GLuint ebo );
 
 

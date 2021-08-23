@@ -12,8 +12,8 @@
 #define MAXU32 0xFFFFFFFF
 
 
-QuadF extend(const TripleF* in) {
-    QuadF hCoord;
+Vector4 extend(const Vector3* in) {
+    Vector4 hCoord;
     hCoord.x = in->x; 
     hCoord.y = in->y;
     hCoord.z = in->z;
@@ -84,7 +84,7 @@ u8* loadBitmap(const char* fileName) {
     return bitMap;
 }
 
-void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,Array<TripleF>* coords, Array<TripleF>* normals, Array<UV>* uvcoords,
+void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,Array<Vector3>* coords, Array<Vector3>* normals, Array<UV>* uvcoords,
                 Array<Vertex>* vertices) {
     unsigned int p, t, n, occurences;
     occurences = countOccurrences(s, '/', 0);
@@ -114,7 +114,7 @@ void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,A
 
 }
 
-Vertex constructVertex(Array<TripleF>* coords, Array<TripleF>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  ) {
+Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  ) {
     Vertex v;
     v.coord = extend(&(*coords)[p]);
     if (n != MAXU32)
@@ -130,7 +130,7 @@ Vertex constructVertex(Array<TripleF>* coords, Array<TripleF>* normals, Array<UV
 }
 // Should check for a malicious file
 Mesh parseObj(const char* f, const char* texture) {
-    Array<TripleF> coords, normals;
+    Array<Vector3> coords, normals;
     Array<UV> tcoords;
     Array<Vertex> verticesList;
     Array<u32> indices;
@@ -144,7 +144,7 @@ Mesh parseObj(const char* f, const char* texture) {
     char arr[200];
     char type[100];
     char tri1[80]; char tri2[80]; char tri3[80];
-    TripleF tr;
+    Vector3 tr;
     UV df;
     int debugCtr = 0;
     while (fgets(arr, 100, fp)) {

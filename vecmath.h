@@ -109,6 +109,19 @@ struct Matrix3 {
         
     }
 
+    Matrix3& operator*= (f32 scale) {
+        data[0][0] *= scale;
+        data[0][1] *= scale;
+        data[0][2] *= scale;
+        data[1][0] *= scale;
+        data[1][1] *= scale;
+        data[1][2] *= scale;
+        data[2][0] *= scale;
+        data[2][1] *= scale;
+        data[2][2] *= scale;
+        return (*this);
+    }
+
     f32& operator()(int i, int j) {
         return data[j][i];
     }
@@ -156,6 +169,27 @@ struct alignas(64) Matrix4 {
     
     Matrix4(const Vector4& v1, const Vector4& v2, const Vector4& v3, const Vector4& v4) {
         _v1 = v1; _v2 = v2; _v3 = v3; _v4 = v4;
+    }
+
+    Matrix4& operator*= (f32 scale) {
+        data[0][0] *= scale;
+        data[0][1] *= scale;
+        data[0][2] *= scale;
+        data[0][3] *= scale;
+        data[1][0] *= scale;
+        data[1][1] *= scale;
+        data[1][2] *= scale;
+        data[1][3] *= scale;
+        data[2][0] *= scale;
+        data[2][1] *= scale;
+        data[2][2] *= scale;
+        data[2][3] *= scale;
+        data[3][0] *= scale;
+        data[3][1] *= scale;
+        data[3][2] *= scale;
+        data[3][3] *= scale;
+         
+        return (*this);
     }
 
     Matrix4() {}
@@ -526,6 +560,13 @@ inline Matrix3 adjoint3x3( Matrix3 &in) {
                    det(in(1,0), in(1,1), in(2,0), in(2,1)), -det(in(0,0), in(0,1), in(2,0), in(2,1)), det(in(0,0), in(0,1), in(1,0), in(1,1)) );
 }
 
+inline Matrix3 inv3x3(Matrix3& in) {
+    Matrix3 m = adjoint3x3(in);
+    f32 invdet = 1/det(in);
+    m *= invdet;
+    return m;
+}
+
 
 
 /* This is a linear interpolation, at the heart of graphics
@@ -607,7 +648,7 @@ inline Matrix4 glModelViewProjection(const CoordinateSpace& objSpace, const Coor
     return (p*(v*m));
 }
 
-inline Matrix4 modelView(const CoordinateSpace& objSpace, const CoordinateSpace& objSpace) {
+inline Matrix4 modelView(const CoordinateSpace& objSpace, const CoordinateSpace& cameraSpace) {
     Matrix4 m = ObjectWorldMatrix(objSpace);
     Matrix4 v = WorldObjectMatrix(cameraSpace);
     return v*m;
@@ -662,5 +703,10 @@ void CoordinateSpace::rotate( Matrix3& rotation) {
         m = m.transpose();
         r = m[0]; s = m[1]; t = m[2];
     }
+
+Matrix3 normalTransform(Matrix3& transform) {
+    return inv3x3(transform.transpose());
+}
+
 
 #endif
