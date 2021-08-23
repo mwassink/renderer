@@ -8,3 +8,4 @@ test*
 *.log
 .gitignore
 build/.vs*
+TAGS

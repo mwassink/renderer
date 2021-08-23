@@ -15,7 +15,7 @@ void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVer
 void setupBitmapTexture(const char* textureString, int width, int height, int mips, GLuint* tex);
 QuadF extend(const TripleF* in);
 int setShaders(const char*, const char*);
-
+int32 clampRangei(int32 min, int32 max, int32 in);
 
 #pragma pack(push, 1)
 

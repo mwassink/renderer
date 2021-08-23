@@ -36,6 +36,11 @@ struct Vector3 {
         z *= scale;
         return (*this);
     }
+
+    void normalize(){
+        f32 mag = sqrt(z*z + y*y + x*x);
+        x /= mag; y /= mag; z /= mag;
+    }
 };
 
 struct Vector4 {
@@ -561,6 +566,9 @@ inline Matrix4 changeOfBasis(Vector4& r, Vector4& u, Vector4& v) {
 }
 
 // Change the model coord space with the dot of the eye and the coordinate axes
+// We want to express a point in world space as the sum of elements of our new basis
+// (e.g) in world space the point (4,2,3) is just the sum of 4<1,0,0> + 2<0,1,0> + 3<0,0,1>
+// But we also want to subtract elements of the distance included that are already included in the origin
 inline Matrix4 WorldObjectMatrix(const CoordinateSpace& modelCoordSpace){
     return Matrix4(modelCoordSpace.r.x, modelCoordSpace.r.y, modelCoordSpace.r.z, -dot(modelCoordSpace.origin, modelCoordSpace.r ),
                    modelCoordSpace.s.x, modelCoordSpace.s.y, modelCoordSpace.s.z, -dot(modelCoordSpace.origin, modelCoordSpace.s),
@@ -569,6 +577,8 @@ inline Matrix4 WorldObjectMatrix(const CoordinateSpace& modelCoordSpace){
 }
 
 // The dot of the world space coordinate system is always directly onto x, y, z since there is no rotation, so we should be good
+// We want to take our point in obj space and express each's contributions to x,y, z respectivel 
+// Then we can add the origin, and the dots like the one earlier are just all 1 for each bases
 inline Matrix4 ObjectWorldMatrix(const CoordinateSpace& modelCoordSpace) {
     return Matrix4(modelCoordSpace.r.x, modelCoordSpace.s.x, modelCoordSpace.t.x, modelCoordSpace.origin.x,
         modelCoordSpace.r.y, modelCoordSpace.s.y, modelCoordSpace.t.y, modelCoordSpace.origin.y,
@@ -595,6 +605,12 @@ inline Matrix4 glModelViewProjection(const CoordinateSpace& objSpace, const Coor
     Matrix4 v = WorldObjectMatrix(cameraSpace);
     Matrix4 p = glProjectionMatrix(vFOV, aspectRatio, nearPlane, farPlane);
     return (p*(v*m));
+}
+
+inline Matrix4 modelView(const CoordinateSpace& objSpace, const CoordinateSpace& objSpace) {
+    Matrix4 m = ObjectWorldMatrix(objSpace);
+    Matrix4 v = WorldObjectMatrix(cameraSpace);
+    return v*m;
 }
 
 inline bool fcmp(f32* p1, f32* p2, int cnt) {

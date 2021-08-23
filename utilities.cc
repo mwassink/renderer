@@ -423,3 +423,15 @@ int32 HashTable::at(u32 a, u32 b, u32 c, u32 empty ) {
 void HashTable::release() {
     free(arr);
 }
+
+int32 clampRangei(int32 min, int32 max, int32 in) {
+    if (in < min) return min;
+    if (in > max) return max;
+    return in;
+}
+
+f32 clampNormal(f32 in) {
+    if (in < -1.0f) return -1.0f;
+    if (in > 1.0f) return 1.0f;
+    return in;
+}

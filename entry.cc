@@ -79,19 +79,19 @@ void orientCameraFromInput(UINT msg, WPARAM wparam, CoordinateSpace* cameraSpace
         } break;
             // Rotation about the x axis
         case VK_UP: {
-            Matrix3 m = rotateX3(3.14f/20.0f);
+            Matrix3 m = rotateX3(3.14f/80.0f);
             cameraSpace->rotate(m);  
         } break;
         case VK_LEFT: {
-            Matrix3 m = rotateY3(-3.14/20.0f);
+            Matrix3 m = rotateY3(-3.14/80.0f);
             cameraSpace->rotate(m);
         } break;
         case VK_DOWN: {
-            Matrix3 m = rotateX3(-3.14f/20.0f);
+            Matrix3 m = rotateX3(-3.14f/80.0f);
             cameraSpace->rotate(m);
         } break;
         case VK_RIGHT: {
-            Matrix3 m = rotateY3(3.14/20.0f);
+            Matrix3 m = rotateY3(3.14/80.0f);
             cameraSpace->rotate(m);
         } break;
           
