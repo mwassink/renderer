@@ -10,7 +10,6 @@ typedef unsigned int u32;
 typedef short int s16;
 typedef short unsigned int u16;
 typedef unsigned char u8;
-
 typedef int32_t int32;
 
 
@@ -35,7 +34,7 @@ struct RGB {
         struct {
             f32 r, g, b;
         };
-    }
+    };
     
 };
 
@@ -55,7 +54,7 @@ struct UV {
 };
 
 struct glTriangleNames {
-    GLuint ebo, vao, vbo;
+    u32 ebo, vao, vbo;
 };
 
 template <typename Type>
@@ -140,7 +139,8 @@ struct Mesh {
     TextureName normalMap;
     u32 numVertices;
     u32 numIndices;
-    Vector3 defaultColor;
+    Vector3 diffuseColor;
+    Vector3 specColor;
 
     Mesh(Vertex* v, u32* tr, TextureName tx, u32 numV, u32 numI) : vertices(v), triangles(tr), textures(tx), numVertices(numV), numIndices(numI) {}
     
@@ -149,11 +149,13 @@ struct Mesh {
 struct Model {
     Mesh mesh;
     CoordinateSpace modelSpace;
+    glTriangleNames identifiers;
 };
 
 struct Light {
     Vector3 worldSpaceCoord;
+    Vector3 color;
     f32 irradiance;
-}
+};
 #endif
 

@@ -60,6 +60,10 @@ struct Vector4 {
     }
 
     Vector4() {}
+
+    Vector3 v3() {
+        return Vector3(x, y, z);
+    }
     f32& operator[](int index) {
         return data[index];
     }
@@ -363,7 +367,7 @@ inline Quaternion operator* (f32 scale, Quaternion& in) {
 }
 
 // with (4x4)(4x1) = 4x1
-/*
+#if 0
 inline Vector4 operator*( Matrix4& lhs, Vector4&rhs) {
     f32 a, b, c, d;
     a = lhs(0,0)*rhs.data[0] + lhs(0, 1)* rhs.data[1] + lhs(0, 2)* rhs.data[2] + lhs(0, 3) * rhs.data[3];
@@ -373,7 +377,7 @@ inline Vector4 operator*( Matrix4& lhs, Vector4&rhs) {
     return Vector4(a, b, c, d);
     
 }
-*/
+#endif
 /* det 2x2 */
 inline f32 det(f32 ul, f32 ur, f32 ll, f32 lr) {
     return ul*lr - ll*ur;
@@ -696,7 +700,7 @@ inline bool operator==(const Vector3& lhs, const Vector3& rhs) {
     return (fcmp(p1, p2, 3));
 }
 
-void CoordinateSpace::rotate( Matrix3& rotation) {
+inline void CoordinateSpace::rotate( Matrix3& rotation) {
         Matrix3 m(r, s, t);
         m = m.transpose();
         m = rotation * m;
@@ -704,8 +708,14 @@ void CoordinateSpace::rotate( Matrix3& rotation) {
         r = m[0]; s = m[1]; t = m[2];
     }
 
-Matrix3 normalTransform(Matrix3& transform) {
+inline Matrix3 normalTransform(Matrix3& transform) {
     return inv3x3(transform.transpose());
+}
+
+inline Matrix3 Matrix3x3(const Matrix4& in) {
+    return Matrix3(in(0,0), in(0,1), in(0,2),
+                   in(1,0), in(1,1), in(1,2),
+                   in(2,0), in(2,1), in(2,2));
 }
 
 

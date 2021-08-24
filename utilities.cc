@@ -12,15 +12,6 @@
 #define MAXU32 0xFFFFFFFF
 
 
-Vector4 extend(const Vector3* in) {
-    Vector4 hCoord;
-    hCoord.x = in->x; 
-    hCoord.y = in->y;
-    hCoord.z = in->z;
-    hCoord.w = 1.0f;
-    return hCoord;
-}
-
 int countOccurrences(const char* s, char ch, char delim = 0) {
     int ctr = 0;
     while (*s && *s != delim) ctr += (*s++ == ch);
@@ -116,7 +107,7 @@ void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,A
 
 Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  ) {
     Vertex v;
-    v.coord = extend(&(*coords)[p]);
+    v.coord = Vector4((*coords)[p], 1.0f);
     if (n != MAXU32)
         v.normal = (*normals)[n];
     else
@@ -330,8 +321,6 @@ void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVer
     glEnableVertexAttribArray(positionCoord);
     glEnableVertexAttribArray(positionNorm); 
     glEnableVertexAttribArray(positionUV);
-
-    
     
 }
 

@@ -33,6 +33,9 @@ DECLARE( UniformMatrix4fv);
 DECLARE( GetUniformLocation);
 DECLARE( GetProgramInfoLog);
 DECLARE( GetProgramiv);
+DECLARE( UniformMatrix3fv);
+DECLARE(Uniform3f);
+DECLARE(Uniform1f);
 const int pixelAttribList[] =
 {
     WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -172,6 +175,8 @@ void wrangle(void) {
     WRANGLE(GetUniformLocation);
     WRANGLE(GetProgramInfoLog);
     WRANGLE(GetProgramiv);
-    
+    WRANGLE(UniformMatrix3fv);
+    WRANGLE(Uniform3f);
+    WRANGLE(Uniform1f);
     
 }

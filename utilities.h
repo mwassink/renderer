@@ -13,9 +13,9 @@ Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV
 void setupTexture(const char*);
 void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV, glTriangleNames* names );
 void setupBitmapTexture(const char* textureString, int width, int height, int mips, GLuint* tex);
-Vector4 extend(const Vector3* in);
 int setShaders(const char*, const char*);
 int32 clampRangei(int32 min, int32 max, int32 in);
+f32 clampNormal(f32 in);
 
 #pragma pack(push, 1)
 

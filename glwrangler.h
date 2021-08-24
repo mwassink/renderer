@@ -2,6 +2,7 @@
 
 #ifndef GLWRANGLER_H
 #define GLWRANGLER_H
+#include <windows.h>
 #include <gl/gl.h>
 extern const int pixelAttribList[];
 extern const int glAttribList[];
@@ -92,6 +93,15 @@ typedef void WINAPI  t_GetProgramiv(	GLuint program,
  	GLenum pname,
  	GLint *params);
 
+typedef void WINAPI t_UniformMatrix3fv(	GLint location,
+ 	GLsizei count,
+ 	GLboolean transpose,
+ 	const GLfloat *value);
+typedef void WINAPI t_Uniform3f(GLint location,
+ 	GLfloat v0,
+ 	GLfloat v1,
+ 	GLfloat v2);
+typedef void WINAPI t_Uniform1f(GLint location, GLfloat v0);
 
 #define CONSTIFY(name) #name
 
@@ -135,6 +145,9 @@ EXPORT( UniformMatrix4fv);
 EXPORT( GetUniformLocation);
 EXPORT( GetProgramInfoLog);
 EXPORT( GetProgramiv);
+EXPORT( UniformMatrix3fv);
+EXPORT( Uniform3f);
+EXPORT( Uniform1f);
 
 void setPixelAttrs(HDC windowDC);
 void wrangleSetup(void);
