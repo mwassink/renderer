@@ -6,7 +6,7 @@ typedef float f32;
 
 #include <math.h>
 #include <intrin.h>
-#include <string.h>
+
 
 
 
