@@ -2,7 +2,6 @@
 #include <windows.h>
 #include <gl/gl.h>
 #include <string.h>
-#include <immintrin.h>
 #include <intrin.h>
 
 

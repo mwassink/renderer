@@ -501,7 +501,7 @@ inline Matrix3 operator* ( Matrix3 &lhs,  Matrix3& rhs) {
 }
 
 inline Matrix4 operator*(Matrix4& lhs, Matrix4& rhs) {
-    // The column vectors are actually contiguous
+
 
     Matrix4 emptyMatrix;
     __m128 col0 = _mm_load_ps(&lhs.data[0][0]);

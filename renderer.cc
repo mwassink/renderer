@@ -37,7 +37,7 @@ void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 width ) {
     }
 }
 
-void shadeLightBasic(Model* model, Light* light) {
+void shadeLightBasic(Model* model, Light* light, bool compileShader = true) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
@@ -46,7 +46,8 @@ void shadeLightBasic(Model* model, Light* light) {
     Vector3 dColor = model->mesh.diffuseColor;
     Vector3 sColor = model->mesh.specColor;
     Vector3 lColor = light->color;
-    OpenGL.basicLightingShader = setShaders("../shaders/blinnPhongVertex.glsl", "../shaders/blinnPhongPixel.glsl");
+    if (compileShader)
+        OpenGL.basicLightingShader = setShaders("../shaders/blinnPhongVertex.glsl", "../shaders/blinnPhongPixel.glsl");
     glUseProgram(OpenGL.basicLightingShader);
     mvLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelView");
     mvpLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelViewProjection");
@@ -76,9 +77,9 @@ Model addModel(const char* fileName, const char* textureName) {
     return model;
 }
 
-void activateModel(Model& model) {
-    addBasicTexturedVerticesToShader(model.mesh.vertices, model.mesh.triangles, model.mesh.numVertices, model.mesh.numIndices, 0, 1, 2, &model.identifiers);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.identifiers.ebo);
+void activateModel(Model* model) {
+    addBasicTexturedVerticesToShader(model->mesh.vertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, &model->identifiers);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
 }
 
 #if 0
