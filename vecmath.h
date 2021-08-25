@@ -250,7 +250,14 @@ struct Quaternion {
 struct CoordinateSpace {
     Vector3 origin; // in world space coordinates
     Vector3 r, s, t;
-    
+
+    CoordinateSpace() {
+        r = Vector3(1.0f, 0.0f, 0.0f);
+        s = Vector3(0.0f, 1.0f, 0.0f);
+        t = Vector3(0.0f, 0.0f, 1.0f);
+        origin = Vector3(0.0f, 0.0f, 0.0f);
+    }
+    CoordinateSpace(Vector3 r, Vector3 s,Vector3 t, Vector3 o ) : r(r), s(s), t(t), origin(o) {}
     void rotate(Matrix3& rotation);
     
 };
@@ -635,8 +642,8 @@ inline Matrix4 ObjectWorldMatrix(const CoordinateSpace& modelCoordSpace) {
 // therefore the 3rd column of the usual projection matrix has its sign flipped
 inline Matrix4 glProjectionMatrix(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane) {
 
-    ASSERT(farPlane > -.001f);
-    ASSERT(nearPlane > -.001f);
+    //ASSERT(farPlane > -.001f);
+    //ASSERT(nearPlane > -.001f);
     f32 c = 1.0f/ tanf(vFOV/2);
     return Matrix4(c/aspectRatio, 0, 0, 0,
                    0, c, 0, 0,

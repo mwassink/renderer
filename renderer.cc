@@ -2,16 +2,13 @@
 #include "types.h"
 #include "glwrangler.h"
 #include "utilities.h"
+#include "renderer.h"
 
-struct OpenGL {
-    f32 vFOV = 3.14/6.0f;
-    f32 aspectRatio = 16.0f/9.0f;
-    f32 znear = .5f;
-    f32 zfar = 50.0f;
-    CoordinateSpace cameraSpace;
-    u32 basicLightingShader;
-    
-} OpenGL;
+#define DEBUG 1
+#if DEBUG
+#include <stdio.h>
+#endif
+GL OpenGL;
 // Return a normal map from the height map
 // it shouldn't matter the height map's range
 // since this should point out we shoudl 
@@ -57,9 +54,7 @@ void shadeLightBasic(Model* model, Light* light, bool compileShader = true) {
     specCol = glGetUniformLocation(OpenGL.basicLightingShader, "specularColor");
     lightCol = glGetUniformLocation(OpenGL.basicLightingShader, "lightColor");
     lightPow = glGetUniformLocation(OpenGL.basicLightingShader, "lightBrightness");
-    if (mvpLoc * mvLoc * normMatrix * lightPos * diffCol * specCol * lightCol * lightPow < 0) {
-        ASSERT(0);
-    }
+    
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, (f32*)&mv.data[0]);
     glUniformMatrix3fv(normMatrix, 1, GL_FALSE, (f32*)&normalMatrix.data[0]);
@@ -80,6 +75,24 @@ Model addModel(const char* fileName, const char* textureName) {
 void activateModel(Model* model) {
     addBasicTexturedVerticesToShader(model->mesh.vertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, &model->identifiers);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+}
+
+void setDrawModel(Model* model) {
+#if DEBUG
+    Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
+    Mesh& mesh = model->mesh;
+    for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 10; ++i) {
+            Vector4 v(mesh.vertices[i].coord.x, mesh.vertices[i].coord.y, mesh.vertices[i].coord.z, mesh.vertices[i].coord.w);
+            v = mvp * v;
+            printf("%f %f %f %f\n", v.x, v.y, v.z, v.w);
+        }
+    }
+#endif
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+    glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
+    glBindVertexArray(model->identifiers.vao);
+    glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
 }
 
 #if 0

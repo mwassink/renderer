@@ -8,7 +8,7 @@
 #include "utilities.h" 
 #include "types.h"
 #include "vecmath.h"
-
+#include "renderer.h"
 
 
 
@@ -19,13 +19,14 @@ static bool runnable = 1;
 #define RUNTESTS 1
 #if RUNTESTS
 //#include "tests/gltest2.cc"
-#include "tests/gltest3.cc"
+//#include "tests/gltest3.cc"
+#include "tests/basiclighting.cc"
 
 #endif
 
 static void initOpenGL(HWND Window ) {
     HDC WindowDC = GetDC(Window);
-    setPixelAttrs(WindowDC); // it can do this because we have already made a context    
+    setPixelAttrs(WindowDC); // it can do this because we have already made a context
     HGLRC OpenGLRC = 0;
     if (wglCreateContextAttribsARB) {
         OpenGLRC = wglCreateContextAttribsARB(WindowDC, 0, glAttribList); //can we get a modern context
@@ -40,7 +41,9 @@ static void initOpenGL(HWND Window ) {
     else {
         FAIL();
     }
-    ReleaseDC(Window, WindowDC);   
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    ReleaseDC(Window, WindowDC);
 }
 
 
@@ -55,6 +58,14 @@ static void ResizeDIBSection(int width, int height, HWND wind) {
     ReleaseDC(wind, windowDC);
 }
 
+void clear(HWND wind) {
+    HDC windowDC = GetDC(wind);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glFlush();
+    ReleaseDC(wind, windowDC);
+}
+
 void orientCameraFromInput(UINT msg, WPARAM wparam, CoordinateSpace* cameraSpace) {
 
     switch (msg) {
@@ -66,20 +77,20 @@ void orientCameraFromInput(UINT msg, WPARAM wparam, CoordinateSpace* cameraSpace
         u32 code = (u32)wparam;
         switch (code) {
         case 'W': {
-            cameraSpace->origin.z -= 1.0f;
+            cameraSpace->origin = cameraSpace->origin - cameraSpace->t;
         } break;
         case 'S': {
-            cameraSpace->origin.z += 1.0f;
+            cameraSpace->origin = cameraSpace->origin + cameraSpace->t;
         } break;
         case 'A': {
-            cameraSpace->origin.x -= 1.0f;
+            cameraSpace->origin = cameraSpace->origin - cameraSpace->r;
         } break;
         case 'D': {
-            cameraSpace->origin.x += 1.0f;
+            cameraSpace->origin = cameraSpace->origin + cameraSpace->r;
         } break;
             // Rotation about the x axis
         case VK_UP: {
-            Matrix3 m = rotateX3(3.14f/80.0f);
+            Matrix3 m = rotateX3(-3.14f/80.0f);
             cameraSpace->rotate(m);  
         } break;
         case VK_LEFT: {
@@ -87,7 +98,7 @@ void orientCameraFromInput(UINT msg, WPARAM wparam, CoordinateSpace* cameraSpace
             cameraSpace->rotate(m);
         } break;
         case VK_DOWN: {
-            Matrix3 m = rotateX3(-3.14f/80.0f);
+            Matrix3 m = rotateX3(3.14f/80.0f);
             cameraSpace->rotate(m);
         } break;
         case VK_RIGHT: {
@@ -164,7 +175,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     WindowClass.hInstance = hInstance;
     WindowClass.lpszClassName = "Renderer";
     bool ran = false;
-    Mesh mesh;
+    Model model; Light light;
     if (RegisterClass(&WindowClass)) {
         HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
@@ -173,7 +184,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
             initOpenGL(windowHandle);
             
             for (; runnable; ) {
-
+                clear(windowHandle);
                 MSG msg = {};
                 BOOL msg_res = PeekMessage(&msg, windowHandle, 0, 1000, PM_REMOVE);
                 if (msg_res > 0) {
@@ -181,7 +192,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     if (msg.message ==  WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP ||
                         msg.message ==  WM_KEYDOWN || msg.message == WM_KEYUP) {
 #if RUNTESTS
-                        orientCameraFromInput(msg.message, msg.wParam, &cameraSpace);
+                        orientCameraFromInput(msg.message, msg.wParam, &OpenGL.cameraSpace);
 #else
                         orientCameraFromInput(msg.message, msg.wParam, 0);
 #endif
@@ -193,12 +204,14 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 }
                 if (!ran) {
 #if RUNTESTS
-                    mesh = gltest3();
+                    model = test(&light);
 #endif
-                    HDC windowDC = GetDC(windowHandle);
-                    SwapBuffers(windowDC);
+
                 }
-                doDraw(mesh);
+                else {
+                    shadeLightBasic(&model, &light, false);
+                }
+                setDrawModel(&model);
                 HDC windowDC = GetDC(windowHandle);
                 SwapBuffers(windowDC);
                 

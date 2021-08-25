@@ -120,8 +120,13 @@ Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV
 }
 // Should check for a malicious file
 Mesh parseObj(const char* f, const char* texture) {
+    UV dummyUV;
+    Vector3 dummyVec;
     Array<Vector3> coords, normals;
     Array<UV> tcoords;
+
+    coords.push(dummyVec); normals.push(dummyVec);
+    tcoords.push(dummyUV);
     Array<Vertex> verticesList;
     Array<u32> indices;
     int triangles = countTrianglesOccurences(f);
@@ -133,7 +138,7 @@ Mesh parseObj(const char* f, const char* texture) {
     FILE* fp = fopen(f, "rb");
     char arr[200];
     char type[100];
-    char tri1[80]; char tri2[80]; char tri3[80];
+    char tri1[80]; char tri2[80]; char tri3[80]; char tri4[80];
     Vector3 tr;
     UV df;
     int debugCtr = 0;
@@ -152,7 +157,8 @@ Mesh parseObj(const char* f, const char* texture) {
             normals.push(tr);
         }
         else if (!strcmp(type, "f")) {
-            sscanf(arr, "%s %s %s %s", type, tri1, tri2, tri3);
+            ASSERT(sscanf(arr, "%s %s %s %s %s", type, tri1, tri2, tri3, tri4) != 5);
+            
             parseVertex(tri1, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList );
             parseVertex(tri2, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
             parseVertex(tri3, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
