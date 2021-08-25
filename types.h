@@ -113,10 +113,16 @@ struct HashTable {
 
 
 
-struct TextureName {
+struct Texture {
     const char* fileName;
-    TextureName(const char* fileName)  : fileName(fileName) {}
-    TextureName () {}
+    int id;
+    int width;
+    int height;
+    Texture(const char* fileName, int width, int height) : fileName(fileName), width(width), height(height){}
+    Texture () {
+        id = -1;
+    }
+    void activate(); 
 };
 
 struct Vertex {
@@ -135,14 +141,14 @@ struct Mesh {
     Mesh() {};
     Vertex* vertices;
     u32* triangles;
-    TextureName textures;
-    TextureName normalMap;
+    Texture textures;
+    Texture normalMap;
     u32 numVertices;
     u32 numIndices;
     Vector3 diffuseColor;
     Vector3 specColor;
 
-    Mesh(Vertex* v, u32* tr, TextureName tx, u32 numV, u32 numI) : vertices(v), triangles(tr), textures(tx), numVertices(numV), numIndices(numI) {}
+    Mesh(Vertex* v, u32* tr, Texture tx, u32 numV, u32 numI) : vertices(v), triangles(tr), textures(tx), numVertices(numV), numIndices(numI) {}
     
 };
 

@@ -2,7 +2,7 @@
 
 #define M_PI 3.1415926535897932384626433832795
 
-const float shininess =  4.0f;
+const float shininess =  16.0f;
 uniform vec3 lightCameraSpace;
 uniform vec3 diffColor;
 uniform vec3 specularColor;

@@ -119,19 +119,21 @@ Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV
 
 }
 // Should check for a malicious file
-Mesh parseObj(const char* f, const char* texture) {
+Mesh parseObj(const char* f, Texture texRequest) {
     UV dummyUV;
     Vector3 dummyVec;
     Array<Vector3> coords, normals;
     Array<UV> tcoords;
 
-    coords.push(dummyVec); normals.push(dummyVec);
+    coords.push(dummyVec);
+    normals.push(dummyVec);
     tcoords.push(dummyUV);
     Array<Vertex> verticesList;
     Array<u32> indices;
+    // is an estimate
     int triangles = countTrianglesOccurences(f);
     if (triangles == -1) {
-        return Mesh(0, 0, TextureName(0), 0, 0);
+        return Mesh(0, 0, Texture(), 0, 0);
     }
     HashTable mappingTable(triangles * 3);
 
@@ -157,7 +159,16 @@ Mesh parseObj(const char* f, const char* texture) {
             normals.push(tr);
         }
         else if (!strcmp(type, "f")) {
-            ASSERT(sscanf(arr, "%s %s %s %s %s", type, tri1, tri2, tri3, tri4) != 5);
+            if(sscanf(arr, "%s %s %s %s %s", type, tri1, tri2, tri3, tri4) == 5) {
+                // 1, 2, 3 gives a properly wound triangle
+                parseVertex(tri1, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList );
+                parseVertex(tri2, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
+                parseVertex(tri3, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
+                // 1, 3, 4 should?
+                parseVertex(tri1, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList );
+                parseVertex(tri3, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
+                parseVertex(tri4, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
+            }
             
             parseVertex(tri1, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList );
             parseVertex(tri2, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
@@ -169,15 +180,17 @@ Mesh parseObj(const char* f, const char* texture) {
     normals.release();
     tcoords.release();
     
-    Mesh mesh(verticesList.data, indices.data, TextureName(texture), verticesList.sz, indices.sz);
+    
+    Mesh mesh(verticesList.data, indices.data, texRequest, verticesList.sz, indices.sz);
     return mesh;
 }
 
 
-Mesh loadMesh(const char* objFile, const char* textureFile) {
+Mesh loadMesh(const char* objFile,  Texture textureRequest) {
 
-    return parseObj(objFile, textureFile);
-
+    Mesh mesh = parseObj(objFile, textureRequest);
+    textureRequest.activate();
+    return mesh;
 }
 
 char*  readFileWindows(const char* name, int* sz) {
@@ -341,19 +354,23 @@ void addThings(f32* verts, int numVerts) {
 }
 
 
-void setupBitmapTexture(const char* textureString, int width, int height, int mips, GLuint* tex) {
+int setupBitmapTexture(const char* textureString, int width, int height, int mips) {
 
-    
+    GLuint tex;
+    if (width != height)
+        return -1;
+
     u8* bitmapTexture = loadBitmap(textureString);
 
-    glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, tex);
-    glBindTexture(GL_TEXTURE_2D, *tex);
-    glTextureStorage2D(*tex, mips, GL_RGBA32F, width, height   );
-    glTextureSubImage2D(*tex, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, bitmapTexture );
-    free(bitmapTexture);
-    glTextureParameteri(*tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glGenerateTextureMipmap(*tex);
     
+    glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTextureStorage2D(tex, mips, GL_RGBA32F, width, height   );
+    glTextureSubImage2D(tex, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, bitmapTexture );
+    free(bitmapTexture);
+    glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glGenerateTextureMipmap(tex);
+    return tex;
         
 }
 
@@ -428,4 +445,13 @@ f32 clampNormal(f32 in) {
     if (in < -1.0f) return -1.0f;
     if (in > 1.0f) return 1.0f;
     return in;
+}
+
+
+void Texture::activate() {
+
+        int widthCopy = width;
+        int mips = 0;
+        while (widthCopy >>= 1) mips++;
+        setupBitmapTexture(fileName, width, height, mips);
 }

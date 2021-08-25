@@ -202,16 +202,18 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                         DispatchMessage(&msg);
                     }
                 }
-                if (!ran) {
 #if RUNTESTS
+                if (!ran) {
+
                     model = test(&light);
-#endif
+
 
                 }
                 else {
                     shadeLightBasic(&model, &light, false);
                 }
                 setDrawModel(&model);
+#endif
                 HDC windowDC = GetDC(windowHandle);
                 SwapBuffers(windowDC);
                 

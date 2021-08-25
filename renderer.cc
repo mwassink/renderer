@@ -66,9 +66,10 @@ void shadeLightBasic(Model* model, Light* light, bool compileShader = true) {
 }
 
 
-Model addModel(const char* fileName, const char* textureName) {
+Model addModel(const char* fileName, const char* textureName, int32 width, int32 height) {
     Model model;
-    model.mesh = loadMesh(fileName, textureName);
+    Texture req(textureName, width, height);
+    model.mesh = loadMesh(fileName, req);
     return model;
 }
 
