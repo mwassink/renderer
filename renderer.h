@@ -5,6 +5,7 @@ struct GL {
     f32 zfar = 125.0f;
     CoordinateSpace cameraSpace;
     u32 basicLightingShader;
+    u32 texturedLightingShader;
     
 };
 extern GL OpenGL;

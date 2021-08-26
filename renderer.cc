@@ -34,7 +34,7 @@ void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 width ) {
     }
 }
 
-void shadeLightBasic(Model* model, Light* light, bool compileShader = true) {
+void shadeLightBasic(Model* model, Light* light, bool init = true) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
@@ -43,7 +43,7 @@ void shadeLightBasic(Model* model, Light* light, bool compileShader = true) {
     Vector3 dColor = model->mesh.diffuseColor;
     Vector3 sColor = model->mesh.specColor;
     Vector3 lColor = light->color;
-    if (compileShader)
+    if (init)
         OpenGL.basicLightingShader = setShaders("../shaders/blinnPhongVertex.glsl", "../shaders/blinnPhongPixel.glsl");
     glUseProgram(OpenGL.basicLightingShader);
     mvLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelView");
@@ -65,6 +65,41 @@ void shadeLightBasic(Model* model, Light* light, bool compileShader = true) {
     glUniform1f(lightPow, light->irradiance);
 }
 
+void shadeLightTextured(Model* model, Light* light,  bool setup = true) {
+    GLint mvLoc, mvpLoc, normMatrix, lightPos, specCol, lightCol, lightPow;
+    Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
+    Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
+    Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
+    Vector3 l = ( mv * Vector4(light->worldSpaceCoord, 1.0f)).v3();
+    Vector3 sColor = model->mesh.specColor;
+    Vector3 lColor = light->color;
+    if (setup) {
+        OpenGL.texturedLightingShader = setShaders("../shaders/basicTexturedVertex.glsl", "../shaders/basicTexturedPixel.glsl" );
+    }
+    
+    
+    glUseProgram(OpenGL.texturedLightingShader);
+    mvpLoc = glGetUniformLocation(OpenGL.texturedLightingShader, "modelViewProjection");
+    mvLoc = glGetUniformLocation(OpenGL.texturedLightingShader, "modelView");
+    normMatrix = glGetUniformLocation(OpenGL.basicLightingShader, "normalMatrix");
+    lightPos = glGetUniformLocation(OpenGL.basicLightingShader, "lightCameraSpace");
+    specCol = glGetUniformLocation(OpenGL.basicLightingShader, "specularColor");
+    lightCol = glGetUniformLocation(OpenGL.basicLightingShader, "lightColor");
+    lightPow = glGetUniformLocation(OpenGL.basicLightingShader, "lightBrightness");
+    glBindTextureUnit(0, model->mesh.textures);
+    glBindTextureUnit(1, model->mesh.normalMap);
+
+    glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, (f32*)&mv.data[0]);
+    glUniformMatrix3fv(normMatrix, 1, GL_FALSE, (f32*)&normalMatrix.data[0]);
+    glUniform3f(lightPos, l[0], l[1], l[2]);
+    glUniform3f(specCol, sColor[0], sColor[1], sColor[2]);
+    glUniform3f(lightCol, lColor[0], lColor[1], lColor[2]);
+    glUniform1f(lightPow, light->irradiance);
+    
+    
+    
+}
 
 Model addModel(const char* fileName, const char* textureName, int32 width, int32 height) {
     Model model;

@@ -363,7 +363,7 @@ int setupBitmapTexture(const char* textureString, int width, int height, int mip
     u8* bitmapTexture = loadBitmap(textureString);
 
     
-    glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &tex);
+    glCreateTextures(GL_TEXTURE_2D, 1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     glTextureStorage2D(tex, mips, GL_RGBA32F, width, height   );
     glTextureSubImage2D(tex, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, bitmapTexture );

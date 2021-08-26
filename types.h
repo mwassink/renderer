@@ -132,6 +132,13 @@ struct Vertex {
     UV uv;
 };
 
+struct VertexLarge {
+    Vector4 coord;
+    Vector3 normal;
+    Vector3 tangent;
+    UV uv;
+}
+
 struct PlainVertex {
     Vector3 coord;
     Vector3 norm;
