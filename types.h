@@ -137,6 +137,7 @@ struct VertexLarge {
     Vector3 normal;
     Vector3 tangent;
     UV uv;
+    f32 handedness;
 }
 
 struct PlainVertex {
@@ -147,6 +148,7 @@ struct PlainVertex {
 struct Mesh {
     Mesh() {};
     Vertex* vertices;
+    VertexLarge* normalVertices;
     u32* triangles;
     Texture textures;
     Texture normalMap;
@@ -164,6 +166,7 @@ struct Model {
     CoordinateSpace modelSpace;
     glTriangleNames identifiers;
 };
+
 
 struct Light {
     Vector3 worldSpaceCoord;

@@ -118,18 +118,19 @@ Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV
     return v;
 
 }
-// Should check for a malicious file
+
 Mesh parseObj(const char* f, Texture texRequest) {
     UV dummyUV;
     Vector3 dummyVec;
     Array<Vector3> coords, normals;
     Array<UV> tcoords;
-
+    Array<Vertex> verticesList;
+    Array<u32> indices;
     coords.push(dummyVec);
     normals.push(dummyVec);
     tcoords.push(dummyUV);
-    Array<Vertex> verticesList;
-    Array<u32> indices;
+
+    
     // is an estimate
     int triangles = countTrianglesOccurences(f);
     if (triangles == -1) {
@@ -143,7 +144,7 @@ Mesh parseObj(const char* f, Texture texRequest) {
     char tri1[80]; char tri2[80]; char tri3[80]; char tri4[80];
     Vector3 tr;
     UV df;
-    int debugCtr = 0;
+    
     while (fgets(arr, 100, fp)) {
         sscanf(arr, "%s", type );
         if (!strcmp(type, "v")) {
@@ -173,7 +174,7 @@ Mesh parseObj(const char* f, Texture texRequest) {
             parseVertex(tri1, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList );
             parseVertex(tri2, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
             parseVertex(tri3, &mappingTable, &indices, &coords, &normals, &tcoords, &verticesList);
-            debugCtr++;
+            
         }
     }
     coords.release();
@@ -185,6 +186,67 @@ Mesh parseObj(const char* f, Texture texRequest) {
     return mesh;
 }
 
+// Lengyel, Eric. "Computing Tangent Space Basis Vectors for an Arbitrary Mesh". Terathon Software 3D Graphics Library,2001. http://www.terathon.com/code/tangent.html
+void addMeshTangents(Mesh* mesh, Vector3* normals) {
+    VertexLarge* tangentVerts = (VertexLarge*)malloc(sizeof(VertexLarge)*mesh->numVertices);
+    Vertex* verts = mesh->vertices;
+    u32 indexList = mesh->triangles;
+    Vector3* bitangents = (Vector3*)malloc(sizeof(Vector3)*mesh->numVertices);
+    for (int i = 0; i < mesh->numVertices; ++i) {
+        tangentVerts[i].coord = verts[i].coord;
+        tangentVerts[i].normal  = verts[i].normal;
+        tangentVerts[i].tangent = Vector3(0.0f, 0.0f, 0.0f);
+        tangentVerts[i].uv = verts[i].uv;
+        tangentVerts[i].handedness = 1.0f;
+    }
+    for (int i = 0; i < mesh->numIndices/3; ++i) {
+        u32 i0 = mesh->triangles[i*3], i1 = mesh->triangles[i*3+1], i2 = mesh->triangles[i*3+2];
+        Vector3 p0 = verts[i0].coord.v3();
+        Vector3 p1 = verts[i1].coord.v3();
+        Vector3 p2 = verts[i2].coord.v3();
+
+        UV uv0 = verts[i0].uv;
+        UV uv1 = verts[i1].uv;
+        UV uv2 = verts[i2].uv;
+
+        Vector3 q1 = p1 - p0;
+        Vector3 q2 = p2 - p0;
+        f32 s1 = uv1.u - uv0.u, s2 = uv2.u - uv0.u;
+        f32 t1 = uv1.v - uv0.v, t2 = uv2.v - uv0.v;
+
+        f32 adjScale = 1/(s1*t2 - s2*t1);
+        Matrix3 tsmat  = Matrix3(t2, -t1, 0, -s2, s1, 0, 0, 0,0);
+        Matrix3 qmat = Matrix3(q1, q2, Vector3(0,0,0));
+        qmat = qmat.transpose();
+        Matrix3 res = adjScale * tsmat * qmat;
+
+        res = res.transpose();
+        
+        Vector3 t = res[0];
+        Vector3 b = res[1];
+
+        tangentVerts[i0].tangent = tangentVerts[i].tangent + t;
+        bitangents[i0] = bitangents[i0] + b;
+        tangentVerts[i1].tangent = tangentVerts[i].tangent + t;
+        bitangents[i1] = bitangents[i1] + b;
+        tangentVerts[i2].tangent = tangentVerts[i].tangent + t;
+        bitangents[i2] = bitangents[i2] + b;
+    }
+    for (int i = 0; i < mesh->numVertices; ++i) {
+        Vector3 t = mesh->vertices[i].tangent;
+        mesh->vertices[i].tangent = t - dot(normals[i], t)*normals[i];
+        mesh->vertices[i].tangent.normalize();
+        if (dot(cross(t, bitangents[i]), n) < 0.0f) {
+            tangentVerts[i].handedness = -1.0f;
+        }
+    }
+
+    mesh->normalVertices = tangentVerts;
+    free(verts);
+    free(tangentVerts);
+    free(bitangents);
+    mesh->vertices = 0;
+}
 
 Mesh loadMesh(const char* objFile,  Texture textureRequest) {
 
@@ -193,7 +255,7 @@ Mesh loadMesh(const char* objFile,  Texture textureRequest) {
     return mesh;
 }
 
-char*  readFileWindows(const char* name, int* sz) {
+char* readFileWindows(const char* name, int* sz) {
     char* mem;
     HANDLE hFile;
     union _LARGE_INTEGER size;
@@ -342,6 +404,34 @@ void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVer
     
 }
 
+
+void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
+                         u32 positionCoord, u32 positionNorm, u32 positionTangent, u32 positionUV, glTriangleNames* names) {
+    glGenBuffers(1, &names->ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(u32), indices, Gl_STATIC_DRAW);
+
+    glGenVertexArrays(1, &names->vao);
+    glBindVertexArray(names->vao);
+    glGenBuffers(1, &names->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexLarge), vertices, GL_STATIC_DRAW);
+
+    
+    glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, coord)));
+    glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, normal)));
+    glVertexAttribPointer(positionTangent, 3, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, tangent)));
+    glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, uv)));
+
+    glEnableVertexAttribArray(positionCoord);
+    glEnableVertexAttribArray(positionNorm);
+    glEnableVertexAttribArray(positionTangent);
+    glEnableVertexAttribArray(positionUV);
+
+
+    
+}
+
 void addThings(f32* verts, int numVerts) {
     GLuint vao, vbo;
     glGenVertexArrays(1, &vao);
@@ -365,8 +455,8 @@ int setupBitmapTexture(const char* textureString, int width, int height, int mip
     
     glCreateTextures(GL_TEXTURE_2D, 1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTextureStorage2D(tex, mips, GL_RGBA32F, width, height   );
-    glTextureSubImage2D(tex, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, bitmapTexture );
+    glTextureStorage2D(tex, mips, GL_RGB8, width, height   );
+    glTextureSubImage2D(tex, 0, 0, 0, width, height, GL_RGB8, GL_FLOAT, bitmapTexture );
     free(bitmapTexture);
     glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glGenerateTextureMipmap(tex);

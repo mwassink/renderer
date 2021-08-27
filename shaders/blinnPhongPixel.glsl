@@ -27,7 +27,7 @@ void main(void) {
     float spec = pow(max(dot(n, h), 0.0f), shininess);
 
     // Attenuate light power as a sphere
-    float scaleQuad  = 1.0f / (4*M_PI*dot(l,l));
+    float scaleQuad  = 1.0f / (4*M_PI*dot(lightCameraSpace,lightCameraSpace));
     float lightIntensity = lightBrightness * scaleQuad;
     
     vec3 diffRefl = (lambertian/M_PI* lightIntensity + lightIntensity* ambientCoeff)*diffColor*lightColor;

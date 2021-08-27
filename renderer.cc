@@ -77,7 +77,7 @@ void shadeLightTextured(Model* model, Light* light,  bool setup = true) {
         OpenGL.texturedLightingShader = setShaders("../shaders/basicTexturedVertex.glsl", "../shaders/basicTexturedPixel.glsl" );
     }
     
-    
+    // (TODO) which of these do we need? and which ones do we still need to add?
     glUseProgram(OpenGL.texturedLightingShader);
     mvpLoc = glGetUniformLocation(OpenGL.texturedLightingShader, "modelViewProjection");
     mvLoc = glGetUniformLocation(OpenGL.texturedLightingShader, "modelView");
@@ -99,6 +99,15 @@ void shadeLightTextured(Model* model, Light* light,  bool setup = true) {
     
     
     
+}
+
+Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap, int width, int height ) {
+    Model model;
+    Texture tex(textureName, width, height);
+    Texture norm(normalMap, width, height);
+    model.mesh = loadMesh(fileName, tex);
+    model.mesh.normalMap = norm;
+    return model;
 }
 
 Model addModel(const char* fileName, const char* textureName, int32 width, int32 height) {
