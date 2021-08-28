@@ -12,7 +12,7 @@ u32 hash432(u32 a, u32 b, u32 c, u32 d);
 Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  );
 void setupTexture(const char*);
 void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV, glTriangleNames* names );
-void addVerticesToShader(VertexLarge* verts, u32* indices, int numVerts, int numIndices, u32 posCoord, u32 posNorm, u32 posTangent, u32 posUV, glTriangleNames* ids);
+void addVerticesToShader(VertexLarge* verts, u32* indices, int numVerts, int numIndices, u32 posCoord, u32 posNorm, u32 posTangent, u32 posUV, u32 posHandedness, glTriangleNames* ids);
 int setupBitmapTexture(const char* textureString, u32* w, u32* h, u32* bpp);
 int setShaders(const char*, const char*);
 int32 clampRangei(int32 min, int32 max, int32 in);

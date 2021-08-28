@@ -204,8 +204,12 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     }
                 }
 #if RUNTESTS
-                test();
+                if (!ran) {
+                    model = testAddModel();
+                }
+                renderModel(&model, &testlight );
 #endif
+                
                 HDC windowDC = GetDC(windowHandle);
                 SwapBuffers(windowDC);
                 

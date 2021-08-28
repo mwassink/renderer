@@ -212,6 +212,7 @@ void addMeshTangents(Mesh* mesh) {
         normalVerts[i].tangent = Vector3(0.0f, 0.0f, 0.0f);
         normalVerts[i].uv = verts[i].uv;
         normalVerts[i].handedness = 1.0f;
+        bitangents[i] = Vector3(0.0f, 0.0f, 0.0f);
     }
     for (int i = 0; i < mesh->numIndices/3; ++i) {
         u32 i0 = mesh->triangles[i*3], i1 = mesh->triangles[i*3+1], i2 = mesh->triangles[i*3+2];
@@ -230,8 +231,15 @@ void addMeshTangents(Mesh* mesh) {
 
         f32 adjScale = 1/(s1*t2 - s2*t1);
         Matrix3 tsmat  = Matrix3(t2, -t1, 0, -s2, s1, 0, 0, 0,0);
+        //tsmat:
+        // t2 -t1 0
+        // -s2 s1 0
+        // 0   0  0
         Matrix3 qmat = Matrix3(q1, q2, Vector3(0,0,0));
         qmat = qmat.transpose();
+        // <- q1 ->
+        // <- q2 ->
+        // 0  0  0 
         Matrix3 res = adjScale * tsmat * qmat;
 
         res = res.transpose();
@@ -239,11 +247,11 @@ void addMeshTangents(Mesh* mesh) {
         Vector3 t = res[0];
         Vector3 b = res[1];
 
-        normalVerts[i0].tangent = normalVerts[i].tangent + t;
+        normalVerts[i0].tangent = normalVerts[i0].tangent + t;
         bitangents[i0] = bitangents[i0] + b;
-        normalVerts[i1].tangent = normalVerts[i].tangent + t;
+        normalVerts[i1].tangent = normalVerts[i1].tangent + t;
         bitangents[i1] = bitangents[i1] + b;
-        normalVerts[i2].tangent = normalVerts[i].tangent + t;
+        normalVerts[i2].tangent = normalVerts[i2].tangent + t;
         bitangents[i2] = bitangents[i2] + b;
     }
     for (int i = 0; i < mesh->numVertices; ++i) {
@@ -265,7 +273,6 @@ void addMeshTangents(Mesh* mesh) {
 Mesh loadMesh(const char* objFile,  Texture textureRequest) {
 
     Mesh mesh = parseObj(objFile, textureRequest);
-    textureRequest.activate();
     return mesh;
 }
 
@@ -320,7 +327,7 @@ char* readFile(const char* name, int32* sizePtr) {
 int checkFailure(int shader, GLenum status) {
     
     int success = 0;
-    char log[512];
+    char log[512] = { 0 };
     glGetShaderiv(shader, status, &success);
     
     if(!success ){
@@ -335,7 +342,7 @@ int checkFailure(int shader, GLenum status) {
 
 int checkFailureLink(int shader, GLenum status) {
     int success = 0;
-    char log[512];
+    char log[512] = { 0 };
     glGetProgramiv(shader, status, &success);
 
     if (!success) {
@@ -359,7 +366,7 @@ int setShaders(const char* vertexFile, const char* fragmentFile) {
         v = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(v, 1, &vertexShaderSrc, NULL);
         glCompileShader(v);
-        
+        GLint err = glGetError();
         if (checkFailure(v, GL_COMPILE_STATUS)) {
             free((void*)vertexShaderSrc);
             return -1;
@@ -384,6 +391,7 @@ int setShaders(const char* vertexFile, const char* fragmentFile) {
     glAttachShader(program, v);
     glAttachShader(program, f);
     glLinkProgram(program);
+    GLint err = glGetError();
     if (checkFailureLink(program, GL_LINK_STATUS)) {
         return -1;
     }
@@ -420,7 +428,7 @@ void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVer
 
 
 void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
-                         u32 positionCoord, u32 positionNorm, u32 positionTangent, u32 positionUV, glTriangleNames* names) {
+                         u32 positionCoord, u32 positionNorm, u32 positionTangent, u32 positionUV, u32 positionHandedness, glTriangleNames* names) {
     glGenBuffers(1, &names->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(u32), indices, GL_STATIC_DRAW);
@@ -429,18 +437,20 @@ void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, i
     glBindVertexArray(names->vao);
     glGenBuffers(1, &names->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexLarge), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexLarge)*numVertices, vertices, GL_STATIC_DRAW);
 
     
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, coord)));
     glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, normal)));
     glVertexAttribPointer(positionTangent, 3, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, tangent)));
     glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, uv)));
+    glVertexAttribPointer(positionHandedness, 1, GL_FLOAT, GL_FALSE, sizeof(VertexLarge), reinterpret_cast<void*>(offsetof(VertexLarge, handedness)));
 
     glEnableVertexAttribArray(positionCoord);
     glEnableVertexAttribArray(positionNorm);
     glEnableVertexAttribArray(positionTangent);
     glEnableVertexAttribArray(positionUV);
+    glEnableVertexAttribArray(positionHandedness);
 
 
     
@@ -453,17 +463,20 @@ int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* 
     GLuint tex;
     u32 mips = 0;
     
-    if (width != height)
-        return -1;
+    
 
     u8* bitmapTexture = loadBitmap(textureString , width, height, bitsPerPixel);
+
+    if (*width != *height)
+        return -1;
+
     u32 wc = *width;
     while (wc >>= 1) mips++;
     
     glCreateTextures(GL_TEXTURE_2D, 1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     glTextureStorage2D(tex, mips, GL_RGB8, *width, *height);
-    glTextureSubImage2D(tex, 0, 0, 0, *width, *height, GL_RGB8, GL_UNSIGNED_BYTE, bitmapTexture );
+    glTextureSubImage2D(tex, 0, 0, 0, *width, *height, GL_BGR, GL_UNSIGNED_BYTE, bitmapTexture );
     free(bitmapTexture);
     glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glGenerateTextureMipmap(tex);
@@ -545,8 +558,9 @@ f32 clampNormal(f32 in) {
 
 
 void Texture::activate() {
+    
     u32 bpp;
-    setupBitmapTexture(fileName, &width, &height, &bpp);
+    id = setupBitmapTexture(fileName, &width, &height, &bpp);
     if (bpp != 24) {
         ASSERT(0);
     }

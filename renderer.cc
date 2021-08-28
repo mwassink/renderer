@@ -67,7 +67,7 @@ void shadeLightBasic(Model* model, Light* light) {
 }
 
 void shadeLightTextured(Model* model, Light* light) {
-    GLint mvLoc, mvpLoc, normMatrix, lightPos, specCol, lightCol, lightPow;
+    GLint mvLoc, mvpLoc, normMatrix, lightPos, specCol, lightCol, lightPow, err;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
     Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
@@ -80,14 +80,13 @@ void shadeLightTextured(Model* model, Light* light) {
     glUseProgram(OpenGL.texturedLightingShader);
     mvpLoc = glGetUniformLocation(OpenGL.texturedLightingShader, "modelViewProjection");
     mvLoc = glGetUniformLocation(OpenGL.texturedLightingShader, "modelView");
-    normMatrix = glGetUniformLocation(OpenGL.basicLightingShader, "normalMatrix");
-    lightPos = glGetUniformLocation(OpenGL.basicLightingShader, "lightCameraSpace");
-    specCol = glGetUniformLocation(OpenGL.basicLightingShader, "specularColor");
-    lightCol = glGetUniformLocation(OpenGL.basicLightingShader, "lightColor");
-    lightPow = glGetUniformLocation(OpenGL.basicLightingShader, "lightBrightness");
+    normMatrix = glGetUniformLocation(OpenGL.texturedLightingShader, "normMatrix");
+    lightPos = glGetUniformLocation(OpenGL.texturedLightingShader, "lightCameraSpace");
+    specCol = glGetUniformLocation(OpenGL.texturedLightingShader, "specularColor");
+    lightCol = glGetUniformLocation(OpenGL.texturedLightingShader, "lightColor");
+    lightPow = glGetUniformLocation(OpenGL.texturedLightingShader, "lightBrightness");
     glBindTextureUnit(0, model->mesh.textures.id);
     glBindTextureUnit(1, model->mesh.normalMap.id);
-
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, (f32*)&mv.data[0]);
     glUniformMatrix3fv(normMatrix, 1, GL_FALSE, (f32*)&normalMatrix.data[0]);
@@ -106,6 +105,7 @@ Model addModelNormalMap(const char* fileName, const char* textureName, const cha
     Texture norm(normalMap);
     model.mesh = loadMesh(fileName, tex);
     model.mesh.normalMap = norm;
+
     
     addMeshTangents(&model.mesh);
     activateModel(&model);
@@ -127,7 +127,7 @@ void activateModel(Model* model) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
     }
     else {
-        addVerticesToShader(model->mesh.normalVertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, 3, &model->identifiers);
+        addVerticesToShader(model->mesh.normalVertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, 3, 4, &model->identifiers);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
     }
 }
@@ -141,9 +141,20 @@ void setDrawModel(Model* model) {
     glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
 }
 
+void testViz(Model* model) {
+    Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
+    for (int i = 0; i < 10; ++i) {
+        Vector4 t = model->mesh.normalVertices[i].coord;
+        t = mvp * t;
+        printf("%f %f %f %f\n", t.x, t.y, t.z, t.w);
+    }
+}
+
 
 void renderModel(Model* model, Light* light) {
+    
     if (model->mesh.normalVertices) {
+        
         shadeLightTextured(model, light);
         setDrawModel(model);
     }

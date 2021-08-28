@@ -33,6 +33,7 @@ void setPixelAttrs(HDC windowDC);
 #define GL_TEXTURE_2D_ARRAY               0x8C1A
 #define GL_RGBA32F                        0x8814
 #define GL_LINK_STATUS                    0x8B82
+#define GL_BGR                            0x80E0
 
 
 typedef ptrdiff_t GLsizeiptr;

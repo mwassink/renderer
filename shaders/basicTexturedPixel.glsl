@@ -1,5 +1,8 @@
 #version 450 core
 
+#define M_PI 3.1415926535897932384626433832795
+
+
 layout (binding = 0) uniform sampler2D tex;
 layout (binding = 1) uniform sampler2D normalMap;
 
@@ -18,14 +21,14 @@ const float ambientCoeff = .05f;
 out vec4 color;
 
 void main(void) {
-    lightDir = normalize(lightDir);
-    eyeDir = normalize(eyeDir);
+    vec3 l = normalize(lightDir);
+    vec3 v = normalize(eyeDir);
     vec4 normalOld = texture(normalMap, uvCoord);
     vec3 n = normalize(2.0*normalOld.xyz - 1.0);
-    vec4 diffColor = texture(tex, uvCoord);
+    vec3 diffColor = texture(tex, uvCoord).xyz;
     
-    float lambertian = max(dot(n, lightDir ), 0.0f);
-    vec3 h = normalize(n + eyeDir);
+    float lambertian = max(dot(n, l), 0.0f);
+    vec3 h = normalize(n + v);
     float spec = pow(max(dot(n, h), 0.0f), shininess);
     
     float scaleQuad = 1.0f / (4*M_PI*distSquared);
@@ -34,6 +37,8 @@ void main(void) {
     vec3 diffRefl = (lambertian/M_PI* lightIntensity + lightIntensity*ambientCoeff)*diffColor*lightColor;
 
     vec3 specRefl = spec * lightIntensity * lightColor * specularColor;
+
+    //color = vec4(diffColor, 1.0f);
     color = vec4(diffRefl + specRefl, 1.0f);
     
 }
