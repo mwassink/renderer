@@ -128,7 +128,7 @@ Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV
     if (n != MAXU32)
         v.uv = (*uvcoords)[t];
     else
-        v.uv = {.5f, .5f};
+        v.uv = {2.5f, 2.5f};
     return v;
 
 }
@@ -463,7 +463,7 @@ int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* 
     GLuint tex;
     GLint err;
     u32 mips = 0;
-    
+    f32 borderColor[] = { 1.0f, 0.0f, 1.0f, 1.0f };
     
 
     u8* bitmapTexture = loadBitmap(textureString , width, height, bitsPerPixel);
@@ -471,21 +471,28 @@ int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* 
     u32 wc = *width;
     while (wc >>= 1) mips++;
 
-    if (*width != *height) mips = 1;
+    /*if (*width != *height) */ mips = 1;
     
     glCreateTextures(GL_TEXTURE_2D, 1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     glTextureStorage2D(tex, mips, GL_RGB8, *width, *height);
     glTextureSubImage2D(tex, 0, 0, 0, *width, *height, GL_BGR, GL_UNSIGNED_BYTE, bitmapTexture );
+#if 0
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+#else
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+#endif
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     free(bitmapTexture);
     if (mips != 1) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         
         glGenerateTextureMipmap(tex);
+        err = glGetError();
     }
     return tex;
 }

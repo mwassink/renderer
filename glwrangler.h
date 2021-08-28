@@ -35,6 +35,7 @@ void setPixelAttrs(HDC windowDC);
 #define GL_LINK_STATUS                    0x8B82
 #define GL_BGR                            0x80E0
 #define GL_MIRRORED_REPEAT                0x8370
+#define GL_CLAMP_TO_BORDER                0x812D
 
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;

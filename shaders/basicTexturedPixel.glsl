@@ -26,7 +26,7 @@ void main(void) {
     vec4 normalOld = texture(normalMap, uvCoord);
     vec3 n = normalize(2.0*normalOld.xyz - 1.0);
     vec3 diffColor = texture(tex, uvCoord).xyz;
-    //vec3 diffColor = (1.0f, 0.0f, .8f);
+
     
     float lambertian = max(dot(n, l), 0.0f);
     vec3 h = normalize(n + v);
@@ -39,7 +39,6 @@ void main(void) {
 
     vec3 specRefl = spec * lightIntensity * lightColor * specularColor;
 
-    //color = vec4(texture(tex, uvCoord).xyz, 1.0f);
     color = vec4(diffRefl + specRefl, 1.0f);
     
 }
