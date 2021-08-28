@@ -467,19 +467,20 @@ int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* 
 
     u8* bitmapTexture = loadBitmap(textureString , width, height, bitsPerPixel);
 
-    if (*width != *height)
-        return -1;
-
     u32 wc = *width;
     while (wc >>= 1) mips++;
+
+    if (*width != *height) mips = 1;
     
     glCreateTextures(GL_TEXTURE_2D, 1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     glTextureStorage2D(tex, mips, GL_RGB8, *width, *height);
     glTextureSubImage2D(tex, 0, 0, 0, *width, *height, GL_BGR, GL_UNSIGNED_BYTE, bitmapTexture );
     free(bitmapTexture);
-    glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glGenerateTextureMipmap(tex);
+    if (mips != 1) {
+        glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glGenerateTextureMipmap(tex);
+    }
     return tex;
 }
 
@@ -593,6 +594,7 @@ Vector3* loadNormals(const char* fileName, u32* widthOut, u32* heightOut) {
     
 }
 
+// Make sure when getting the bitmap it is a multiple of 4
 void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals) {
     BMPFileHeader fileHeader = {};
     BitmapHeader header = {};
@@ -653,4 +655,37 @@ f32* convertBitmapHeightmap(const char* bitmapFile, u32* w, u32* h, f32 maxHeigh
     *w = width;
     *h = height;
     return heightmap;
+}
+// Return a normal map from the height map
+// it shouldn't matter the height map's range
+// since this should point out we shoudl 
+void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 width ) {
+    Vector3 tmp;
+    for (int h = 0; h < height; ++h) {
+        int32 hup = clampRangei(0, height-1, h-1);
+        int32 hdown = clampRangei(0, height-1, h+1);
+        for (int w = 0; w < width; ++w) {
+            const f32 above = heightMap[hup*width + w ];
+            const f32 below = heightMap[hdown* width + w];
+            const f32 left = heightMap[h*width + clampRangei(0, width-1, w -1 )];
+            const f32 right = heightMap[h*width + clampRangei(0, width-1, w + 1)];
+            // if we went down from say height 2 at x = 1 to height 0 at x = 3, then the normal would point to +x, which is correct
+            f32 npdx = (left - right) * .5f;
+            f32 npdy = (above - below) * .5f;
+
+            f32 mag = sqrt(npdx * npdx + npdy*npdy + 1.0f);
+            tmp.x = clampNormal(npdx/mag);
+            tmp.y = clampNormal(npdy/mag);
+            tmp.z = clampNormal(1.0f/mag);
+            normalMap[h* width + w] = tmp;
+        }
+    }
+}
+
+void buildNormalMap(const char* hFile, const char* n) {
+    u32 w, h;
+    f32* heightmap = convertBitmapHeightmap(hFile, &w, &h ,20.0f);
+    Vector3* normalMapVecs = (Vector3*)malloc(sizeof(Vector3)*w*h);
+    normalMap(heightmap, normalMapVecs, h, w);
+    writeOutNormalMapBMP(n, w, h, normalMapVecs);
 }

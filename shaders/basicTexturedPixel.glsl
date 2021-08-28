@@ -38,7 +38,7 @@ void main(void) {
 
     vec3 specRefl = spec * lightIntensity * lightColor * specularColor;
 
-    //color = vec4(diffColor, 1.0f);
+    //color = vec4(texture(tex, uvCoord).xyz, 1.0f);
     color = vec4(diffRefl + specRefl, 1.0f);
     
 }

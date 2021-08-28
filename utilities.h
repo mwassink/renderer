@@ -21,6 +21,8 @@ Vector3* loadNormals(const char* f, u32* w, u32* h);
 void addMeshTangents(Mesh* mesh);
 void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals);
 f32* convertBitmapHeightmap(const char* b, u32* w, u32* h, f32 m);
+void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 width );
+void buildNormalMap(const char* hFile, const char* n);
 
 #pragma pack(push, 1)
 

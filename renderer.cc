@@ -10,31 +10,6 @@
 #endif
 
 GL OpenGL;
-// Return a normal map from the height map
-// it shouldn't matter the height map's range
-// since this should point out we shoudl 
-void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 width ) {
-    Vector3 tmp;
-    for (int h = 0; h < height; ++h) {
-        int32 hup = clampRangei(0, height, h-1);
-        int32 hdown = clampRangei(0, height, h+1);
-        for (int w = 0; w < width; ++w) {
-            const f32 above = heightMap[hup*width + w ];
-            const f32 below = heightMap[hdown* width + w];
-            const f32 left = heightMap[h*width + clampRangei(0, width, w -1 )];
-            const f32 right = heightMap[h*width + clampRangei(0, width, w + 1)];
-            // if we went down from say height 2 at x = 1 to height 0 at x = 3, then the normal would point to +x, which is correct
-            f32 npdx = (left - right) * .5f;
-            f32 npdy = (above - below) * .5f;
-
-            f32 mag = sqrt(npdx * npdx + npdy*npdy + 1.0f);
-            tmp.x = clampNormal(npdx/mag);
-            tmp.y = clampNormal(npdy/mag);
-            tmp.z = clampNormal(1.0f/mag);
-            normalMap[h* width + w] = tmp;
-        }
-    }
-}
 
 void shadeLightBasic(Model* model, Light* light) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow;
