@@ -461,6 +461,7 @@ void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, i
 int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
 
     GLuint tex;
+    GLint err;
     u32 mips = 0;
     
     
@@ -476,9 +477,14 @@ int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* 
     glBindTexture(GL_TEXTURE_2D, tex);
     glTextureStorage2D(tex, mips, GL_RGB8, *width, *height);
     glTextureSubImage2D(tex, 0, 0, 0, *width, *height, GL_BGR, GL_UNSIGNED_BYTE, bitmapTexture );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     free(bitmapTexture);
     if (mips != 1) {
-        glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        
         glGenerateTextureMipmap(tex);
     }
     return tex;

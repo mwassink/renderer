@@ -12,7 +12,7 @@
 GL OpenGL;
 
 void shadeLightBasic(Model* model, Light* light) {
-    GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow;
+    GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow, err;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
     Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
@@ -30,6 +30,8 @@ void shadeLightBasic(Model* model, Light* light) {
     specCol = glGetUniformLocation(OpenGL.basicLightingShader, "specularColor");
     lightCol = glGetUniformLocation(OpenGL.basicLightingShader, "lightColor");
     lightPow = glGetUniformLocation(OpenGL.basicLightingShader, "lightBrightness");
+    glBindTexture(0, model->mesh.textures.id);
+    err = glGetError();
     
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, (f32*)&mv.data[0]);

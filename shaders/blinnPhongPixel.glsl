@@ -13,6 +13,8 @@ const float ambientCoeff = .10f;
 in vec3 normCameraSpace;
 in vec3 vertCameraSpace;
 
+layout (binding = 0) uniform sampler2D tex;
+
 
 out vec4 color;
 

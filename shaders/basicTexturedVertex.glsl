@@ -31,6 +31,6 @@ void main(void) {
     eyeDir = normalize(eyeDir);
 
     gl_Position = modelViewProjection * pos;
-    distSquared = dot(diff, diff);
+    distSquared = length(diff);
     uvCoord = uvVertex;
 }

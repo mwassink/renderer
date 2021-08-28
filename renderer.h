@@ -17,7 +17,7 @@ struct GL {
     
 };
 extern GL OpenGL;
-Model addModel(const char* fileName, const char* textureName, int32 width, int32 height);
+Model addModel(const char* fileName, const char* textureName);
 Model addModelNormalMap(const char* f, const char* t, const char* n);
 void activateModel(Model* model);
 void shadeLightBasic(Model* model, Light* light);

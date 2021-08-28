@@ -205,7 +205,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 }
 #if RUNTESTS
                 if (!ran) {
-                    model = barrel();
+                    model = car();
                 }
                 renderModel(&model, &testlight );
 #endif

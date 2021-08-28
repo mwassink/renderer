@@ -150,7 +150,7 @@ struct PlainVertex {
 struct Mesh {
     Mesh() {};
     Vertex* vertices;
-    VertexLarge* normalVertices;
+    VertexLarge* normalVertices = 0;
     u32* triangles;
     Texture textures;
     Texture normalMap;
