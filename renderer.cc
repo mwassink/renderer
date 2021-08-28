@@ -11,7 +11,7 @@
 
 GL OpenGL;
 
-void shadeLightBasic(Model* model, Light* light) {
+void shadeLightBasic(Model* model, Light* light, GLuint shader) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow, err;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
@@ -21,15 +21,15 @@ void shadeLightBasic(Model* model, Light* light) {
     Vector3 sColor = model->mesh.specColor;
     Vector3 lColor = light->color;
     
-    glUseProgram(OpenGL.basicLightingShader);
-    mvLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelView");
-    mvpLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelViewProjection");
-    normMatrix = glGetUniformLocation(OpenGL.basicLightingShader, "normalMatrix");
-    lightPos = glGetUniformLocation(OpenGL.basicLightingShader, "lightCameraSpace");
-    diffCol = glGetUniformLocation(OpenGL.basicLightingShader, "diffColor");
-    specCol = glGetUniformLocation(OpenGL.basicLightingShader, "specularColor");
-    lightCol = glGetUniformLocation(OpenGL.basicLightingShader, "lightColor");
-    lightPow = glGetUniformLocation(OpenGL.basicLightingShader, "lightBrightness");
+    glUseProgram(shader);
+    mvLoc = glGetUniformLocation(shader, "modelView");
+    mvpLoc = glGetUniformLocation(shader, "modelViewProjection");
+    normMatrix = glGetUniformLocation(shader, "normalMatrix");
+    lightPos = glGetUniformLocation(shader, "lightCameraSpace");
+    diffCol = glGetUniformLocation(shader, "diffColor");
+    specCol = glGetUniformLocation(shader, "specularColor");
+    lightCol = glGetUniformLocation(shader, "lightColor");
+    lightPow = glGetUniformLocation(shader, "lightBrightness");
     glBindTexture(0, model->mesh.textures.id);
     err = glGetError();
     
@@ -43,7 +43,7 @@ void shadeLightBasic(Model* model, Light* light) {
     glUniform1f(lightPow, light->irradiance);
 }
 
-void shadeLightTextured(Model* model, Light* light) {
+void shadeLightTextured(Model* model, Light* light, GLuint shader) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, specCol, lightCol, lightPow, err;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
@@ -54,14 +54,14 @@ void shadeLightTextured(Model* model, Light* light) {
     
     
     // (TODO) which of these do we need? and which ones do we still need to add?
-    glUseProgram(OpenGL.texturedLightingShader);
-    mvpLoc = glGetUniformLocation(OpenGL.texturedLightingShader, "modelViewProjection");
-    mvLoc = glGetUniformLocation(OpenGL.texturedLightingShader, "modelView");
-    normMatrix = glGetUniformLocation(OpenGL.texturedLightingShader, "normMatrix");
-    lightPos = glGetUniformLocation(OpenGL.texturedLightingShader, "lightCameraSpace");
-    specCol = glGetUniformLocation(OpenGL.texturedLightingShader, "specularColor");
-    lightCol = glGetUniformLocation(OpenGL.texturedLightingShader, "lightColor");
-    lightPow = glGetUniformLocation(OpenGL.texturedLightingShader, "lightBrightness");
+    glUseProgram(shader);
+    mvpLoc = glGetUniformLocation(shader, "modelViewProjection");
+    mvLoc = glGetUniformLocation(shader, "modelView");
+    normMatrix = glGetUniformLocation(shader, "normMatrix");
+    lightPos = glGetUniformLocation(shader, "lightCameraSpace");
+    specCol = glGetUniformLocation(shader, "specularColor");
+    lightCol = glGetUniformLocation(shader, "lightColor");
+    lightPow = glGetUniformLocation(shader, "lightBrightness");
     glBindTextureUnit(0, model->mesh.textures.id);
     glBindTextureUnit(1, model->mesh.normalMap.id);
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
@@ -74,6 +74,21 @@ void shadeLightTextured(Model* model, Light* light) {
     
     
     
+}
+
+void shaderShadowed(Model* model, Light* light) {
+    
+}
+
+void shaderShadowedTextured(Model* model, Light* light) {
+    shadeLightTextured(model, light, OpenGL.texturedShadowShader);
+    GLint sMatrixLoc = glGetUniformLocation(OpenGL.texturedShadowShader, "shadowMatrix");
+    Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 125.0f);
+    Matrix4 sMatrix = Matrix4(.5f, 0.0f, 0.0f, 0.0f,
+                              0.0f, 0.5f, 0.0f, 0.0f,
+                              0.0f, 0.0f, 0.5f, 0.0f,
+                              0.5f, 0.5f, 0.5f, 1.0f) * glproj;
+    glUniformMatrix4fv(sMatrixLoc, 1, GL_FALSE, (f32*)&sMatrix.data[0]);
 }
 
 Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap ) {
@@ -101,12 +116,15 @@ Model addModel(const char* fileName, const char* textureName) {
 void activateModel(Model* model) {
     if (!model->mesh.normalVertices) {
         addBasicTexturedVerticesToShader(model->mesh.vertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, &model->identifiers);
+        addBasicVerticesShadowMapping(model->mesh.vertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, &model->identifiers);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
     }
     else {
         addVerticesToShader(model->mesh.normalVertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, 3, 4, &model->identifiers);
+        addVerticesShadowMapping(model->mesh.vertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, &model->identifiers);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
     }
+    
 }
 
 
@@ -142,4 +160,54 @@ void renderModel(Model* model, Light* light) {
     
 }
 
+void attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO) {
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glFrameBufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthTex, 0);
+}
 
+void createShadowMapTexture(Light* light, u32 res) {
+    GLint depthTex;
+    glGenTextures(1, &depthTex);
+    glBindTexture(GL_TEXTURE_2D, depthTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
+                 res, res, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0); // done
+
+    light->depthFBO = depthTex;
+    
+}
+
+// (TODO)allow for config of near far plane
+// This will give the shadows in the texture... we still need to add them to the rendering pipeline
+void addShadowMapping(Model* models, Light* light, u32 numModels) {
+    GLint mvpLoc;
+    glUseProgram(OpenGL.shadowMappingShader);
+    // (TODO) can I reuse these buffers?
+    glBindFrameBuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);
+    glViewport(0, 0, res, res );
+    glClearDepth(1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(2.0f, 4.0f);
+    attachDepthTextureFramebuffer(light->depthFBO, OpenGL.shadowMappingFramebuffer);
+    for (int i = 0; i < numModels; ++i) {
+        Matrix4 modelLightProjection = glModelViewProjection(models[i].modelSpace, lightSpace, PI/4.0f,
+                                                             1, 1.0f, 125.0f);
+        mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
+        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&modelLightProjection.data[0]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+        glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
+        glBindVertexArray(model->identifiers.smVAO);
+        glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
+    }
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}

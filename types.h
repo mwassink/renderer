@@ -55,6 +55,7 @@ struct UV {
 
 struct glTriangleNames {
     u32 ebo, vao, vbo;
+    u32 smVao;
 };
 
 template <typename Type>
@@ -171,7 +172,14 @@ struct Model {
 
 
 struct Light {
-    Vector3 worldSpaceCoord;
+    union {
+        struct {
+            Vector3 worldSpaceCoord;
+            Vector3 r, s, t;
+        };
+        CoordinateSpace lightSpace; // for shadow mapping
+    };
+    int DepthFBO;
     Vector3 color;
     f32 irradiance;
 };

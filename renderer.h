@@ -3,7 +3,9 @@ struct GL {
     CoordinateSpace cameraSpace;
     u32 basicLightingShader;
     u32 texturedLightingShader;
-
+    u32 shadowMappingShader;
+    u32 texturedShadowShader;
+    u32 shadowMappingFramebuffer;
     void initGL() {
         vFOV = 3.14f/6.0f;
         aspectRatio = 16.0f/9.0f;
@@ -12,6 +14,7 @@ struct GL {
         basicLightingShader =  setShaders("../shaders/blinnPhongVertex.glsl", "../shaders/blinnPhongPixel.glsl");
         texturedLightingShader = setShaders("../shaders/basicTexturedVertex.glsl", "../shaders/basicTexturedPixel.glsl" );
         
+        texturedShadowedShader = setShaders("../shaders/shadowedVertex.glsl","../shaders/shadowedPixel.glsl" )
         
     }
     

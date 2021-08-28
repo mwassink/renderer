@@ -456,7 +456,26 @@ void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, i
     
 }
 
+void addBasicVerticesShadowMapping(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, glTriangleNames* names) {
+    glGenVertexArrays(1, &names->smVao );
+    glBindVertexArray(1, names->smVao);
 
+    glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
+    glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)) );
+    glEnableVertexAttribArray(positionCoord);
+    
+}
+
+void addVerticesShadowMapping(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
+                         u32 positionCoord, glTriangleNames* names) {
+    glGenVertexArrays(1, &names->smVao );
+    glBindVertexArray(1, names->smVao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
+    glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, coord)) );
+    glEnableVertexAttribArray(positionCoord);
+    
+}
 
 int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
 
@@ -471,7 +490,7 @@ int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* 
     u32 wc = *width;
     while (wc >>= 1) mips++;
 
-    /*if (*width != *height) */ mips = 1;
+    if (*width != *height) mips = 1;
     
     glCreateTextures(GL_TEXTURE_2D, 1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);

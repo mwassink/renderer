@@ -3,6 +3,7 @@
 typedef float f32;
 #define FLOAT_MIN 0.0001
 #define ASSERT(expr) if (!(expr)) { *(volatile int*)0 = 0;}
+#define PI 3.14159
 
 #include <math.h>
 #include <intrin.h>

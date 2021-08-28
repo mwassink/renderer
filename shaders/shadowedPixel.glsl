@@ -5,6 +5,7 @@
 
 layout (binding = 0) uniform sampler2D tex;
 layout (binding = 1) uniform sampler2D normalMap;
+layout (binding = 2) uniform sampler2DShadow depthTexture;
 
 uniform vec3 specularColor;
 uniform vec3 lightColor;
@@ -13,6 +14,7 @@ uniform float lightBrightness;
 in vec2 uvCoord;
 in vec3 lightDir;
 in vec3 eyeDir;
+in vec4 shadowCoord;
 in float distSquared;
 
 const float shininess = 16.0f;
@@ -34,11 +36,14 @@ void main(void) {
     
     float scaleQuad = 1.0f / (4*M_PI*distSquared);
     float lightIntensity = lightBrightness * scaleQuad;
-    
-    vec3 diffRefl = (lambertian/M_PI* lightIntensity)*diffColor*lightColor;
 
-    vec3 specRefl = spec * lightIntensity * lightColor * specularColor;
+    float s = texture(depthTexture, shadowCoord );
+    vec3 diffRefl = (lambertian/M_PI* lightIntensity*s)*diffColor*lightColor;
+
+    vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;
     vec3 ambient = ambientCoeff * diffColor;
+
+
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
     
 }
