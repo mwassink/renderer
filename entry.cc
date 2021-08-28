@@ -20,7 +20,8 @@ static bool runnable = 1;
 #if RUNTESTS
 //#include "tests/gltest2.cc"
 //#include "tests/gltest3.cc"
-#include "tests/basiclighting.cc"
+//#include "tests/basiclighting.cc"
+#include "tests/normalmapping.cc"
 
 #endif
 
@@ -182,7 +183,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
         if (windowHandle) {
 
             initOpenGL(windowHandle);
-            
+            OpenGL.initGL();
             for (; runnable; ) {
                 clear(windowHandle);
                 MSG msg = {};
@@ -203,16 +204,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     }
                 }
 #if RUNTESTS
-                if (!ran) {
-
-                    model = test(&light);
-
-
-                }
-                else {
-                    shadeLightBasic(&model, &light, false);
-                }
-                setDrawModel(&model);
+                test();
 #endif
                 HDC windowDC = GetDC(windowHandle);
                 SwapBuffers(windowDC);

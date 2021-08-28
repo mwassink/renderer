@@ -102,6 +102,7 @@ typedef void WINAPI t_Uniform3f(GLint location,
  	GLfloat v1,
  	GLfloat v2);
 typedef void WINAPI t_Uniform1f(GLint location, GLfloat v0);
+typedef void WINAPI t_BindTextureUnit(GLuint unit, GLuint texture);
 
 #define CONSTIFY(name) #name
 
@@ -148,6 +149,7 @@ EXPORT( GetProgramiv);
 EXPORT( UniformMatrix3fv);
 EXPORT( Uniform3f);
 EXPORT( Uniform1f);
+EXPORT( BindTextureUnit);
 
 void setPixelAttrs(HDC windowDC);
 void wrangleSetup(void);

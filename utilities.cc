@@ -55,22 +55,36 @@ int countTrianglesOccurences(const char* f) {
 }
 
 
-u8* loadBitmap(const char* fileName) {
-    u32 sz;
+u8* loadBitmap(const char* fileName, u32* width, u32* height, u32* bitsPerPixel) {
+    u32 sizeBitmap;
     u8* bitMap;
     FILE* fp = fopen(fileName, "rb");
     if (!fp) {
         return 0;
     }
     BMPFileHeader header;
+    BitmapCore headerCore;
     if (fread(&header, 1, sizeof(BMPFileHeader), fp) != sizeof(BMPFileHeader)) {
         return 0;
     }
-    sz = header.fileSize - header.bitmapOffset;
-    bitMap = (u8*) malloc(sz);
-    fread(bitMap, 1, sz, fp);
+    sizeBitmap = header.fileSize - header.bitmapOffset;
+    bitMap = (u8*)malloc(sizeBitmap);
+    
+    if (fread(&headerCore, 1, sizeof(BitmapCore), fp) != sizeof(BitmapCore)) {
+        return 0;
+    }
+    *width = headerCore.width;
+    *height = headerCore.height;
+    *bitsPerPixel = headerCore.bitsPerPixel;
+    
+    // Read up until the bitmap
+    if (fread(bitMap, 1, header.bitmapOffset - sizeof(BitmapCore) - sizeof(BMPFileHeader), fp) != (header.bitmapOffset - sizeof(BitmapCore) - sizeof(BMPFileHeader)))
+    {
+        free(bitMap);
+        return 0;
+    }
+    fread(bitMap, 1, sizeBitmap, fp);
     fclose(fp);
-
     return bitMap;
 }
 
@@ -187,17 +201,17 @@ Mesh parseObj(const char* f, Texture texRequest) {
 }
 
 // Lengyel, Eric. "Computing Tangent Space Basis Vectors for an Arbitrary Mesh". Terathon Software 3D Graphics Library,2001. http://www.terathon.com/code/tangent.html
-void addMeshTangents(Mesh* mesh, Vector3* normals) {
-    VertexLarge* tangentVerts = (VertexLarge*)malloc(sizeof(VertexLarge)*mesh->numVertices);
+void addMeshTangents(Mesh* mesh) {
+    VertexLarge* normalVerts = (VertexLarge*)malloc(sizeof(VertexLarge)*mesh->numVertices);
     Vertex* verts = mesh->vertices;
-    u32 indexList = mesh->triangles;
+    u32* indexList = mesh->triangles;
     Vector3* bitangents = (Vector3*)malloc(sizeof(Vector3)*mesh->numVertices);
     for (int i = 0; i < mesh->numVertices; ++i) {
-        tangentVerts[i].coord = verts[i].coord;
-        tangentVerts[i].normal  = verts[i].normal;
-        tangentVerts[i].tangent = Vector3(0.0f, 0.0f, 0.0f);
-        tangentVerts[i].uv = verts[i].uv;
-        tangentVerts[i].handedness = 1.0f;
+        normalVerts[i].coord = verts[i].coord;
+        normalVerts[i].normal  = verts[i].normal;
+        normalVerts[i].tangent = Vector3(0.0f, 0.0f, 0.0f);
+        normalVerts[i].uv = verts[i].uv;
+        normalVerts[i].handedness = 1.0f;
     }
     for (int i = 0; i < mesh->numIndices/3; ++i) {
         u32 i0 = mesh->triangles[i*3], i1 = mesh->triangles[i*3+1], i2 = mesh->triangles[i*3+2];
@@ -225,25 +239,25 @@ void addMeshTangents(Mesh* mesh, Vector3* normals) {
         Vector3 t = res[0];
         Vector3 b = res[1];
 
-        tangentVerts[i0].tangent = tangentVerts[i].tangent + t;
+        normalVerts[i0].tangent = normalVerts[i].tangent + t;
         bitangents[i0] = bitangents[i0] + b;
-        tangentVerts[i1].tangent = tangentVerts[i].tangent + t;
+        normalVerts[i1].tangent = normalVerts[i].tangent + t;
         bitangents[i1] = bitangents[i1] + b;
-        tangentVerts[i2].tangent = tangentVerts[i].tangent + t;
+        normalVerts[i2].tangent = normalVerts[i].tangent + t;
         bitangents[i2] = bitangents[i2] + b;
     }
     for (int i = 0; i < mesh->numVertices; ++i) {
-        Vector3 t = mesh->vertices[i].tangent;
-        mesh->vertices[i].tangent = t - dot(normals[i], t)*normals[i];
-        mesh->vertices[i].tangent.normalize();
+        Vector3 t = normalVerts[i].tangent;
+        Vector3& n = normalVerts[i].normal;
+        normalVerts[i].tangent = t - dot(normalVerts[i].normal, t)*normalVerts[i].normal;
+        normalVerts[i].tangent.normalize();
         if (dot(cross(t, bitangents[i]), n) < 0.0f) {
-            tangentVerts[i].handedness = -1.0f;
+            normalVerts[i].handedness = -1.0f;
         }
     }
 
-    mesh->normalVertices = tangentVerts;
+    mesh->normalVertices = normalVerts;
     free(verts);
-    free(tangentVerts);
     free(bitangents);
     mesh->vertices = 0;
 }
@@ -409,7 +423,7 @@ void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, i
                          u32 positionCoord, u32 positionNorm, u32 positionTangent, u32 positionUV, glTriangleNames* names) {
     glGenBuffers(1, &names->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(u32), indices, Gl_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(u32), indices, GL_STATIC_DRAW);
 
     glGenVertexArrays(1, &names->vao);
     glBindVertexArray(names->vao);
@@ -432,36 +446,28 @@ void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, i
     
 }
 
-void addThings(f32* verts, int numVerts) {
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(f32) * numVerts * 4, verts, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 3*sizeof(float), NULL);
-    glEnableVertexAttribArray(0);
-}
 
 
-int setupBitmapTexture(const char* textureString, int width, int height, int mips) {
+int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
 
     GLuint tex;
+    u32 mips = 0;
+    
     if (width != height)
         return -1;
 
-    u8* bitmapTexture = loadBitmap(textureString);
-
+    u8* bitmapTexture = loadBitmap(textureString , width, height, bitsPerPixel);
+    u32 wc = *width;
+    while (wc >>= 1) mips++;
     
     glCreateTextures(GL_TEXTURE_2D, 1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTextureStorage2D(tex, mips, GL_RGB8, width, height   );
-    glTextureSubImage2D(tex, 0, 0, 0, width, height, GL_RGB8, GL_FLOAT, bitmapTexture );
+    glTextureStorage2D(tex, mips, GL_RGB8, *width, *height);
+    glTextureSubImage2D(tex, 0, 0, 0, *width, *height, GL_RGB8, GL_UNSIGNED_BYTE, bitmapTexture );
     free(bitmapTexture);
     glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glGenerateTextureMipmap(tex);
     return tex;
-        
 }
 
 
@@ -539,9 +545,98 @@ f32 clampNormal(f32 in) {
 
 
 void Texture::activate() {
+    u32 bpp;
+    setupBitmapTexture(fileName, &width, &height, &bpp);
+    if (bpp != 24) {
+        ASSERT(0);
+    }
+}
 
-        int widthCopy = width;
-        int mips = 0;
-        while (widthCopy >>= 1) mips++;
-        setupBitmapTexture(fileName, width, height, mips);
+Vector3* loadNormals(const char* fileName, u32* widthOut, u32* heightOut) {
+    u32 w, h, bpp;
+    u8* data = loadBitmap(fileName, &w, &h, &bpp);
+
+    if (bpp != 24) {
+        free(data);
+        return 0;
+    }
+
+    Vector3* vecs = (Vector3*)malloc(sizeof(Vector3)*w*h);
+    for (int y = 0; y < h; ++y){
+        for (int x = 0; x < w; ++x) {
+            f32 r = data[0] / 255.0f;
+            f32 g = data[1] / 255.0f;
+            f32 b = data[2] / 255.0f;
+            vecs[y*w + x] = Vector3(r, g, b);
+            data += 3;
+        }
+    }
+    free(data);
+
+    *widthOut = w;
+    *heightOut = h;
+    return 0;
+    
+}
+
+void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals) {
+    BMPFileHeader fileHeader = {};
+    BitmapHeader header = {};
+
+    FILE* fp = fopen(target, "wb");
+
+    u8* mem = (u8*)malloc(w * h * 3);
+    u8* tmp = mem;
+    fileHeader.fileType = 0x4D42;
+    fileHeader.fileSize = sizeof(fileHeader) + sizeof(header) + w*h*3;
+    fileHeader.bitmapOffset = sizeof(fileHeader) + sizeof(header);
+    fileHeader.reserved1 = 0; fileHeader.reserved2 = 0;
+
+    header.size = sizeof(header);
+    header.width = w;
+    header.height = h;
+    header.planes = 1;
+    header.bitsPerPixel = 24;
+    header.compression = 0;
+    header.imageSize = h * w * 3;
+    header.xRes = 1; //???
+    header.yRes = 1; //???
+    header.numColorsPalette = 0;
+
+    fwrite(&fileHeader, 1, sizeof(fileHeader), fp);
+    fwrite(&header, 1, sizeof(header), fp);
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            Vector3& normal = *normals;
+            u8 r = (normal[0] + 1.0f)*127.0f;
+            u8 g = (normal[1] + 1.0f)*127.0f;
+            u8 b = (normal[2] + 1.0f)*127.0f;
+            tmp[0] = b; tmp[1] = g; tmp[2] = r;
+            tmp += 3;
+            normals++;
+        }
+    }
+    fwrite(mem, 1, w * h * 3, fp);
+    fclose(fp);
+}
+
+f32* convertBitmapHeightmap(const char* bitmapFile, u32* w, u32* h, f32 maxHeight) {
+    u32 width, height, bpp;
+    u8* mem = loadBitmap(bitmapFile, &width, &height, &bpp);
+    u8* bitmap = mem;
+    if (!bitmap) {
+        return 0;
+    }
+    f32* heightmap = (f32*)malloc(width*height*sizeof(f32));
+    for (int y = 0; y < height; ++y ) {
+        for (int x = 0; x < width; ++x) {
+            heightmap[y*width + x] = maxHeight* (*bitmap) / 255.0f;
+            bitmap += 3;
+        }
+    }
+
+    free(mem);
+    *w = width;
+    *h = height;
+    return heightmap;
 }

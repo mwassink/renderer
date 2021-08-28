@@ -116,9 +116,11 @@ struct HashTable {
 struct Texture {
     const char* fileName;
     int id;
-    int width;
-    int height;
-    Texture(const char* fileName, int width, int height) : fileName(fileName), width(width), height(height){}
+    u32 width;
+    u32 height;
+    Texture(const char* fileName) : fileName(fileName){
+        activate();
+    }
     Texture () {
         id = -1;
     }
@@ -138,7 +140,7 @@ struct VertexLarge {
     Vector3 tangent;
     UV uv;
     f32 handedness;
-}
+};
 
 struct PlainVertex {
     Vector3 coord;

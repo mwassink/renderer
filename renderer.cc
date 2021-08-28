@@ -8,6 +8,7 @@
 #if DEBUG
 #include <stdio.h>
 #endif
+
 GL OpenGL;
 // Return a normal map from the height map
 // it shouldn't matter the height map's range
@@ -22,19 +23,20 @@ void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 width ) {
             const f32 below = heightMap[hdown* width + w];
             const f32 left = heightMap[h*width + clampRangei(0, width, w -1 )];
             const f32 right = heightMap[h*width + clampRangei(0, width, w + 1)];
-            f32 pdx = (right - left) * .5f;
-            f32 pdy = (above - below) * .5f;
+            // if we went down from say height 2 at x = 1 to height 0 at x = 3, then the normal would point to +x, which is correct
+            f32 npdx = (left - right) * .5f;
+            f32 npdy = (above - below) * .5f;
 
-            f32 mag = sqrt(pdx * pdx + pdy*pdy + 1.0f);
-            tmp.x = clampNormal(pdx/mag);
-            tmp.y = clampNormal(pdy/mag);
+            f32 mag = sqrt(npdx * npdx + npdy*npdy + 1.0f);
+            tmp.x = clampNormal(npdx/mag);
+            tmp.y = clampNormal(npdy/mag);
             tmp.z = clampNormal(1.0f/mag);
             normalMap[h* width + w] = tmp;
         }
     }
 }
 
-void shadeLightBasic(Model* model, Light* light, bool init = true) {
+void shadeLightBasic(Model* model, Light* light) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
@@ -43,8 +45,7 @@ void shadeLightBasic(Model* model, Light* light, bool init = true) {
     Vector3 dColor = model->mesh.diffuseColor;
     Vector3 sColor = model->mesh.specColor;
     Vector3 lColor = light->color;
-    if (init)
-        OpenGL.basicLightingShader = setShaders("../shaders/blinnPhongVertex.glsl", "../shaders/blinnPhongPixel.glsl");
+    
     glUseProgram(OpenGL.basicLightingShader);
     mvLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelView");
     mvpLoc = glGetUniformLocation(OpenGL.basicLightingShader, "modelViewProjection");
@@ -65,7 +66,7 @@ void shadeLightBasic(Model* model, Light* light, bool init = true) {
     glUniform1f(lightPow, light->irradiance);
 }
 
-void shadeLightTextured(Model* model, Light* light,  bool setup = true) {
+void shadeLightTextured(Model* model, Light* light) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, specCol, lightCol, lightPow;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
@@ -73,9 +74,7 @@ void shadeLightTextured(Model* model, Light* light,  bool setup = true) {
     Vector3 l = ( mv * Vector4(light->worldSpaceCoord, 1.0f)).v3();
     Vector3 sColor = model->mesh.specColor;
     Vector3 lColor = light->color;
-    if (setup) {
-        OpenGL.texturedLightingShader = setShaders("../shaders/basicTexturedVertex.glsl", "../shaders/basicTexturedPixel.glsl" );
-    }
+    
     
     // (TODO) which of these do we need? and which ones do we still need to add?
     glUseProgram(OpenGL.texturedLightingShader);
@@ -86,8 +85,8 @@ void shadeLightTextured(Model* model, Light* light,  bool setup = true) {
     specCol = glGetUniformLocation(OpenGL.basicLightingShader, "specularColor");
     lightCol = glGetUniformLocation(OpenGL.basicLightingShader, "lightColor");
     lightPow = glGetUniformLocation(OpenGL.basicLightingShader, "lightBrightness");
-    glBindTextureUnit(0, model->mesh.textures);
-    glBindTextureUnit(1, model->mesh.normalMap);
+    glBindTextureUnit(0, model->mesh.textures.id);
+    glBindTextureUnit(1, model->mesh.normalMap.id);
 
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, (f32*)&mv.data[0]);
@@ -101,50 +100,58 @@ void shadeLightTextured(Model* model, Light* light,  bool setup = true) {
     
 }
 
-Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap, int width, int height ) {
+Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap ) {
     Model model;
-    Texture tex(textureName, width, height);
-    Texture norm(normalMap, width, height);
+    Texture tex(textureName);
+    Texture norm(normalMap);
     model.mesh = loadMesh(fileName, tex);
     model.mesh.normalMap = norm;
+    
+    addMeshTangents(&model.mesh);
+    activateModel(&model);
     return model;
 }
 
-Model addModel(const char* fileName, const char* textureName, int32 width, int32 height) {
+Model addModel(const char* fileName, const char* textureName) {
     Model model;
-    Texture req(textureName, width, height);
+    Texture req(textureName);
     model.mesh = loadMesh(fileName, req);
+    activateModel(&model);
     return model;
 }
 
+// Internal
 void activateModel(Model* model) {
-    addBasicTexturedVerticesToShader(model->mesh.vertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, &model->identifiers);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+    if (!model->mesh.normalVertices) {
+        addBasicTexturedVerticesToShader(model->mesh.vertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, &model->identifiers);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+    }
+    else {
+        addVerticesToShader(model->mesh.normalVertices, model->mesh.triangles, model->mesh.numVertices, model->mesh.numIndices, 0, 1, 2, 3, &model->identifiers);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+    }
 }
+
+
 
 void setDrawModel(Model* model) {
-#if DEBUG
-    Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
-    Mesh& mesh = model->mesh;
-    for (int i = 0; i < 10; ++i) {
-        for (int i = 0; i < 10; ++i) {
-            Vector4 v(mesh.vertices[i].coord.x, mesh.vertices[i].coord.y, mesh.vertices[i].coord.z, mesh.vertices[i].coord.w);
-            v = mvp * v;
-            printf("%f %f %f %f\n", v.x, v.y, v.z, v.w);
-        }
-    }
-#endif
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
     glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
     glBindVertexArray(model->identifiers.vao);
     glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
 }
 
-#if 0
-GLuint addModelNormalMap(const char* fileName, const char* textureName, const Vector3* normalMap);
-// Takes a mesh with basic texture, Blinn Phong shading
-void DrawMeshStandard(CameraSpace* camera, Mesh* mesh);
-// Allows for a normal map to be done at each pixel, as opposed to at each point on triangle
-void DrawMeshNormalMap(CameraSpace* camera, );
 
-#endif
+void renderModel(Model* model, Light* light) {
+    if (model->mesh.normalVertices) {
+        shadeLightTextured(model, light);
+        setDrawModel(model);
+    }
+    else if (model->mesh.vertices) {
+        shadeLightBasic(model, light);
+        setDrawModel(model);
+    }
+    
+}
+
+

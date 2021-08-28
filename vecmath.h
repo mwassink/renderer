@@ -507,6 +507,12 @@ inline Matrix3 operator* ( Matrix3 &lhs,  Matrix3& rhs) {
     return Matrix3(_00, _01, _02, _10, _11, _12, _20, _21, _22);
 }
 
+inline Matrix3 operator*(f32 scale, Matrix3& rhs) {
+    return Matrix3(rhs(0,0)*scale, rhs(0,1)*scale, rhs(0,2)*scale,
+                   rhs(1,0)*scale, rhs(1,1)*scale, rhs(1,2)*scale,
+                   rhs(2,0)*scale, rhs(2,1)*scale, rhs(2,2)*scale);
+}
+
 inline Matrix4 operator*(Matrix4& lhs, Matrix4& rhs) {
 
 
