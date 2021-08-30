@@ -46,5 +46,5 @@ void main(void) {
 
 
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
-    color = vec4(s, s,s, s);
+    //color = vec4(s, s,s, s);
 }

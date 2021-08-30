@@ -84,7 +84,7 @@ void shaderShadowed(Model* model, Light* light) {
 void shaderShadowedTextured(Model* model, Light* light) {
 
     GLint sMatrixLoc = glGetUniformLocation(OpenGL.texturedShadowShader, "shadowMatrix");
-    Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 0.5f, 125.0f);
+    Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 7.0f);
     Matrix4 sMatrix = Matrix4(.5f, 0.0f, 0.0f, 0.0f,
                               0.0f, 0.5f, 0.0f, 0.0f,
                               0.0f, 0.0f, 0.5f, 0.0f,
@@ -177,10 +177,11 @@ void renderModel(Model* model, Light* light) {
 
 // The depthtex needs to be bound at this point
 void attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO) {
-    //glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,  depthTex, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,  depthTex, 0);
     glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
+    GLint err = glGetError();
+    //glReadBuffer(GL_NONE);
     bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 }
 
@@ -197,8 +198,8 @@ void createShadowMapTexture(Light* light, u32 res) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0); // done
 
     light->depthTexture = depthTex;
@@ -225,17 +226,18 @@ void addShadowMapping(Model* models, Light* light, u32 numModels) {
     glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);
     
     bool z = glIsEnabled(GL_DEPTH_TEST);
-    glPolygonOffset(2.0f, 4.0f);
+    
     attachDepthTextureFramebuffer(light->depthTexture, OpenGL.shadowMappingFramebuffer);
     glViewport(0, 0, RES, RES);
     glClearDepth(1.0f);
     glClear(GL_DEPTH_BUFFER_BIT);
-    //glEnable(GL_POLYGON_OFFSET_FILL);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(2.0f, 4.0f);
 #endif
     
     for (int i = 0; i < numModels; ++i) {
         Matrix4 modelLightProjection = glModelViewProjection(models[i].modelSpace, light->lightSpace, PI/4.0f,
-                                                             1, 0.5f, 125.0f);
+                                                             1, 1.0f, 7.0f);
         testViz(&models[i], &light->lightSpace);
         GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&modelLightProjection.data[0]);
@@ -246,7 +248,7 @@ void addShadowMapping(Model* models, Light* light, u32 numModels) {
         glDrawElements(GL_TRIANGLES, models[i].mesh.numIndices, GL_UNSIGNED_INT, 0);
     }
 #if RUN
-    //glDisable(GL_POLYGON_OFFSET_FILL);
+    glDisable(GL_POLYGON_OFFSET_FILL);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);

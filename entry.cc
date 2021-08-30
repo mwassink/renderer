@@ -216,7 +216,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     p = plane();
                 }
                 testShadow(&models, &lights[0]);
-                //renderModel(&p, &lights[0]);
+                renderModel(&p, &lights[0]);
 #endif
                 
                 HDC windowDC = GetDC(windowHandle);
