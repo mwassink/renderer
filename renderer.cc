@@ -85,11 +85,11 @@ void shaderShadowedTextured(Model* model, Light* light) {
 
     GLint sMatrixLoc = glGetUniformLocation(OpenGL.texturedShadowShader, "shadowMatrix");
     Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 40.0f);
-    Matrix4 sMatrix = Matrix4(.5f, 0.0f, 0.0f, 0.0f,
-                              0.0f, 0.5f, 0.0f, 0.0f,
-                              0.0f, 0.0f, 0.5f, 0.0f,
-                              0.5f, 0.5f, 0.5f, 1.0f) * glproj;
-                              
+    Matrix4 sMatrix = Matrix4(.5f, 0.0f, 0.0f, 0.5f,
+                              0.0f, 0.5f, 0.0f, 0.5f,
+                              0.0f, 0.0f, 0.5f, 0.5f,
+                              0.0f, 0.0f, 0.0f, 1.0f) * glproj;
+                           
     //Matrix4 sMatrix = glproj;
     glUniformMatrix4fv(sMatrixLoc, 1, GL_FALSE, (f32*)&sMatrix.data[0]);
 
