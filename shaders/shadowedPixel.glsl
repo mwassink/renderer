@@ -18,7 +18,7 @@ in vec4 shadowCoord;
 in float distSquared;
 
 const float shininess = 16.0f;
-const float ambientCoeff = .05f;
+const float ambientCoeff = .10f;
 
 out vec4 color;
 
@@ -38,6 +38,7 @@ void main(void) {
     float lightIntensity = lightBrightness * scaleQuad;
 
     float s = textureProj(depthTexture, shadowCoord );
+    //float s = 1;
     vec3 diffRefl = (lambertian/M_PI* lightIntensity*s)*diffColor*lightColor;
 
     vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;
@@ -45,5 +46,5 @@ void main(void) {
 
 
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
-    
+    color = vec4(s, s,s, s);
 }

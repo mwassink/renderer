@@ -43,6 +43,9 @@ void setPixelAttrs(HDC windowDC);
 #define GL_TEXTURE_COMPARE_FUNC           0x884D
 #define GL_COMPARE_REF_TO_TEXTURE         0x884E
 #define GL_CLAMP_TO_EDGE                  0x812F
+#define GL_DEPTH_ATTACHMENT               0x8D00
+#define GL_FRAMEBUFFER_COMPLETE           0x8CD5
+
 
 
 typedef ptrdiff_t GLsizeiptr;
@@ -121,6 +124,16 @@ typedef void WINAPI t_FramebufferTexture(	GLenum target,
  	GLuint texture,
  	GLint level);
 
+
+typedef void WINAPI t_FramebufferTexture2D(	GLenum target,
+ 	GLenum attachment,
+ 	GLenum textarget,
+ 	GLuint texture,
+ 	GLint level);
+typedef GLenum WINAPI t_CheckFramebufferStatus(	GLenum target);
+
+
+
 #define CONSTIFY(name) #name
 
 #define MAKESTRING(name) const char* str_##name = CONSTIFY(gl##name) 
@@ -170,6 +183,8 @@ EXPORT( BindTextureUnit);
 EXPORT(GenFramebuffers);
 EXPORT(BindFramebuffer);
 EXPORT(FramebufferTexture);
+EXPORT(FramebufferTexture2D);
+EXPORT(CheckFramebufferStatus);
 
 
 void setPixelAttrs(HDC windowDC);

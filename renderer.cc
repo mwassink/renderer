@@ -84,14 +84,17 @@ void shaderShadowed(Model* model, Light* light) {
 void shaderShadowedTextured(Model* model, Light* light) {
 
     GLint sMatrixLoc = glGetUniformLocation(OpenGL.texturedShadowShader, "shadowMatrix");
-    Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 125.0f);
+    Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 0.5f, 125.0f);
     Matrix4 sMatrix = Matrix4(.5f, 0.0f, 0.0f, 0.0f,
                               0.0f, 0.5f, 0.0f, 0.0f,
                               0.0f, 0.0f, 0.5f, 0.0f,
                               0.5f, 0.5f, 0.5f, 1.0f) * glproj;
+                              
+    //Matrix4 sMatrix = glproj;
     glUniformMatrix4fv(sMatrixLoc, 1, GL_FALSE, (f32*)&sMatrix.data[0]);
 
     glBindTextureUnit(2, light->depthTexture);
+    GLint err = glGetError();
 }
 
 Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap ) {
@@ -139,8 +142,8 @@ void setDrawModel(Model* model) {
     glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
 }
 
-void testViz(Model* model) {
-    Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
+void testViz(Model* model, CoordinateSpace* cs) {
+    Matrix4 mvp = glModelViewProjection(model->modelSpace, *cs, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
     for (int i = 0; i < 10; ++i) {
         Vector4 t = model->mesh.normalVertices[i].coord;
         t = mvp * t;
@@ -174,14 +177,16 @@ void renderModel(Model* model, Light* light) {
 
 // The depthtex needs to be bound at this point
 void attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO) {
-    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthTex, 0);
+    //glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D,  depthTex, 0);
     glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 }
 
 void createShadowMapTexture(Light* light, u32 res) {
     GLuint depthTex;
-    f32 border[] = { 1.0f, 0.0f, 0.0f, 0.0f };
+    f32 border[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glGenTextures(1, &depthTex);
     glBindTexture(GL_TEXTURE_2D, depthTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
@@ -203,25 +208,36 @@ void createShadowMapTexture(Light* light, u32 res) {
 // (TODO)allow for config of near, far plane
 // This will give the shadows in the texture... we still need to add them to the rendering pipeline
 void addShadowMapping(Model* models, Light* light, u32 numModels) {
-#define RES 500
-    GLint mvpLoc, err;
+#define RES 2500
+#define RUN 1
+#if RUN
+    GLint err;
     RECT rect;
+    GetWindowRect(OpenGL.windowHandle, &rect);
+
     if (light->depthTexture < 0) {
         createShadowMapTexture(light, RES);
     }
+#endif
     glUseProgram(OpenGL.shadowMappingShader);
     // (TODO) can I reuse these buffers?
+#if RUN 
     glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);
-    glViewport(0, 0, RES, RES );
-    glClearDepth(1.0f);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_POLYGON_OFFSET_FILL);
+    
+    bool z = glIsEnabled(GL_DEPTH_TEST);
     glPolygonOffset(2.0f, 4.0f);
     attachDepthTextureFramebuffer(light->depthTexture, OpenGL.shadowMappingFramebuffer);
+    glViewport(0, 0, RES, RES);
+    glClearDepth(1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    //glEnable(GL_POLYGON_OFFSET_FILL);
+#endif
+    
     for (int i = 0; i < numModels; ++i) {
         Matrix4 modelLightProjection = glModelViewProjection(models[i].modelSpace, light->lightSpace, PI/4.0f,
-                                                             1, 1.0f, 125.0f);
-        mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
+                                                             1, 0.5f, 125.0f);
+        testViz(&models[i], &light->lightSpace);
+        GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&modelLightProjection.data[0]);
 
         glBindBuffer(GL_ARRAY_BUFFER, models[i].identifiers.vbo);
@@ -229,10 +245,12 @@ void addShadowMapping(Model* models, Light* light, u32 numModels) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, models[i].identifiers.ebo);
         glDrawElements(GL_TRIANGLES, models[i].mesh.numIndices, GL_UNSIGNED_INT, 0);
     }
-
-    glDisable(GL_POLYGON_OFFSET_FILL);
+#if RUN
+    //glDisable(GL_POLYGON_OFFSET_FILL);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    GetWindowRect(OpenGL.windowHandle, &rect);
+
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
 #undef RES
 }

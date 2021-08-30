@@ -150,7 +150,7 @@ Mesh parseObj(const char* f, Texture texRequest) {
     if (triangles == -1) {
         return Mesh(0, 0, Texture(), 0, 0);
     }
-    HashTable mappingTable(triangles * 3);
+    HashTable mappingTable(triangles * 4);
 
     FILE* fp = fopen(f, "rb");
     char arr[200];
@@ -159,7 +159,7 @@ Mesh parseObj(const char* f, Texture texRequest) {
     Vector3 tr;
     UV df;
     
-    while (fgets(arr, 100, fp)) {
+    while (fgets(arr, 100, fp) != NULL) {
         sscanf(arr, "%s", type );
         if (!strcmp(type, "v")) {
             sscanf(arr, "%s %f %f %f", type, &tr.x, &tr.y, &tr.z);

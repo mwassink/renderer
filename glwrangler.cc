@@ -40,6 +40,9 @@ DECLARE(BindTextureUnit);
 DECLARE(GenFramebuffers);
 DECLARE(BindFramebuffer);
 DECLARE(FramebufferTexture);
+DECLARE(FramebufferTexture2D);
+DECLARE(CheckFramebufferStatus);
+
 
 
 const int pixelAttribList[] =
@@ -188,5 +191,9 @@ void wrangle(void) {
     WRANGLE(GenFramebuffers);
     WRANGLE(BindFramebuffer); 
     WRANGLE(FramebufferTexture);
+    WRANGLE(FramebufferTexture2D);
+    WRANGLE(CheckFramebufferStatus);
 
+
+    
 }

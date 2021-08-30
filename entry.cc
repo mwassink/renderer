@@ -23,6 +23,7 @@ static bool runnable = 1;
 //#include "tests/basiclighting.cc"
 #include "tests/normalmapping.cc"
 #include "tests/shadowmapping.cc"
+#include "tests/loadplane.cc"
 
 #endif
 
@@ -179,6 +180,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     bool ran = false;
     Array<Model> models;
     Array<Light> lights;
+    Model p;
     if (RegisterClass(&WindowClass)) {
         HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
@@ -211,9 +213,10 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     models.push(car());
                     models.push(barrel());
                     lights.push(testlight);
+                    p = plane();
                 }
                 testShadow(&models, &lights[0]);
-
+                //renderModel(&p, &lights[0]);
 #endif
                 
                 HDC windowDC = GetDC(windowHandle);

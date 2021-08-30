@@ -120,7 +120,8 @@ struct Texture {
     u32 width;
     u32 height;
     Texture(const char* fileName) : fileName(fileName){
-        activate();
+        if (fileName)
+            activate();
     }
     Texture () {
         id = -1;
