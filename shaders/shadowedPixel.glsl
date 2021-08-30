@@ -39,7 +39,7 @@ void main(void) {
 
     float s = textureProj(depthTexture, shadowCoord );
     //float s = 1;
-    vec3 diffRefl = (lambertian/M_PI* lightIntensity*s)*diffColor*lightColor;
+    vec3 diffRefl = (lambertian* lightIntensity*s)*diffColor*lightColor;
 
     vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;
     vec3 ambient = ambientCoeff * diffColor;

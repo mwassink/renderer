@@ -84,7 +84,7 @@ void shaderShadowed(Model* model, Light* light) {
 void shaderShadowedTextured(Model* model, Light* light) {
 
     GLint sMatrixLoc = glGetUniformLocation(OpenGL.texturedShadowShader, "shadowMatrix");
-    Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 7.0f);
+    Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 40.0f);
     Matrix4 sMatrix = Matrix4(.5f, 0.0f, 0.0f, 0.0f,
                               0.0f, 0.5f, 0.0f, 0.0f,
                               0.0f, 0.0f, 0.5f, 0.0f,
@@ -178,7 +178,7 @@ void renderModel(Model* model, Light* light) {
 // The depthtex needs to be bound at this point
 void attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO) {
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,  depthTex, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  depthTex, 0);
     glDrawBuffer(GL_NONE);
     GLint err = glGetError();
     //glReadBuffer(GL_NONE);
@@ -237,7 +237,7 @@ void addShadowMapping(Model* models, Light* light, u32 numModels) {
     
     for (int i = 0; i < numModels; ++i) {
         Matrix4 modelLightProjection = glModelViewProjection(models[i].modelSpace, light->lightSpace, PI/4.0f,
-                                                             1, 1.0f, 7.0f);
+                                                             1, 1.0f, 40.0f);
         testViz(&models[i], &light->lightSpace);
         GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&modelLightProjection.data[0]);
@@ -249,6 +249,7 @@ void addShadowMapping(Model* models, Light* light, u32 numModels) {
     }
 #if RUN
     glDisable(GL_POLYGON_OFFSET_FILL);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  0, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
