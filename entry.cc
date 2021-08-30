@@ -22,6 +22,7 @@ static bool runnable = 1;
 //#include "tests/gltest3.cc"
 //#include "tests/basiclighting.cc"
 #include "tests/normalmapping.cc"
+#include "tests/shadowmapping.cc"
 
 #endif
 
@@ -176,7 +177,8 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     WindowClass.hInstance = hInstance;
     WindowClass.lpszClassName = "Renderer";
     bool ran = false;
-    Model model; Light light;
+    Array<Model> models;
+    Array<Light> lights;
     if (RegisterClass(&WindowClass)) {
         HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
@@ -184,6 +186,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 
             initOpenGL(windowHandle);
             OpenGL.initGL();
+            OpenGL.windowHandle = windowHandle;
             for (; runnable; ) {
                 clear(windowHandle);
                 MSG msg = {};
@@ -205,9 +208,12 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 }
 #if RUNTESTS
                 if (!ran) {
-                    model = car();
+                    models.push(car());
+                    models.push(barrel());
+                    lights.push(testlight);
                 }
-                renderModel(&model, &testlight );
+                testShadow(&models, &lights[0]);
+
 #endif
                 
                 HDC windowDC = GetDC(windowHandle);

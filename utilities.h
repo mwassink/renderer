@@ -23,6 +23,9 @@ void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals);
 f32* convertBitmapHeightmap(const char* b, u32* w, u32* h, f32 m);
 void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 width );
 void buildNormalMap(const char* hFile, const char* n);
+void addBasicVerticesShadowMapping(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, glTriangleNames* names);
+void addVerticesShadowMapping(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
+                              u32 positionCoord, glTriangleNames* names);
 
 #pragma pack(push, 1)
 

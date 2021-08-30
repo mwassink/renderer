@@ -36,6 +36,14 @@ void setPixelAttrs(HDC windowDC);
 #define GL_BGR                            0x80E0
 #define GL_MIRRORED_REPEAT                0x8370
 #define GL_CLAMP_TO_BORDER                0x812D
+#define GL_FRAMEBUFFER                    0x8D40
+#define GL_DEPTH_STENCIL_ATTACHMENT       0x821A
+#define GL_DEPTH_COMPONENT32              0x81A7
+#define GL_TEXTURE_COMPARE_MODE           0x884C
+#define GL_TEXTURE_COMPARE_FUNC           0x884D
+#define GL_COMPARE_REF_TO_TEXTURE         0x884E
+#define GL_CLAMP_TO_EDGE                  0x812F
+
 
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
@@ -105,6 +113,13 @@ typedef void WINAPI t_Uniform3f(GLint location,
  	GLfloat v2);
 typedef void WINAPI t_Uniform1f(GLint location, GLfloat v0);
 typedef void WINAPI t_BindTextureUnit(GLuint unit, GLuint texture);
+typedef void WINAPI t_GenFramebuffers(GLsizei n,GLuint* ids );
+typedef void WINAPI t_BindFramebuffer(GLenum t, GLuint f);
+
+typedef void WINAPI t_FramebufferTexture(	GLenum target,
+ 	GLenum attachment,
+ 	GLuint texture,
+ 	GLint level);
 
 #define CONSTIFY(name) #name
 
@@ -152,6 +167,10 @@ EXPORT( UniformMatrix3fv);
 EXPORT( Uniform3f);
 EXPORT( Uniform1f);
 EXPORT( BindTextureUnit);
+EXPORT(GenFramebuffers);
+EXPORT(BindFramebuffer);
+EXPORT(FramebufferTexture);
+
 
 void setPixelAttrs(HDC windowDC);
 void wrangleSetup(void);

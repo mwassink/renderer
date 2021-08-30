@@ -37,7 +37,7 @@ void main(void) {
     float scaleQuad = 1.0f / (4*M_PI*distSquared);
     float lightIntensity = lightBrightness * scaleQuad;
 
-    float s = texture(depthTexture, shadowCoord );
+    float s = textureProj(depthTexture, shadowCoord );
     vec3 diffRefl = (lambertian/M_PI* lightIntensity*s)*diffColor*lightColor;
 
     vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;

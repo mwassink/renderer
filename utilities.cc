@@ -458,7 +458,7 @@ void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, i
 
 void addBasicVerticesShadowMapping(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, glTriangleNames* names) {
     glGenVertexArrays(1, &names->smVao );
-    glBindVertexArray(1, names->smVao);
+    glBindVertexArray(names->smVao);
 
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)) );
@@ -469,7 +469,7 @@ void addBasicVerticesShadowMapping(Vertex* vertices, u32* indices, int numVertic
 void addVerticesShadowMapping(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
                          u32 positionCoord, glTriangleNames* names) {
     glGenVertexArrays(1, &names->smVao );
-    glBindVertexArray(1, names->smVao);
+    glBindVertexArray(names->smVao);
 
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, coord)) );

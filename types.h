@@ -172,6 +172,7 @@ struct Model {
 
 
 struct Light {
+    Light() {}
     union {
         struct {
             Vector3 worldSpaceCoord;
@@ -179,9 +180,10 @@ struct Light {
         };
         CoordinateSpace lightSpace; // for shadow mapping
     };
-    int DepthFBO;
+    int depthTexture = -1;
     Vector3 color;
     f32 irradiance;
+    bool shadows = true;
 };
 #endif
 
