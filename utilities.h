@@ -15,9 +15,7 @@ int setupBitmapTexture(const char* textureString, u32* w, u32* h, u32* bpp);
 int32 clampRangei(int32 min, int32 max, int32 in);
 f32 clampNormal(f32 in);
 void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals);
-void addBasicVerticesShadowMapping(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, glTriangleNames* names);
-void addVerticesShadowMapping(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
-                              u32 positionCoord, glTriangleNames* names);
+
 
 #pragma pack(push, 1)
 
