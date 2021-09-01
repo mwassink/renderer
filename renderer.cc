@@ -620,7 +620,7 @@ void CubeMapRenderTest(Model* model, Light* light) {
     Array<Matrix4> rotations(6);
     GetWindowRect(OpenGL.windowHandle, &rect);
     if (light->cubeDepthTexture == -1) {
-        glGenTextures(1, &id);
+        glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
         defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
         for (int i = 0; i < 6; ++i) {
@@ -654,9 +654,9 @@ void CubeMapRenderTest(Model* model, Light* light) {
     for (int i = 0; i < 6; ++i) {
 
         GLint err1 = glGetError();
-        glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, light->cubeDepthTexture);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                               id, 0);
+                               light->cubeDepthTexture, 0);
         glDrawBuffer(GL_NONE);
         bool c = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
         glViewport(0, 0, RES, RES);
