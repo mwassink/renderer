@@ -45,7 +45,8 @@ void setPixelAttrs(HDC windowDC);
 #define GL_CLAMP_TO_EDGE                  0x812F
 #define GL_DEPTH_ATTACHMENT               0x8D00
 #define GL_FRAMEBUFFER_COMPLETE           0x8CD5
-
+#define GL_TEXTURE_CUBE_MAP               0x8513
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_X    0x8515
 
 
 typedef ptrdiff_t GLsizeiptr;
@@ -131,6 +132,18 @@ typedef void WINAPI t_FramebufferTexture2D(	GLenum target,
  	GLuint texture,
  	GLint level);
 typedef GLenum WINAPI t_CheckFramebufferStatus(	GLenum target);
+
+#if 0
+typedef void WINAPI t_TexImage2D(	GLenum target,
+ 	GLint level,
+ 	GLint internalformat,
+ 	GLsizei width,
+ 	GLsizei height,
+ 	GLint border,
+ 	GLenum format,
+ 	GLenum type,
+ 	const void * data);
+#endif
 
 
 

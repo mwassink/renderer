@@ -215,6 +215,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     lights.push(testlight);
                     p = plane();
                 }
+                CubeMapRenderTest(&models[0], &lights[0]);
                 testShadow(&models, &lights[0]);
                 renderModel(&p, &lights[0]);
 #endif

@@ -1,0 +1,12 @@
+- Add extra shadow shader for non-textured stuff
+- Performance seems to become awful after a while
+Other: 
+- bounding boxes, acceleration algorithms
+- Skyboxes
+- Cube shadow map
+- Cascading shadow maps
+- Visible lights
+- SSAO
+- Better BRDF... fresnel mirrors? masking? normal dist. function? (GGX?)
+- environment mapping
+- light extent optimization

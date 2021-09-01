@@ -185,21 +185,27 @@ void attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO) {
     bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 }
 
+void defaultShadowTexParams(GLenum target) {
+    f32 border[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+    glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, border);
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+}
+
 void createShadowMapTexture(Light* light, u32 res) {
     GLuint depthTex;
-    f32 border[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
     glGenTextures(1, &depthTex);
     glBindTexture(GL_TEXTURE_2D, depthTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
                  res, res, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    defaultShadowTexParams(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0); // done
 
     light->depthTexture = depthTex;
@@ -603,4 +609,78 @@ int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* 
         err = glGetError();
     }
     return tex;
+}
+
+void CubeMapRenderTest(Model* model, Light* light) {
+#define RES 500
+    
+    GLuint id;
+    RECT rect;
+
+    Array<Matrix4> rotations(6);
+    GetWindowRect(OpenGL.windowHandle, &rect);
+    if (light->cubeDepthTexture == -1) {
+        glGenTextures(1, &id);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+        defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
+        for (int i = 0; i < 6; ++i) {
+            GLint e = glGetError();
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT32, RES, RES,
+                         0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+            
+            
+        }
+        // 4 rotations about the y axis then two about the x axis should? get all of the cubes
+        
+        light->cubeDepthTexture = id;
+    }
+    Matrix4 modelLightProjection = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4,
+                                                             1, 1.0f, 40.0f);
+
+    rotations[4] = modelLightProjection;
+    rotations[0] = rotateY(PI/2) * modelLightProjection;
+    rotations[5] = rotateY(PI) * modelLightProjection;
+    rotations[1] = rotateY(-PI/2)  * modelLightProjection;
+    rotations[2] = rotateX(-PI/2) * modelLightProjection;
+    rotations[3] = rotateX(PI/2) * modelLightProjection;
+
+
+
+    
+    glUseProgram(OpenGL.shadowMappingShader);
+    glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);
+    
+        
+    for (int i = 0; i < 6; ++i) {
+
+        GLint err1 = glGetError();
+        glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                               id, 0);
+        glDrawBuffer(GL_NONE);
+        bool c = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+        glViewport(0, 0, RES, RES);
+        glClearDepth(1.0f);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2.0f, 4.0f);
+        GLint err = glGetError();
+        GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
+        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&rotations[i].data[0]);
+
+        glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
+        glBindVertexArray(model->identifiers.smVao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+        glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0);
+    }
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+#undef RES
 }

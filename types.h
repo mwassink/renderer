@@ -182,6 +182,7 @@ struct Light {
         CoordinateSpace lightSpace; // for shadow mapping
     };
     int depthTexture = -1;
+    int cubeDepthTexture = -1;
     Vector3 color;
     f32 irradiance;
     bool shadows = true;
