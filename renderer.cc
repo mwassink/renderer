@@ -611,13 +611,23 @@ int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* 
     return tex;
 }
 
+// Returns Mcamera with a cube map
+// Model space is analogous to cube space
+// In the case of the shadow then mcube should be at the light
+Matrix4 invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace) {
+    Matrix4 mCamera = mCube * mFace;
+    return invTransform(mCamera);
+    
+}
+
 void CubeMapRenderTest(Model* model, Light* light) {
 #define RES 500
     
     GLuint id;
     RECT rect;
 
-    Array<Matrix4> rotations(6);
+    Array<Matrix4> invCameraMatrices(6);
+    Matrix4 mCube = WorldObjectMatrix(light->lightSpace);
     GetWindowRect(OpenGL.windowHandle, &rect);
     if (light->cubeDepthTexture == -1) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
@@ -634,17 +644,26 @@ void CubeMapRenderTest(Model* model, Light* light) {
         
         light->cubeDepthTexture = id;
     }
-    Matrix4 modelLightProjection = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4,
-                                                             1, 1.0f, 40.0f);
 
-    rotations[4] = modelLightProjection;
-    rotations[0] = rotateY(PI/2) * modelLightProjection;
-    rotations[5] = rotateY(PI) * modelLightProjection;
-    rotations[1] = rotateY(-PI/2)  * modelLightProjection;
-    rotations[2] = rotateX(-PI/2) * modelLightProjection;
-    rotations[3] = rotateX(PI/2) * modelLightProjection;
+    
+    // ORDER of cube map storage +X, -X, +Y, -Y, +Z, -Z
+    // M faces
+    invCameraMatrices[0] = Matrix4(0,0,1,0,-1,0,-1,0,0);
+    invCameraMatrices[1] = Matrix4(0,0,-1,0,-1,0,1,0,0);
+    invCameraMatrices[2] = Matrix4(1,0,0,0,0,1,0,1,0);
+    invCameraMatrices[3] = Matrix4(1,0,0,0,0 ,-1,0,-1,0);
+    invCameraMatrices[4] = Matrix4(1,0,0,0,-1,0, 0,0,1);
+    invCameraMatrices[5] = Matrix4(0,0,-1,0,-1,0,0,0,-1);
 
-
+    invCameraMatrices[0] = invCubeFaceCamera(mCube, invCameraMatrices[0] );
+    invCameraMatrices[1] = invCubeFaceCamera(mCube, invCameraMatrices[1] );
+    invCameraMatrices[2] = invCubeFaceCamera(mCube, invCameraMatrices[2] );
+    invCameraMatrices[3] = invCubeFaceCamera(mCube, invCameraMatrices[3] );
+    invCameraMatrices[4] = invCubeFaceCamera(mCube, invCameraMatrices[4] );
+    invCameraMatrices[5] = invCubeFaceCamera(mCube, invCameraMatrices[5] );
+    
+    // Mcamera = Mcube * Mface
+    // mvp = p * Mcamera-1 * Mmodel
 
     
     glUseProgram(OpenGL.shadowMappingShader);
@@ -653,6 +672,8 @@ void CubeMapRenderTest(Model* model, Light* light) {
         
     for (int i = 0; i < 6; ++i) {
 
+        // (TODO) do not just shotgun the projection parameters
+        Matrix4 modelViewProjection = glProjectionMatrix(PI/4, 1.0f, 1.0f, 20.0f  ) * invCameraMatrices[i] * ObjectWorldMatrix(model->modelSpace);
         GLint err1 = glGetError();
         glBindTexture(GL_TEXTURE_CUBE_MAP, light->cubeDepthTexture);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -666,7 +687,7 @@ void CubeMapRenderTest(Model* model, Light* light) {
         glPolygonOffset(2.0f, 4.0f);
         GLint err = glGetError();
         GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
-        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&rotations[i].data[0]);
+        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
 
         glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
         glBindVertexArray(model->identifiers.smVao);

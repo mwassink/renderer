@@ -197,6 +197,26 @@ struct alignas(64) Matrix4 {
         return (*this);
     }
 
+    Matrix4(f32 _00, f32 _01, f32 _02,
+            f32 _10, f32 _11, f32 _12,
+            f32 _20, f32 _21, f32  _22) {
+        data[0][0] = _00;
+        data[0][1] = _10;
+        data[0][2] = _20;
+        data[0][3] = 0.0f;
+        data[1][0] = _01;
+        data[1][1] = _11;
+        data[1][2] = _21;
+        data[1][3] = 0.0f;
+        data[2][0] = _02;
+        data[2][1] = _12;
+        data[2][2] = _22;
+        data[2][3] = 0.0f;
+        data[3][0] = 0.0f;
+        data[3][1] = 0.0f;
+        data[3][2] = 0.0f;
+        data[3][3] = 0.0f;
+    }
     Matrix4() {}
     f32& operator()(int i, int j) {
         return data[j][i];
@@ -208,6 +228,10 @@ struct alignas(64) Matrix4 {
     
     Vector4& operator[](int vec) {
         return *(reinterpret_cast<Vector4*>(&data[vec][0]));
+    }
+
+    Vector3& v3(int vec) {
+        return *(reinterpret_cast<Vector3*>(&data[vec][0]));
     }
     
 };
@@ -265,11 +289,11 @@ struct CoordinateSpace {
 
 
 inline Vector4 cross(const Vector4& a ,const Vector4& b, f32 w) {
-    return Vector4(a.y*b.z-a.z-b.y,a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x, w);
+    return Vector4(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x, w);
 }
 
 inline Vector3 cross(const Vector3& a ,const Vector3& b) {
-    return Vector3(a.y*b.z-a.z-b.y,a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+    return Vector3(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
 }
 
 inline Vector3 operator+(const Vector3& lhs, const Vector3& rhs) {
@@ -564,6 +588,11 @@ inline Quaternion operator* (Quaternion& lhs, Quaternion& rhs) {
     
 }
 
+inline Matrix4 operator* (f32 scale, Matrix4& matrix) {
+    Matrix4 matrixOut = (matrix *= scale);
+    return matrixOut;
+    
+}
 
 /* this really is the adjoint of the upper 3x3 */
 inline Matrix3 adjointUpper3x3( Matrix4 &in) {
@@ -585,6 +614,27 @@ inline Matrix3 inv3x3(Matrix3& in) {
     return m;
 }
 
+
+inline Matrix4 invTransform(Matrix4& in) {
+    Vector3& _0 = in.v3(0);
+    Vector3& _1 = in.v3(1);
+    Vector3& _2 = in.v3(2);
+    Vector3& _3 = in.v3(3);
+    
+    Vector3 c01 = cross(_0,_1), c23 = cross(_2,_3);
+    f32 scale = 1.0f  / dot(c01,_2); //the bottom row is 0 0 0 1, so this is fine
+    Vector3 v = _2 * scale;
+    c01 *= scale;
+    c23 *= scale;
+    Vector3 r0 = cross(_1, v);
+    Vector3 r1 = cross(v, _0);
+    
+    return Matrix4(r0.x, r0.y, r0.z, -dot(_1, c23),
+                          r1.x, r1.y, r1.z, dot(_0, c23),
+                          c01.x, c01.y, c01.z, -dot(_3, c01),
+                          0.0f, 0.0f, 0.0f, 1.0f);
+    
+}
 
 
 /* This is a linear interpolation, at the heart of graphics
@@ -649,7 +699,7 @@ inline Matrix4 ObjectWorldMatrix(const CoordinateSpace& modelCoordSpace) {
 // therefore the 3rd column of the usual projection matrix has its sign flipped
 inline Matrix4 glProjectionMatrix(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane) {
 
-    //ASSERT(farPlane > -.001f);
+    //assert(farPlane > -.001f);
     //ASSERT(nearPlane > -.001f);
     f32 c = 1.0f/ tanf(vFOV/2);
     return Matrix4(c/aspectRatio, 0, 0, 0,
