@@ -1,6 +1,6 @@
 .vs/*
-test*
 *.ilk
+test*
 *.obj
 *.pdb
 *.exe
