@@ -627,7 +627,7 @@ void CubeMapRenderTest(Model* model, Light* light) {
     RECT rect;
 
     Array<Matrix4> invCameraMatrices(6);
-    Matrix4 mCube = WorldObjectMatrix(light->lightSpace);
+    Matrix4 mCube = ObjectWorldMatrix(light->lightSpace);
     GetWindowRect(OpenGL.windowHandle, &rect);
     if (light->cubeDepthTexture == -1) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
@@ -653,7 +653,7 @@ void CubeMapRenderTest(Model* model, Light* light) {
     invCameraMatrices[2] = Matrix4(1,0,0,0,0,1,0,1,0);
     invCameraMatrices[3] = Matrix4(1,0,0,0,0 ,-1,0,-1,0);
     invCameraMatrices[4] = Matrix4(1,0,0,0,-1,0, 0,0,1);
-    invCameraMatrices[5] = Matrix4(0,0,-1,0,-1,0,0,0,-1);
+    invCameraMatrices[5] = Matrix4(-1,0,0,0,-1,0,0,0,-1);
 
     invCameraMatrices[0] = invCubeFaceCamera(mCube, invCameraMatrices[0] );
     invCameraMatrices[1] = invCubeFaceCamera(mCube, invCameraMatrices[1] );

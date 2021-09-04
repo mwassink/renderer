@@ -215,7 +215,7 @@ struct alignas(64) Matrix4 {
         data[3][0] = 0.0f;
         data[3][1] = 0.0f;
         data[3][2] = 0.0f;
-        data[3][3] = 0.0f;
+        data[3][3] = 1.0f;
     }
     Matrix4() {}
     f32& operator()(int i, int j) {
