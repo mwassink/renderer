@@ -21,8 +21,9 @@ void addBasicVerticesShadowMapping(Vertex* vertices, u32* indices, int numVertic
 void addVerticesShadowMapping(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
                               u32 positionCoord, glTriangleNames* names);
 int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
-void CubeMapRenderTest(Model* model, Light* light);
+void CubeMapRender(Array<Model>* models, Light* light, f32 near, f32 far);
 void defaultShadowTexParams(GLenum target);
+Matrix4 invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace);
 struct GL {
     f32 vFOV, aspectRatio, znear, zfar;
     CoordinateSpace cameraSpace;

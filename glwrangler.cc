@@ -42,7 +42,7 @@ DECLARE(BindFramebuffer);
 DECLARE(FramebufferTexture);
 DECLARE(FramebufferTexture2D);
 DECLARE(CheckFramebufferStatus);
-
+DECLARE(Uniform3fv);
 
 
 const int pixelAttribList[] =
@@ -193,7 +193,7 @@ void wrangle(void) {
     WRANGLE(FramebufferTexture);
     WRANGLE(FramebufferTexture2D);
     WRANGLE(CheckFramebufferStatus);
-
+    WRANGLE(Uniform3fv);
 
     
 }

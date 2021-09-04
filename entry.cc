@@ -210,12 +210,14 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 }
 #if RUNTESTS
                 if (!ran) {
+                    
+                    populateModels(&models);
                     models.push(car());
                     models.push(barrel());
                     lights.push(testlight);
                     p = plane();
                 }
-                CubeMapRenderTest(&models[0], &lights[0]);
+                CubeMapRender(&models, &lights[0], 1.0f, 50.0f);
                 testShadow(&models, &lights[0]);
                 renderModel(&p, &lights[0]);
 #endif

@@ -48,7 +48,7 @@ void shadeLightTextured(Model* model, Light* light, GLuint shader) {
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
     Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
-    Vector3 l = ( mv * Vector4(light->worldSpaceCoord, 1.0f)).v3();
+    Vector3 l = ( WorldObjectMatrix(OpenGL.cameraSpace) * Vector4(light->worldSpaceCoord, 1.0f)).v3();
     Vector3 sColor = model->mesh.specColor;
     Vector3 lColor = light->color;
     
@@ -68,9 +68,9 @@ void shadeLightTextured(Model* model, Light* light, GLuint shader) {
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, (f32*)&mv.data[0]);
     glUniformMatrix3fv(normMatrix, 1, GL_FALSE, (f32*)&normalMatrix.data[0]);
-    glUniform3f(lightPos, l[0], l[1], l[2]);
-    glUniform3f(specCol, sColor[0], sColor[1], sColor[2]);
-    glUniform3f(lightCol, lColor[0], lColor[1], lColor[2]);
+    glUniform3fv(lightPos, 1, (f32*)l.data);
+    glUniform3fv(specCol, 1, (f32*)sColor.data);
+    glUniform3fv(lightCol, 1, (f32*)lColor.data);
     glUniform1f(lightPow, light->irradiance);
     
     
@@ -620,34 +620,11 @@ Matrix4 invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace) {
     
 }
 
-void CubeMapRenderTest(Model* model, Light* light) {
-#define RES 500
-    
-    GLuint id;
-    RECT rect;
-
-    Array<Matrix4> invCameraMatrices(6);
-    Matrix4 mCube = ObjectWorldMatrix(light->lightSpace);
-    GetWindowRect(OpenGL.windowHandle, &rect);
-    if (light->cubeDepthTexture == -1) {
-        glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, id);
-        defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
-        for (int i = 0; i < 6; ++i) {
-            GLint e = glGetError();
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT32, RES, RES,
-                         0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-            
-            
-        }
-        // 4 rotations about the y axis then two about the x axis should? get all of the cubes
-        
-        light->cubeDepthTexture = id;
-    }
-
-    
-    // ORDER of cube map storage +X, -X, +Y, -Y, +Z, -Z
+Array<Matrix4> cubeMapMatrices(CoordinateSpace& renderSpace) {
+     Array<Matrix4> invCameraMatrices(6);
+     // ORDER of cube map storage +X, -X, +Y, -Y, +Z, -Z
     // M faces
+    Matrix4 mCube = ObjectWorldMatrix(renderSpace);
     invCameraMatrices[0] = Matrix4(0,0,1,0,-1,0,-1,0,0);
     invCameraMatrices[1] = Matrix4(0,0,-1,0,-1,0,1,0,0);
     invCameraMatrices[2] = Matrix4(1,0,0,0,0,1,0,1,0);
@@ -661,38 +638,55 @@ void CubeMapRenderTest(Model* model, Light* light) {
     invCameraMatrices[3] = invCubeFaceCamera(mCube, invCameraMatrices[3] );
     invCameraMatrices[4] = invCubeFaceCamera(mCube, invCameraMatrices[4] );
     invCameraMatrices[5] = invCubeFaceCamera(mCube, invCameraMatrices[5] );
-    
-    // Mcamera = Mcube * Mface
-    // mvp = p * Mcamera-1 * Mmodel
+    return invCameraMatrices;
+}
 
+void CubeMapRender(Array<Model>* models, Light* light, f32 n, f32 f) {
+#define RES 500
     
+    GLuint id;
+    RECT rect;
+
+   
+    Array<Matrix4> invCameraMatrices = cubeMapMatrices(light->lightSpace);
+    GetWindowRect(OpenGL.windowHandle, &rect);
+    if (light->cubeDepthTexture == -1) {
+        glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+        defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
+        for (int i = 0; i < 6; ++i) {
+            GLint e = glGetError();
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT32, RES, RES,
+                         0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);   
+        }
+        light->cubeDepthTexture = id;
+    }
+
     glUseProgram(OpenGL.shadowMappingShader);
-    glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);
-    
-        
+    glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);        
     for (int i = 0; i < 6; ++i) {
 
-        // (TODO) do not just shotgun the projection parameters
-        Matrix4 modelViewProjection = glProjectionMatrix(PI/4, 1.0f, 1.0f, 20.0f  ) * invCameraMatrices[i] * ObjectWorldMatrix(model->modelSpace);
-        GLint err1 = glGetError();
         glBindTexture(GL_TEXTURE_CUBE_MAP, light->cubeDepthTexture);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                                light->cubeDepthTexture, 0);
-        glDrawBuffer(GL_NONE);
-        bool c = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-        glViewport(0, 0, RES, RES);
-        glClearDepth(1.0f);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(2.0f, 4.0f);
-        GLint err = glGetError();
-        GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
-        glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
+        for (int k = 0; k < models->sz; ++k) {
+            Matrix4 modelViewProjection = glProjectionMatrix(PI/4, 1.0f, n, f  ) * invCameraMatrices[i] * ObjectWorldMatrix((*models)[k].modelSpace);
+            glDrawBuffer(GL_NONE);
+            glViewport(0, 0, RES, RES);
+            glClearDepth(1.0f);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(2.0f, 4.0f);
+            GLint err = glGetError();
+            GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
+            glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
 
-        glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
-        glBindVertexArray(model->identifiers.smVao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
-        glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, (*models)[k].identifiers.vbo);
+            glBindVertexArray((*models)[k].identifiers.smVao);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (*models)[k].identifiers.ebo);
+            glDrawElements(GL_TRIANGLES, (*models)[k].mesh.numIndices, GL_UNSIGNED_INT, 0);
+        
+        }
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0);
     }
 

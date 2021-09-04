@@ -2,7 +2,7 @@
 
 #define M_PI 3.1415926535897932384626433832795
 
-
+#define DEBUG 0
 layout (binding = 0) uniform sampler2D tex;
 layout (binding = 1) uniform sampler2D normalMap;
 layout (binding = 2) uniform sampler2DShadow depthTexture;
@@ -18,7 +18,7 @@ in vec4 shadowCoord;
 in float distSquared;
 
 const float shininess = 16.0f;
-const float ambientCoeff = .10f;
+const float ambientCoeff = .05f;
 
 out vec4 color;
 
@@ -45,6 +45,10 @@ void main(void) {
     vec3 ambient = ambientCoeff * diffColor;
 
 
+    #if DEBUG
+    color = vec4(vec3(lambertian* lightIntensity*s), 1.0f);
+    #else
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
+    #endif
     //color = vec4(s, s,s, s);
 }
