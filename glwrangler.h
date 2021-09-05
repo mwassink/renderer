@@ -136,7 +136,9 @@ typedef GLenum WINAPI t_CheckFramebufferStatus(	GLenum target);
 typedef void WINAPI t_Uniform3fv(	GLint location,
  	GLsizei count,
  	const GLfloat *value);
-
+typedef void WINAPI t_Uniform4fv(	GLint location,
+ 	GLsizei count,
+ 	const GLfloat *value);
 #if 0
 typedef void WINAPI t_TexImage2D(	GLenum target,
  	GLint level,
@@ -203,6 +205,7 @@ EXPORT(FramebufferTexture);
 EXPORT(FramebufferTexture2D);
 EXPORT(CheckFramebufferStatus);
 EXPORT(Uniform3fv);
+EXPORT(Uniform4fv);
 
 void setPixelAttrs(HDC windowDC);
 void wrangleSetup(void);

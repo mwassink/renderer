@@ -11,79 +11,76 @@
 
 GL OpenGL;
 
-void shadeLightBasic(Model* model, Light* light, GLuint shader) {
+void uplumbMatrix4(u32 s, Matrix4& m, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    glUniformMatrix4fv(loc, 1, GL_FALSE, (f32*)&m.data[0]);
+}
+void uplumbMatrix3(u32 s, Matrix3& m, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    glUniformMatrix3fv(loc, 1, GL_FALSE, (f32*)&m.data[0]);
+}
+void uplumbVector4(u32 s, Vector4& v, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    glUniform4fv(loc, 1, (f32*)&v.data[0]);
+}
+void uplumbVector3(u32 s, Vector3& v, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    glUniform3fv(loc, 1, (f32*)&v.data[0]);
+}
+
+void uplumbf(u32 s, f32 f, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    glUniform1f(loc, f);
+}
+
+// NO shadows
+void shaderLightBasic(Model* model, PointLight* light, GLuint shader) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow, err;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
     Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
-    Vector3 l = ( mv * Vector4(light->worldSpaceCoord, 1.0f)).v3();
+    Vector3 l = ( WorldObjectMatrix(OpenGL.cameraSpace)* Vector4(light->worldSpaceCoord, 1.0f)).v3();
     Vector3 dColor = model->mesh.diffuseColor;
     Vector3 sColor = model->mesh.specColor;
     Vector3 lColor = light->color;
     
     glUseProgram(shader);
-    mvLoc = glGetUniformLocation(shader, "modelView");
-    mvpLoc = glGetUniformLocation(shader, "modelViewProjection");
-    normMatrix = glGetUniformLocation(shader, "normalMatrix");
-    lightPos = glGetUniformLocation(shader, "lightCameraSpace");
-    diffCol = glGetUniformLocation(shader, "diffColor");
-    specCol = glGetUniformLocation(shader, "specularColor");
-    lightCol = glGetUniformLocation(shader, "lightColor");
-    lightPow = glGetUniformLocation(shader, "lightBrightness");
-    glBindTexture(0, model->mesh.textures.id);
-    err = glGetError();
+    uplumbMatrix4(shader, mv, "modelView");
+    uplumbMatrix4(shader, mvp, "modelViewProjection");
+    uplumbMatrix3(shader, normalMatrix, "normalMatrix");
+    uplumbVector3(shader, l, "lightCameraSpace");
+    uplumbVector3(shader, model->mesh.diffuseColor, "diffColor");
+    uplumbVector3(shader, model->mesh.diffuseColor, "specularColor");
+    uplumbVector3(shader, light->color, "lightColor");
+    uplumbf(shader, light->irradiance, "lightBrightness");
+    glBindTextureUnit(0, model->mesh.textures.id);
     
-    glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, (f32*)&mv.data[0]);
-    glUniformMatrix3fv(normMatrix, 1, GL_FALSE, (f32*)&normalMatrix.data[0]);
-    glUniform3f(lightPos, l[0], l[1], l[2]);
-    glUniform3f(diffCol, dColor[0], dColor[1], dColor[2]);
-    glUniform3f(specCol, sColor[0], sColor[1], sColor[2]);
-    glUniform3f(lightCol, lColor[0], lColor[1], lColor[2]);
-    glUniform1f(lightPow, light->irradiance);
+
 }
 
-void shadeLightTextured(Model* model, Light* light, GLuint shader) {
+void shaderPointLightTextured(Model* m, PointLight* light, GLuint shader) {
+    
+}
+
+void shaderLightTextured(Model* model, SpotLight* light, GLuint shader) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, specCol, lightCol, lightPow, err;
     Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
     Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
-    Vector3 l = ( WorldObjectMatrix(OpenGL.cameraSpace) * Vector4(light->worldSpaceCoord, 1.0f)).v3();
-    Vector3 sColor = model->mesh.specColor;
-    Vector3 lColor = light->color;
-    
-    
+    Vector3 l = ( WorldObjectMatrix(OpenGL.cameraSpace) * Vector4(light->worldSpaceCoord, 1.0f)).v3();    
     // (TODO) which of these do we need? and which ones do we still need to add?
     glUseProgram(shader);
-    mvpLoc = glGetUniformLocation(shader, "modelViewProjection");
-    mvLoc = glGetUniformLocation(shader, "modelView");
-    normMatrix = glGetUniformLocation(shader, "normMatrix");
-    lightPos = glGetUniformLocation(shader, "lightCameraSpace");
-    specCol = glGetUniformLocation(shader, "specularColor");
-    lightCol = glGetUniformLocation(shader, "lightColor");
-    lightPow = glGetUniformLocation(shader, "lightBrightness");
-    err = glGetError();
-    glBindTextureUnit(0, model->mesh.textures.id);
-    glBindTextureUnit(1, model->mesh.normalMap.id);
-    glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&mvp.data[0]);
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, (f32*)&mv.data[0]);
-    glUniformMatrix3fv(normMatrix, 1, GL_FALSE, (f32*)&normalMatrix.data[0]);
-    glUniform3fv(lightPos, 1, (f32*)l.data);
-    glUniform3fv(specCol, 1, (f32*)sColor.data);
-    glUniform3fv(lightCol, 1, (f32*)lColor.data);
-    glUniform1f(lightPow, light->irradiance);
-    
-    
-    
+    uplumbMatrix4(shader, mvp, "modelViewProjection");
+    uplumbMatrix4(shader, mv, "modelView");
+    uplumbMatrix3(shader, normalMatrix, "normMatrix");
+    uplumbVector3(shader, l, "lightCameraSpace");
+    uplumbVector3(shader, model->mesh.specColor, "specularColor");
+    uplumbVector3(shader, light->color, "lightColor");
+    uplumbf(shader, light->irradiance, "lightBrightness");
 }
 
-void shaderShadowed(Model* model, Light* light) {
-    
-}
+void shaderSpotShadowedTextured(Model* model, SpotLight* light) {
 
-void shaderShadowedTextured(Model* model, Light* light) {
-
-    GLint sMatrixLoc = glGetUniformLocation(OpenGL.texturedShadowShader, "shadowMatrix");
     Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 40.0f);
     Matrix4 sMatrix = Matrix4(.5f, 0.0f, 0.0f, 0.5f,
                               0.0f, 0.5f, 0.0f, 0.5f,
@@ -91,10 +88,9 @@ void shaderShadowedTextured(Model* model, Light* light) {
                               0.0f, 0.0f, 0.0f, 1.0f) * glproj;
                            
     //Matrix4 sMatrix = glproj;
-    glUniformMatrix4fv(sMatrixLoc, 1, GL_FALSE, (f32*)&sMatrix.data[0]);
+    uplumbMatrix4(OpenGL.texturedShadowShader, sMatrix, "shadowMatrix");
 
     glBindTextureUnit(2, light->depthTexture);
-    GLint err = glGetError();
 }
 
 Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap ) {
@@ -152,27 +148,29 @@ void testViz(Model* model, CoordinateSpace* cs) {
 }
 
 // Shadow maps need to be set up BEFORE this is called
-void renderModel(Model* model, Light* light) {
-    GLint err;
+void renderModel(Model* model, SpotLight* light) {
+
     u32 shader = OpenGL.basicLightingShader;
     if (model->mesh.normalVertices) {
         shader = OpenGL.texturedLightingShader;
         if (light->shadows) {
             shader = OpenGL.texturedShadowShader;
         }
-        err = glGetError();
-        shadeLightTextured(model, light, shader);
+        shaderLightTextured(model, light, shader);
         if (light->shadows) {
-            shaderShadowedTextured(model, light);
+            shaderSpotShadowedTextured(model, light);
         }
         setDrawModel(model);
-
     }
     else if (model->mesh.vertices) {
-        shadeLightBasic(model, light, shader);
+        shaderLightBasic(model, (PointLight*)light, shader);
         setDrawModel(model);
     }
     
+}
+
+void renderModel(Model* model, PointLight* spotLight) {
+    //stub
 }
 
 // The depthtex needs to be bound at this point
@@ -198,7 +196,7 @@ void defaultShadowTexParams(GLenum target) {
     
 }
 
-void createShadowMapTexture(Light* light, u32 res) {
+void createShadowMapTexture(SpotLight* light, u32 res) {
     GLuint depthTex;
 
     glGenTextures(1, &depthTex);
@@ -214,7 +212,7 @@ void createShadowMapTexture(Light* light, u32 res) {
 
 // (TODO)allow for config of near, far plane
 // This will give the shadows in the texture... we still need to add them to the rendering pipeline
-void addShadowMapping(Model* models, Light* light, u32 numModels) {
+void addShadowMapping(Model* models, SpotLight* light, u32 numModels) {
 #define RES 500
 
 
@@ -641,61 +639,84 @@ Array<Matrix4> cubeMapMatrices(CoordinateSpace& renderSpace) {
     return invCameraMatrices;
 }
 
-void CubeMapRender(Array<Model>* models, Light* light, f32 n, f32 f) {
-#define RES 500
+void renderPointShadow(Array<Model>* models, SpotLight* light) {
+    if (light->cubeArgs.tex = -1) {
+        light->cubeArgs.internalFormat = GL_DEPTH_COMPONENT32;
+        light->cubeArgs.format = GL_DEPTH_COMPONENT;
+        light->cubeArgs.shader = OpenGL.shadowMappingShader;
+        light->cubeArgs.attachment = GL_DEPTH_ATTACHMENT;
+        light->cubeArgs.res = 500;
+    }
+    // (TODO) could just have the far plane be after attenuates fully
+    CubeMapRender(models, light->lightSpace, 1.0f, 20.0f, &light->cubeArgs  );
+}
+
+
+// don't try to reuse the plumbing for some of the other ones
+void depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
+    Matrix4 modelViewProjection = glProjectionMatrix(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
+    glDrawBuffer(GL_NONE);
+    glViewport(0, 0, res, res);
+    glClearDepth(1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(2.0f, 4.0f);
+    GLint err = glGetError();
+    GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
+    glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
+
+    glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
+    glBindVertexArray(model->identifiers.smVao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+    glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
+}
+
+void depthRenderCleanup(void) {
+    glDisable(GL_POLYGON_OFFSET_FILL);
+}
+
+
+
+
+void CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f, CubeArgs* renderArgs) {
+
     
     GLuint id;
     RECT rect;
-
-   
-    Array<Matrix4> invCameraMatrices = cubeMapMatrices(light->lightSpace);
+    Array<Matrix4> invCameraMatrices = cubeMapMatrices(renderCS);
     GetWindowRect(OpenGL.windowHandle, &rect);
-    if (light->cubeDepthTexture == -1) {
+    
+    if (renderArgs->tex == -1) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
         defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
         for (int i = 0; i < 6; ++i) {
-            GLint e = glGetError();
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT32, RES, RES,
-                         0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);   
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, renderArgs->internalFormat, renderArgs->res, renderArgs->res, 0, renderArgs->format, GL_FLOAT, 0);   
         }
-        light->cubeDepthTexture = id;
+        renderArgs->tex = id;
     }
 
-    glUseProgram(OpenGL.shadowMappingShader);
-    glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);        
+    glUseProgram(renderArgs->shader);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderArgs->shader);        
     for (int i = 0; i < 6; ++i) {
 
-        glBindTexture(GL_TEXTURE_CUBE_MAP, light->cubeDepthTexture);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                               light->cubeDepthTexture, 0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, renderArgs->tex);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, renderArgs->attachment,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                               renderArgs->tex, 0);
         for (int k = 0; k < models->sz; ++k) {
-            Matrix4 modelViewProjection = glProjectionMatrix(PI/4, 1.0f, n, f  ) * invCameraMatrices[i] * ObjectWorldMatrix((*models)[k].modelSpace);
-            glDrawBuffer(GL_NONE);
-            glViewport(0, 0, RES, RES);
-            glClearDepth(1.0f);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            glEnable(GL_POLYGON_OFFSET_FILL);
-            glPolygonOffset(2.0f, 4.0f);
-            GLint err = glGetError();
-            GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
-            glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
-
-            glBindBuffer(GL_ARRAY_BUFFER, (*models)[k].identifiers.vbo);
-            glBindVertexArray((*models)[k].identifiers.smVao);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (*models)[k].identifiers.ebo);
-            glDrawElements(GL_TRIANGLES, (*models)[k].mesh.numIndices, GL_UNSIGNED_INT, 0);
-        
+            if (renderArgs->shader == OpenGL.shadowMappingShader) {
+                depthRender(&(*models)[k], invCameraMatrices[i], renderArgs->res, 1.0f, 20.0f);
+            }
         }
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, renderArgs->attachment,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0);
     }
 
-    glDisable(GL_POLYGON_OFFSET_FILL);
+    if (renderArgs->shader == OpenGL.shadowMappingShader) {
+        depthRenderCleanup();
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-#undef RES
 }

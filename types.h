@@ -171,9 +171,20 @@ struct Model {
     glTriangleNames identifiers;
 };
 
+struct CubeArgs {
+    u32 tex;
+    int internalFormat;
+    u32 attachment;
+    u32 format;
+    u32 shader;
+    int res;
+};
 
-struct Light {
-    Light() {}
+
+struct SpotLight {
+    SpotLight() {
+        cubeArgs.tex = -1;
+    }
     union {
         struct {
             Vector3 worldSpaceCoord;
@@ -182,10 +193,30 @@ struct Light {
         CoordinateSpace lightSpace; // for shadow mapping
     };
     int depthTexture = -1;
-    int cubeDepthTexture = -1;
+    CubeArgs cubeArgs;
     Vector3 color;
     f32 irradiance;
     bool shadows = true;
 };
+
+struct PointLight {
+    PointLight() {
+        cubeArgs.tex = -1;
+    }
+    union {
+        struct {
+            Vector3 worldSpaceCoord;
+            Vector3 r, s, t;
+        };
+        CoordinateSpace lightSpace; // for shadow mapping
+    };
+    int depthTexture = -1;
+    CubeArgs cubeArgs;
+    Vector3 color;
+    f32 irradiance;
+    bool shadows = true;
+};
+
+
 #endif
 

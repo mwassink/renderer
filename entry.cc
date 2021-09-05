@@ -179,7 +179,8 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     WindowClass.lpszClassName = "Renderer";
     bool ran = false;
     Array<Model> models;
-    Array<Light> lights;
+    Array<SpotLight> spotLights;
+    Array<PointLight> pointLights;
     Model p;
     if (RegisterClass(&WindowClass)) {
         HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
@@ -214,12 +215,11 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     populateModels(&models);
                     models.push(car());
                     models.push(barrel());
-                    lights.push(testlight);
+                    spotLights.push(testlight);
                     p = plane();
                 }
-                CubeMapRender(&models, &lights[0], 1.0f, 50.0f);
-                testShadow(&models, &lights[0]);
-                renderModel(&p, &lights[0]);
+                testShadow(&models, spotLights.data);
+
 #endif
                 
                 HDC windowDC = GetDC(windowHandle);
