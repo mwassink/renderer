@@ -19,6 +19,7 @@ layout (binding = 0) uniform sampler2D tex;
 out vec4 color;
 
 void main(void) {
+    vec3 lFull = lightCameraSpace - vertCameraSpace;
     vec3 l = normalize(lightCameraSpace - vertCameraSpace);
     vec3 n = normalize(normCameraSpace);
     //vec3 n = (1.0f, 0, 0);
@@ -29,7 +30,7 @@ void main(void) {
     float spec = pow(max(dot(n, h), 0.0f), shininess);
 
     // Attenuate light power as a sphere
-    float scaleQuad  = 1.0f / (4*M_PI*dot(lightCameraSpace,lightCameraSpace));
+    float scaleQuad  = 1.0f / (4*M_PI*dot(lFull, lFull));
     float lightIntensity = lightBrightness * scaleQuad;
     
     vec3 diffRefl = (lambertian/M_PI* lightIntensity + lightIntensity* ambientCoeff)*diffColor*lightColor;

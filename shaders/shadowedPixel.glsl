@@ -42,7 +42,7 @@ void main(void) {
     vec3 diffRefl = (lambertian* lightIntensity*s)*diffColor*lightColor;
 
     vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;
-    vec3 ambient = ambientCoeff * diffColor;
+    vec3 ambient = ambientCoeff * diffColor * lightIntensity;
 
 
     #if DEBUG

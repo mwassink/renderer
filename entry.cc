@@ -211,14 +211,19 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 }
 #if RUNTESTS
                 if (!ran) {
-                    
+                    SpotLight s;
+                    s.worldSpaceCoord = Vector3(0, -38, 0);
+                    s.color = Vector3(1,1,1);
+                    s.irradiance = 500.0f;
                     populateModels(&models);
                     models.push(car());
                     models.push(barrel());
                     spotLights.push(testlight);
                     p = plane();
+                    models.push(p);
+                    spotLights.push(s);
                 }
-                testShadow(&models, spotLights.data);
+                testShadow(&models, &spotLights[0]);
 
 #endif
                 

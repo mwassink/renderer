@@ -36,7 +36,7 @@ void uplumbf(u32 s, f32 f, const char* n) {
 // NO shadows
 void shaderLightBasic(Model* model, PointLight* light, GLuint shader) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow, err;
-    Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
+    Matrix4 mv = modelView(model->modelSpace, OpenGL.cameraSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
     Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
     Vector3 l = ( WorldObjectMatrix(OpenGL.cameraSpace)* Vector4(light->worldSpaceCoord, 1.0f)).v3();
@@ -50,7 +50,7 @@ void shaderLightBasic(Model* model, PointLight* light, GLuint shader) {
     uplumbMatrix3(shader, normalMatrix, "normalMatrix");
     uplumbVector3(shader, l, "lightCameraSpace");
     uplumbVector3(shader, model->mesh.diffuseColor, "diffColor");
-    uplumbVector3(shader, model->mesh.diffuseColor, "specularColor");
+    uplumbVector3(shader, model->mesh.specColor, "specularColor");
     uplumbVector3(shader, light->color, "lightColor");
     uplumbf(shader, light->irradiance, "lightBrightness");
     glBindTextureUnit(0, model->mesh.textures.id);
@@ -64,7 +64,7 @@ void shaderPointLightTextured(Model* m, PointLight* light, GLuint shader) {
 
 void shaderLightTextured(Model* model, SpotLight* light, GLuint shader) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, specCol, lightCol, lightPow, err;
-    Matrix4 mv = modelView(OpenGL.cameraSpace, model->modelSpace);
+    Matrix4 mv = modelView(model->modelSpace, OpenGL.cameraSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
     Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
     Vector3 l = ( WorldObjectMatrix(OpenGL.cameraSpace) * Vector4(light->worldSpaceCoord, 1.0f)).v3();    
@@ -77,6 +77,8 @@ void shaderLightTextured(Model* model, SpotLight* light, GLuint shader) {
     uplumbVector3(shader, model->mesh.specColor, "specularColor");
     uplumbVector3(shader, light->color, "lightColor");
     uplumbf(shader, light->irradiance, "lightBrightness");
+    glBindTextureUnit(0, model->mesh.textures.id);
+    glBindTextureUnit(1, model->mesh.normalMap.id);
 }
 
 void shaderSpotShadowedTextured(Model* model, SpotLight* light) {
@@ -140,10 +142,20 @@ void setDrawModel(Model* model) {
 
 void testViz(Model* model, CoordinateSpace* cs) {
     Matrix4 mvp = glModelViewProjection(model->modelSpace, *cs, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
-    for (int i = 0; i < 10; ++i) {
-        Vector4 t = model->mesh.normalVertices[i].coord;
-        t = mvp * t;
-        printf("%f %f %f %f\n", t.x, t.y, t.z, t.w);
+
+    if (model->mesh.normalVertices) {
+        for (int i = 0; i < 10; ++i) {
+            Vector4 t = model->mesh.normalVertices[i].coord;
+            t = mvp * t;
+            printf("%f %f %f %f\n", t.x, t.y, t.z, t.w);
+        }
+    }
+    else {
+        for (int i = 0; i < 10; ++i) {
+            Vector4 t = model->mesh.vertices[i].coord;
+            t = mvp * t;
+            printf("%f %f %f %f\n", t.x, t.y, t.z, t.w);
+        }
     }
 }
 
