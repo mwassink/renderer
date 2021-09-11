@@ -1,5 +1,6 @@
 #version 450 core
 
+// (TODO) this should use a cone
 uniform mat4 modelViewProjection;
 uniform mat4 modelView;
 uniform mat4 shadowMatrix;

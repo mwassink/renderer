@@ -702,10 +702,19 @@ inline Matrix4 glProjectionMatrix(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 
     //assert(farPlane > -.001f);
     //ASSERT(nearPlane > -.001f);
     f32 c = 1.0f/ tanf(vFOV/2);
+    // this maps n, f -> -1 to 1 
+    #if 1
     return Matrix4(c/aspectRatio, 0, 0, 0,
                    0, c, 0, 0,
                    0, 0, -(farPlane + nearPlane)/(farPlane - nearPlane), -2*(farPlane*nearPlane)/(farPlane - nearPlane),
-                   0, 0, -1, 0);
+                   0, 0, -1, 0); 
+    #else 
+    // n, f -> 0 to 1
+    return Matrix4(c/aspectRatio, 0, 0, 0,
+                   0, c, 0, 0,
+                   0, 0, -farPlane/(farPlane-nearPlane), -nearPlane*farPlane/(farPlane-nearPlane),
+                   0, 0, -1, 0); 
+    #endif
 }
 
 // PVM is the right order? Make sure that after division by w these are all in the unit cube

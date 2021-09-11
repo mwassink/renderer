@@ -663,10 +663,19 @@ void renderPointShadow(Array<Model>* models, SpotLight* light) {
     CubeMapRender(models, light->lightSpace, 1.0f, 20.0f, &light->cubeArgs  );
 }
 
+// this is not just the regular projection matrix
+Matrix4 shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane ) {
+    f32 c = 1.0f/ tanf(vFOV/2);
+    return Matrix4(c/(aspectRatio*2), 0, 1/2, 0,
+                   0, c/2, 1/2, 0,
+                   0, 0, -(farPlane)/(farPlane - nearPlane), -nearPlane*farPlane/(farPlane - nearPlane),
+                   0, 0, -1, 0); 
+}
+
 
 // don't try to reuse the plumbing for some of the other ones
 void depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
-    Matrix4 modelViewProjection = glProjectionMatrix(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
+    Matrix4 modelViewProjection = shadowMapProj(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
     glDrawBuffer(GL_NONE);
     glViewport(0, 0, res, res);
     glClearDepth(1.0f);
@@ -683,11 +692,20 @@ void depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) 
     glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
 }
 
+
+// (TODO) add this later
+// For offline rendering
+void envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
+    Matrix4 modelViewProjection = glProjectionMatrix(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
+    glViewport(0, 0, res, res);
+    glClear(GL_COLOR_BUFFER_BIT);
+    GLint err = glGetError();
+    
+}
+
 void depthRenderCleanup(void) {
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
-
-
 
 
 void CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f, CubeArgs* renderArgs) {
