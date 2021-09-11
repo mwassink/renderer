@@ -651,7 +651,7 @@ Array<Matrix4> cubeMapMatrices(CoordinateSpace& renderSpace) {
     return invCameraMatrices;
 }
 
-void renderPointShadow(Array<Model>* models, SpotLight* light) {
+void renderPointShadow(Array<Model>* models, PointLight* light) {
     if (light->cubeArgs.tex = -1) {
         light->cubeArgs.internalFormat = GL_DEPTH_COMPONENT32;
         light->cubeArgs.format = GL_DEPTH_COMPONENT;
@@ -675,13 +675,9 @@ Matrix4 shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane ) {
 
 // don't try to reuse the plumbing for some of the other ones
 void depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
-    Matrix4 modelViewProjection = shadowMapProj(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
-    glDrawBuffer(GL_NONE);
-    glViewport(0, 0, res, res);
-    glClearDepth(1.0f);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(2.0f, 4.0f);
+
+    //Matrix4 modelViewProjection = shadowMapProj(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
+    Matrix4 modelViewProjection = glProjectionMatrix(PI / 4, 1.0f, n, f) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
     GLint err = glGetError();
     GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
@@ -722,17 +718,26 @@ void CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f
         defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
         for (int i = 0; i < 6; ++i) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, renderArgs->internalFormat, renderArgs->res, renderArgs->res, 0, renderArgs->format, GL_FLOAT, 0);   
+            GLint err = glGetError();
+            err = glGetError();
         }
         renderArgs->tex = id;
     }
 
     glUseProgram(renderArgs->shader);
-    glBindFramebuffer(GL_FRAMEBUFFER, renderArgs->shader);        
+    glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);        
     for (int i = 0; i < 6; ++i) {
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, renderArgs->tex);
         glFramebufferTexture2D(GL_FRAMEBUFFER, renderArgs->attachment,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                                renderArgs->tex, 0);
+        glDrawBuffer(GL_NONE);
+        glViewport(0, 0, renderArgs->res, renderArgs->res);
+        glClearDepth(1.0f);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2.0f, 4.0f);
+        GLint err = glGetError();
         for (int k = 0; k < models->sz; ++k) {
             if (renderArgs->shader == OpenGL.shadowMappingShader) {
                 depthRender(&(*models)[k], invCameraMatrices[i], renderArgs->res, 1.0f, 20.0f);
@@ -748,5 +753,6 @@ void CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    invCameraMatrices.release();
 
 }

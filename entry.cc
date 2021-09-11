@@ -215,14 +215,24 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     s.worldSpaceCoord = Vector3(0, -38, 0);
                     s.color = Vector3(1,1,1);
                     s.irradiance = 500.0f;
+#if 0
                     populateModels(&models);
-                    models.push(car());
+                    
                     models.push(barrel());
+#endif
+                    pointLights.push(pl());
+                    models.push(car(0, -5, -60));
+                    models.push(car(0, 15, -60));
+                    models.push(car(0, 5, -55));
+                    models.push(car(0, 5, -65));
+                    models.push(car(5, 5, -60));
+                    models.push(car(-5, 5, -60));
                     spotLights.push(testlight);
                     p = plane();
                     models.push(p);
                     spotLights.push(s);
                 }
+                renderPointShadow(&models, &pointLights[0]);
                 testShadow(&models, &spotLights[0]);
 
 #endif
