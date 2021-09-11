@@ -11,6 +11,8 @@ layout (binding = 2) uniform samplerCubeShadow depthMap;
 uniform vec3 specularColor;
 uniform vec3 lightColor;
 uniform float lightBrightness;
+// ASSERT these are neg when they get plumbed into the fn
+// The algo requires this
 uniform vec2 AB; // A B of the proj matrix (2,2), (2,3)
     
 in vec2 uvCoordl;
@@ -26,8 +28,13 @@ const float ambientCoeff = .05f;
 
 float fetchCoeff(vec3 posIn) {
     // the depth will be the maximum value (e.g if x is largest, then we will use +x and then the depth )
+    posIn = abs(posIn);
     float maxDepth = max(posIn.x, max(posIn.y, posIn.z));
-    float depth = AB.x + AB.y / maxDepth;
+    // With the OpenGL matrix given, (more negative) z values are mapped into larger z values after proj
+    // If I were to simply use the coeffs A and B, then the depth would be negative as A and B are neg
+    // The thing that saves it with the projection is that when the z value is stored as w it gets
+    // multiplied by -1 
+    float depth = -AB.x - AB.y / maxDepth; //those are surely neg values so the comp would always succeed otherwise
     
 }
 
