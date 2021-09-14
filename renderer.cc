@@ -345,6 +345,7 @@ void addMeshTangents(Mesh* mesh) {
     mesh->vertices = 0;
 }
 
+// This would be necessary if it were not loaded in in the texture
 Vector3* loadNormals(const char* fileName, u32* widthOut, u32* heightOut) {
     u32 w, h, bpp;
     u8* data = loadBitmap(fileName, &w, &h, &bpp);
@@ -368,7 +369,7 @@ Vector3* loadNormals(const char* fileName, u32* widthOut, u32* heightOut) {
 
     *widthOut = w;
     *heightOut = h;
-    return 0;
+    return vecs;
     
 }
 
