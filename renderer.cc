@@ -60,6 +60,7 @@ void shaderLightBasic(Model* model, PointLight* light, GLuint shader) {
 
 void shaderPointLightTextured(Model* m, PointLight* light, GLuint shader) {
     
+    
 }
 
 void shaderLightTextured(Model* model, SpotLight* light, GLuint shader) {

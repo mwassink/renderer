@@ -215,7 +215,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     s.worldSpaceCoord = Vector3(0, -38, 0);
                     s.color = Vector3(1,1,1);
                     s.irradiance = 500.0f;
-#if 0
+#if 1
                     populateModels(&models);
                     
                     models.push(barrel());

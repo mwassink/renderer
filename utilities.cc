@@ -10,6 +10,27 @@
 #include "utilities.h"
 #define MAXU32 0xFFFFFFFF
 
+#define NORMALMAPPED "#define NORMALMAPPING 1\n";
+#define SPOTLIGHT "define SPOTLIGHT 1\n";
+#define POINTLIGHT "define POINTLIGHT 1\n"
+#define TEXTURED "define TEXTURED 1\n"
+
+#define VERSIONSTRING "version 450 core\n"
+
+
+
+int length(char* str) {
+    char* init = str;
+    while ( *str) str++;
+    return str - init;
+}
+
+// Do not overlap these
+int slowCopy(const char* src, char* trg, int maxLen) {
+    int initMax = maxLen;
+    while (*src && initMax--) *trg = *src++;
+    return maxLen - initMax;
+}
 
 int countOccurrences(const char* s, char ch, char delim = 0) {
     int ctr = 0;
@@ -381,4 +402,21 @@ void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals) {
     fclose(fp);
 }
 
+// Deletes the original shader, creates a new shader
+char* AlterShaderArgs(char** argList, char* shader, int lenShader ) {    
+    int spaceRequired = length(VERSIONSTRING);
+    for (int i = 0; argList[i] != 0; ++i) {
+        spaceRequired += length(argList[i]);
+    }
+    char* newShader = (char*)malloc(lenShader + spaceRequired);
+    
+    int acc = slowCopy(VERSIONSTRING, newShader, length(VERSIONSTRING));
+    for (int i = 0; argList[i] != 0; ++i) {
+        acc += slowCopy(argList[i], newShader + acc, length(argList[i]));
+    }
+    slowCopy(shader, newShader + acc, lenShader);
+    free(shader);
+    return newShader;
+}
+    
 
