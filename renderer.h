@@ -1,12 +1,7 @@
-void uplumbMatrix4(u32 shader, Matrix4& m, const char* name);
-void uplumbMatrix3(u32 s, Matrix3& m, const char* name);
-void uplumbVector4(u32 s, Vector4& v, const char* name);
-void uplumbVector3(u32 s, Vector3& v, const char* name);
-
 Model addModel(const char* fileName, const char* textureName);
 Model addModelNormalMap(const char* f, const char* t, const char* n);
 void activateModel(Model* model);
-void shaderLightBasic(Model* model, PointLight* light, GLuint tex);
+void SetupBasicShader(Model* model, PointLight* light, GLuint tex);
 void setDrawModel(Model* model);
 void renderModel(Model* m, SpotLight* l);
 void renderModel(Model* m, PointLight* l);

@@ -15,6 +15,12 @@ int setupBitmapTexture(const char* textureString, u32* w, u32* h, u32* bpp);
 int32 clampRangei(int32 min, int32 max, int32 in);
 f32 clampNormal(f32 in);
 void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals);
+void uplumbMatrix4(u32 s, Matrix4& m, const char* n);
+void uplumbMatrix3(u32 s, Matrix3& m, const char* n);
+void uplumbVector4(u32 s, Vector4& v, const char* n);
+void uplumbVector3(u32 s, Vector3& v, const char* n);
+void uplumbf(u32 s, f32 f, const char* n);
+
 
 
 #pragma pack(push, 1)

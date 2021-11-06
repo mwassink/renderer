@@ -2,7 +2,7 @@
 
 uniform mat4 modelViewProjection;
 uniform mat4 modelView;
-uniform mat3 normMatrix;
+uniform mat3 normalMatrix;
 uniform vec3 lightCameraSpace;
 
 layout (location = 0) in vec4 pos;
@@ -17,8 +17,8 @@ out vec3 eyeDir;
 out float distSquared;
 
 void main(void) {
-    vec3 n = normalize(normMatrix * normal);
-    vec3 t = normalize(normMatrix * tangent);
+    vec3 n = normalize(normalMatrix * normal);
+    vec3 t = normalize(normalMatrix * tangent);
     vec3 b = cross(n, t);
     b *= handedness;
     

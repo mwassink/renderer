@@ -19,6 +19,32 @@
 
 
 
+void uplumbMatrix4(u32 s, Matrix4& m, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    if (loc != -1)
+        glUniformMatrix4fv(loc, 1, GL_FALSE, (f32*)&m.data[0]);
+}
+void uplumbMatrix3(u32 s, Matrix3& m, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    if (loc != -1)
+        glUniformMatrix3fv(loc, 1, GL_FALSE, (f32*)&m.data[0]);
+}
+void uplumbVector4(u32 s, Vector4& v, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    if (loc != -1)
+        glUniform4fv(loc, 1, (f32*)&v.data[0]);
+}
+void uplumbVector3(u32 s, Vector3& v, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    if (loc != -1)
+        glUniform3fv(loc, 1, (f32*)&v.data[0]);
+}
+
+void uplumbf(u32 s, f32 f, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    glUniform1f(loc, f);
+}
+
 int length(char* str) {
     char* init = str;
     while ( *str) str++;
