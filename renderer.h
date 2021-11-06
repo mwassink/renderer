@@ -13,6 +13,8 @@ struct RendererContext {
 
 
 struct RendererUtil {
+    RendererContext* context;
+    
     void SetupBasicShader(Model* model, PointLight* light, GLuint shader);
     void AddTexturingToShader (Model* model, SpotLight* light, GLuint shader);
     void AddShadowsToShader(Model* model, SpotLight* light, GLuint shader);
@@ -37,19 +39,22 @@ struct RendererUtil {
                                   u32 positionCoord, glTriangleNames* names);
     int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
     void depthRenderCleanup(void);
+    void addMeshTangents(Mesh* mesh);
+    
 };
 
 
 struct Renderer {
-    RendererUtil utilHelper;
     RendererContext context;
+    RendererUtil utilHelper;
+
 
     
     void setDrawModel(Model* model);
     void testViz(Model* model, CoordinateSpace* cs);
     void renderModel(Model* model, SpotLight* light);
     void renderModel(Model* model, PointLight* pointLight);
-    void addMeshTangents(Mesh* mesh);
+
     void ShadowPass(Model* models, SpotLight* light, u32 numModels);
     Matrix4 invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace);
     Array<Matrix4> cubeMapMatrices(CoordinateSpace& renderSpace);
@@ -58,4 +63,5 @@ struct Renderer {
     void depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f);
     void envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f);
     void CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f, CubeArgs* renderArgs);
+    Renderer();
 };

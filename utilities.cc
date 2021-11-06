@@ -380,7 +380,7 @@ f32 clampNormal(f32 in) {
 void Texture::activate() {
     
     u32 bpp;
-    id = setupBitmapTexture(fileName, &width, &height, &bpp);
+    id = BitmapTextureInternal(fileName, &width, &height, &bpp);
     if (bpp != 24) {
         ASSERT(0);
     }
@@ -444,5 +444,46 @@ char* AlterShaderArgs(char** argList, char* shader, int lenShader ) {
     free(shader);
     return newShader;
 }
+
+
+
+    
+// TODO... I do not like the GL code making its way into here....
+int BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
+
+    GLuint tex;
+    GLint err;
+    u32 mips = 0;
+    f32 borderColor[] = { 1.0f, 0.0f, 1.0f, 1.0f };
     
 
+    u8* bitmapTexture = loadBitmap(textureString , width, height, bitsPerPixel);
+
+    u32 wc = *width;
+    while (wc >>= 1) mips++;
+
+    if (*width != *height) mips = 1;
+    
+    glCreateTextures(GL_TEXTURE_2D, 1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTextureStorage2D(tex, mips, GL_RGB8, *width, *height);
+    glTextureSubImage2D(tex, 0, 0, 0, *width, *height, GL_BGR, GL_UNSIGNED_BYTE, bitmapTexture );
+#if 0
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+#else
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+#endif
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    free(bitmapTexture);
+    if (mips != 1) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        
+        glGenerateTextureMipmap(tex);
+        err = glGetError();
+    }
+    return tex;
+}

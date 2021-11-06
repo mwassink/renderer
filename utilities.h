@@ -20,7 +20,7 @@ void uplumbMatrix3(u32 s, Matrix3& m, const char* n);
 void uplumbVector4(u32 s, Vector4& v, const char* n);
 void uplumbVector3(u32 s, Vector3& v, const char* n);
 void uplumbf(u32 s, f32 f, const char* n);
-
+int BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
 
 
 #pragma pack(push, 1)

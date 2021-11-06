@@ -188,8 +188,8 @@ int CALLBACK WinMain(HINSTANCE hInstance,
         if (windowHandle) {
 
             initOpenGL(windowHandle);
-            OpenGL.initGL();
-            OpenGL.windowHandle = windowHandle;
+            Renderer renderer;
+            renderer.context.windowHandle = windowHandle;
             for (; runnable; ) {
                 clear(windowHandle);
                 MSG msg = {};
@@ -199,7 +199,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     if (msg.message ==  WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP ||
                         msg.message ==  WM_KEYDOWN || msg.message == WM_KEYUP) {
 #if RUNTESTS
-                        orientCameraFromInput(msg.message, msg.wParam, &OpenGL.cameraSpace);
+                        orientCameraFromInput(msg.message, msg.wParam, &renderer.context.cameraSpace);
 #else
                         orientCameraFromInput(msg.message, msg.wParam, 0);
 #endif
@@ -232,7 +232,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     models.push(p);
                     spotLights.push(s);
                 }
-                renderPointShadow(&models, &pointLights[0]);
+                renderer.renderPointShadow(&models, &pointLights[0]);
                 testShadow(&models, &spotLights[0]);
 
 #endif

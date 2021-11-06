@@ -10,15 +10,16 @@
 #endif
 
 RendererContext::RendererContext() {
+    RendererUtil tmp;
     vFOV = 3.14f/6.0f;
     aspectRatio = 16.0f/9.0f;
     znear = 1.0f;
     zfar = 125.0f;
-    basicLightingShader =  setShaders("../shaders/blinnPhongVertex.glsl", "../shaders/blinnPhongPixel.glsl");
-    texturedLightingShader = setShaders("../shaders/basicTexturedVertex.glsl", "../shaders/basicTexturedPixel.glsl" );
+    basicLightingShader =  tmp.setShaders("../shaders/blinnPhongVertex.glsl", "../shaders/blinnPhongPixel.glsl");
+    texturedLightingShader = tmp.setShaders("../shaders/basicTexturedVertex.glsl", "../shaders/basicTexturedPixel.glsl" );
         
-    texturedShadowShader = setShaders("../shaders/shadowedVertex.glsl","../shaders/shadowedPixel.glsl" );
-    shadowMappingShader = setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
+    texturedShadowShader = tmp.setShaders("../shaders/shadowedVertex.glsl","../shaders/shadowedPixel.glsl" );
+    shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     glGenFramebuffers(1, &shadowMappingFramebuffer);
         
 }
@@ -28,10 +29,10 @@ RendererContext::RendererContext() {
 
 void RendererUtil::SetupBasicShader(Model* model, PointLight* light, GLuint shader) {
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow, err;
-    Matrix4 mv = modelView(model->modelSpace, OpenGL.cameraSpace);
-    Matrix4 mvp = glModelViewProjection(model->modelSpace, OpenGL.cameraSpace, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar );
+    Matrix4 mv = modelView(model->modelSpace, context->cameraSpace);
+    Matrix4 mvp = glModelViewProjection(model->modelSpace, context->cameraSpace, context->vFOV, context->aspectRatio, context->znear, context->zfar );
     Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
-    Vector3 l = ( WorldObjectMatrix(OpenGL.cameraSpace)* Vector4(light->worldSpaceCoord, 1.0f)).v3();
+    Vector3 l = ( WorldObjectMatrix(context->cameraSpace)* Vector4(light->worldSpaceCoord, 1.0f)).v3();
 
     
     glUseProgram(shader);
@@ -379,41 +380,7 @@ void RendererUtil::addVerticesShadowMapping(VertexLarge* vertices, u32* indices,
     
 int RendererUtil::setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
 
-    GLuint tex;
-    GLint err;
-    u32 mips = 0;
-    f32 borderColor[] = { 1.0f, 0.0f, 1.0f, 1.0f };
-    
-
-    u8* bitmapTexture = loadBitmap(textureString , width, height, bitsPerPixel);
-
-    u32 wc = *width;
-    while (wc >>= 1) mips++;
-
-    if (*width != *height) mips = 1;
-    
-    glCreateTextures(GL_TEXTURE_2D, 1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTextureStorage2D(tex, mips, GL_RGB8, *width, *height);
-    glTextureSubImage2D(tex, 0, 0, 0, *width, *height, GL_BGR, GL_UNSIGNED_BYTE, bitmapTexture );
-#if 0
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-#else
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-#endif
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    free(bitmapTexture);
-    if (mips != 1) {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        
-        glGenerateTextureMipmap(tex);
-        err = glGetError();
-    }
-    return tex;
+    return BitmapTextureInternal(textureString, width, height, bitsPerPixel);
 }
 
     
@@ -421,62 +388,9 @@ void RendererUtil::depthRenderCleanup(void) {
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-    
-void Renderer::setDrawModel(Model* model) {
-    glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
-    glBindVertexArray(model->identifiers.vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
-    glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
-}
 
-void Renderer::testViz(Model* model, CoordinateSpace* cs) {
-    Matrix4 mvp = glModelViewProjection(model->modelSpace, *cs, OpenGL.vFOV, OpenGL.aspectRatio, OpenGL.znear, OpenGL.zfar);
-
-    if (model->mesh.normalVertices) {
-        for (int i = 0; i < 10; ++i) {
-            Vector4 t = model->mesh.normalVertices[i].coord;
-            t = mvp * t;
-            printf("%f %f %f %f\n", t.x, t.y, t.z, t.w);
-        }
-    }
-    else {
-        for (int i = 0; i < 10; ++i) {
-            Vector4 t = model->mesh.vertices[i].coord;
-            t = mvp * t;
-            printf("%f %f %f %f\n", t.x, t.y, t.z, t.w);
-        }
-    }
-}
-
-// Shadow maps need to be set up BEFORE this is called
-void Renderer::renderModel(Model* model, SpotLight* light) {
-
-    u32 shader = OpenGL.basicLightingShader;
-    if (model->mesh.normalVertices) {
-        shader = OpenGL.texturedLightingShader;
-        if (light->shadows) {
-            shader = OpenGL.texturedShadowShader;
-        }
-        utilHelper.AddTexturingToShader(model, light, shader);
-        if (light->shadows) {
-            utilHelper.AddShadowsToShader(model, light);
-        }
-        setDrawModel(model);
-    }
-    else if (model->mesh.vertices) {
-        SetupBasicShader(model, (PointLight*)light, shader);
-        setDrawModel(model);
-    }
-    
-}
-
-void Renderer::renderModel(Model* model, PointLight* pointLight) {
-    //stub
-}
-
-    
 // Lengyel, Eric. "Computing Tangent Space Basis Vectors for an Arbitrary Mesh". Terathon Software 3D Graphics Library,2001. http://www.terathon.com/code/tangent.html
-void Renderer::addMeshTangents(Mesh* mesh) {
+void RendererUtil::addMeshTangents(Mesh* mesh) {
     VertexLarge* normalVerts = (VertexLarge*)malloc(sizeof(VertexLarge)*mesh->numVertices);
     Vertex* verts = mesh->vertices;
     u32* indexList = mesh->triangles;
@@ -544,8 +458,61 @@ void Renderer::addMeshTangents(Mesh* mesh) {
     free(bitangents);
     mesh->vertices = 0;
 }
+    
+void Renderer::setDrawModel(Model* model) {
+    glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
+    glBindVertexArray(model->identifiers.vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
+    glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
+}
+
+void Renderer::testViz(Model* model, CoordinateSpace* cs) {
+    Matrix4 mvp = glModelViewProjection(model->modelSpace, *cs, context.vFOV, context.aspectRatio, context.znear, context.zfar);
+
+    if (model->mesh.normalVertices) {
+        for (int i = 0; i < 10; ++i) {
+            Vector4 t = model->mesh.normalVertices[i].coord;
+            t = mvp * t;
+            printf("%f %f %f %f\n", t.x, t.y, t.z, t.w);
+        }
+    }
+    else {
+        for (int i = 0; i < 10; ++i) {
+            Vector4 t = model->mesh.vertices[i].coord;
+            t = mvp * t;
+            printf("%f %f %f %f\n", t.x, t.y, t.z, t.w);
+        }
+    }
+}
+
+// Shadow maps need to be set up BEFORE this is called
+void Renderer::renderModel(Model* model, SpotLight* light) {
+
+    u32 shader = context.basicLightingShader;
+    if (model->mesh.normalVertices) {
+        shader = context.texturedLightingShader;
+        if (light->shadows) {
+            shader = context.texturedShadowShader;
+        }
+        utilHelper.AddTexturingToShader(model, light, shader);
+        if (light->shadows) {
+            utilHelper.AddShadowsToShader(model, light, shader);
+        }
+        setDrawModel(model);
+    }
+    else if (model->mesh.vertices) {
+        utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
+        setDrawModel(model);
+    }
+    
+}
+
+void Renderer::renderModel(Model* model, PointLight* pointLight) {
+    //stub
+}
 
     
+
 // (TODO)allow for config of near, far plane
 // This will give the shadows in the texture... we still need to add them to the rendering pipeline
 void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
@@ -554,20 +521,19 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
 
     GLint err;
     RECT rect;
-    GetWindowRect(OpenGL.windowHandle, &rect);
-
-    if (light->depthTexture < 0) {
-        createShadowMapTexture(light, RES);
-    }
-
-    glUseProgram(OpenGL.shadowMappingShader);
+    GetWindowRect(context.windowHandle, &rect);
+    glUseProgram(context.shadowMappingShader);
     // (TODO) can I reuse these buffers?
 
-    glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);
+    if (light->depthTexture < 0) {
+        utilHelper.createShadowMapTexture(light, RES);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, context.shadowMappingFramebuffer);
     
     bool z = glIsEnabled(GL_DEPTH_TEST);
     
-    attachDepthTextureFramebuffer(light->depthTexture, OpenGL.shadowMappingFramebuffer);
+    utilHelper.attachDepthTextureFramebuffer(light->depthTexture, context.shadowMappingFramebuffer);
     glViewport(0, 0, RES, RES);
     glClearDepth(1.0f);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -579,7 +545,7 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
         Matrix4 modelLightProjection = glModelViewProjection(models[i].modelSpace, light->lightSpace, PI/4.0f,
                                                              1, 1.0f, 40.0f);
         testViz(&models[i], &light->lightSpace);
-        GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
+        GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&modelLightProjection.data[0]);
 
         glBindBuffer(GL_ARRAY_BUFFER, models[i].identifiers.vbo);
@@ -633,7 +599,7 @@ void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
     if (light->cubeArgs.tex = -1) {
         light->cubeArgs.internalFormat = GL_DEPTH_COMPONENT32;
         light->cubeArgs.format = GL_DEPTH_COMPONENT;
-        light->cubeArgs.shader = OpenGL.shadowMappingShader;
+        light->cubeArgs.shader = context.shadowMappingShader;
         light->cubeArgs.attachment = GL_DEPTH_ATTACHMENT;
         light->cubeArgs.res = 500;
     }
@@ -657,7 +623,7 @@ void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 
     //Matrix4 modelViewProjection = shadowMapProj(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
     Matrix4 modelViewProjection = glProjectionMatrix(PI / 4, 1.0f, n, f) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
     GLint err = glGetError();
-    GLint mvpLoc = glGetUniformLocation(OpenGL.shadowMappingShader, "modelViewProjection");
+    GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
 
     glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
@@ -684,12 +650,12 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     GLuint id;
     RECT rect;
     Array<Matrix4> invCameraMatrices = cubeMapMatrices(renderCS);
-    GetWindowRect(OpenGL.windowHandle, &rect);
+    GetWindowRect(context.windowHandle, &rect);
     
     if (renderArgs->tex == -1) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
-        defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
+        utilHelper.defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
         for (int i = 0; i < 6; ++i) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, renderArgs->internalFormat, renderArgs->res, renderArgs->res, 0, renderArgs->format, GL_FLOAT, 0);   
             GLint err = glGetError();
@@ -699,7 +665,7 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     }
 
     glUseProgram(renderArgs->shader);
-    glBindFramebuffer(GL_FRAMEBUFFER, OpenGL.shadowMappingFramebuffer);        
+    glBindFramebuffer(GL_FRAMEBUFFER, context.shadowMappingFramebuffer);        
     for (int i = 0; i < 6; ++i) {
 
         glBindTexture(GL_TEXTURE_CUBE_MAP, renderArgs->tex);
@@ -713,14 +679,14 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
         glPolygonOffset(2.0f, 4.0f);
         GLint err = glGetError();
         for (int k = 0; k < models->sz; ++k) {
-            if (renderArgs->shader == OpenGL.shadowMappingShader) {
+            if (renderArgs->shader == context.shadowMappingShader) {
                 depthRender(&(*models)[k], invCameraMatrices[i], renderArgs->res, 1.0f, 20.0f);
             }
         }
         glFramebufferTexture2D(GL_FRAMEBUFFER, renderArgs->attachment,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0);
     }
 
-    if (renderArgs->shader == OpenGL.shadowMappingShader) {
+    if (renderArgs->shader == context.shadowMappingShader) {
         utilHelper.depthRenderCleanup();
     }
 
@@ -731,6 +697,13 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
 
 }
 
+
+Renderer::Renderer() {
+    #define DEPTHTEXRES 500
+    context = RendererContext();
+    utilHelper.context = &context;
+
+}
 
 
 
