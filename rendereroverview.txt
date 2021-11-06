@@ -1,9 +1,0 @@
-addModel()
-           -> Texture()
-                -> Activate()
-                    -> setupBitmapTexture()
-                         -> LoadBitmap()
-           -> loadMesh()
-                -> parseObj()
-           -> activateModel()
-                -> addVertices...
