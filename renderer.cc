@@ -44,7 +44,7 @@ void RendererUtil::SetupBasicShader(Model* model, PointLight* light, GLuint shad
     uplumbVector3(shader, model->mesh.specColor, "specularColor");
     uplumbVector3(shader, light->color, "lightColor");
     uplumbf(shader, light->irradiance, "lightBrightness");
-    glBindTextureUnit(0, model->mesh.textures.id);
+    
     
 
 }
@@ -63,6 +63,7 @@ void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint sha
                               0.0f, 0.0f, 0.0f, 1.0f) * glproj;
     uplumbMatrix4(shader, sMatrix, "shadowMatrix");
     glBindTextureUnit(2, light->depthTexture);
+    
 }
 
     
@@ -106,7 +107,7 @@ void RendererUtil::attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO) {
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  depthTex, 0);
     glDrawBuffer(GL_NONE);
-    GLint err = glGetError();
+    
     //glReadBuffer(GL_NONE);
     bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 }
@@ -487,14 +488,16 @@ void Renderer::testViz(Model* model, CoordinateSpace* cs) {
 
 // Shadow maps need to be set up BEFORE this is called
 void Renderer::renderModel(Model* model, SpotLight* light) {
-
+    
     u32 shader = context.basicLightingShader;
     if (model->mesh.normalVertices) {
         shader = context.texturedLightingShader;
         if (light->shadows) {
             shader = context.texturedShadowShader;
         }
+        utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
         utilHelper.AddTexturingToShader(model, light, shader);
+        
         if (light->shadows) {
             utilHelper.AddShadowsToShader(model, light, shader);
         }
@@ -529,6 +532,7 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
         utilHelper.createShadowMapTexture(light, RES);
     }
 
+    GLint err1 = glGetError();
     glBindFramebuffer(GL_FRAMEBUFFER, context.shadowMappingFramebuffer);
     
     bool z = glIsEnabled(GL_DEPTH_TEST);
@@ -542,6 +546,7 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
 
     
     for (int i = 0; i < numModels; ++i) {
+        GLint err2 = glGetError();
         Matrix4 modelLightProjection = glModelViewProjection(models[i].modelSpace, light->lightSpace, PI/4.0f,
                                                              1, 1.0f, 40.0f);
         testViz(&models[i], &light->lightSpace);
@@ -552,14 +557,18 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
         glBindVertexArray(models[i].identifiers.smVao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, models[i].identifiers.ebo);
         glDrawElements(GL_TRIANGLES, models[i].mesh.numIndices, GL_UNSIGNED_INT, 0);
+        err2 = glGetError();
+        
     }
-
+    GLint err3 = glGetError();
     glDisable(GL_POLYGON_OFFSET_FILL);
+    err3 = glGetError();
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  0, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    err3 = glGetError();
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    err3 = glGetError();
 
 #undef RES
 }

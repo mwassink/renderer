@@ -189,6 +189,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 
             initOpenGL(windowHandle);
             Renderer renderer;
+            
             renderer.context.windowHandle = windowHandle;
             for (; runnable; ) {
                 clear(windowHandle);
@@ -210,6 +211,9 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     }
                 }
 #if RUNTESTS
+                testUtil = &renderer.utilHelper;
+                shadowRenderer = &renderer;
+                shadowRendererUtil = &renderer.utilHelper;
                 if (!ran) {
                     SpotLight s;
                     s.worldSpaceCoord = Vector3(0, -38, 0);
@@ -227,12 +231,12 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     models.push(car(0, 5, -65));
                     models.push(car(5, 5, -60));
                     models.push(car(-5, 5, -60));
-                    spotLights.push(testlight);
                     p = plane();
                     models.push(p);
                     spotLights.push(s);
                 }
-                renderer.renderPointShadow(&models, &pointLights[0]);
+                
+                //renderer.renderPointShadow(&models, &pointLights[0]);
                 testShadow(&models, &spotLights[0]);
 
 #endif
