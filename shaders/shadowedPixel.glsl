@@ -29,7 +29,8 @@ void main(void) {
     vec3 n = normalize(2.0*normalOld.xyz - 1.0);
     vec3 diffColor = texture(tex, uvCoord).xyz;
 
-    
+
+    //float lambertian = 1.0f
     float lambertian = max(dot(n, l), 0.0f);
     vec3 h = normalize(n + v);
     float spec = pow(max(dot(n, h), 0.0f), shininess);
@@ -47,7 +48,7 @@ void main(void) {
 
 
     #if DEBUG
-    color = vec4(vec3(lambertian* lightIntensity*s), 1.0f);
+    color = vec4(vec3(s * lambertian), 1.0f);
     #else
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
     #endif

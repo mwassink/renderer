@@ -4,7 +4,7 @@
 uniform mat4 modelViewProjection;
 uniform mat4 modelView;
 uniform mat4 shadowMatrix;
-uniform mat3 normMatrix;
+uniform mat3 normalMatrix;
 uniform vec3 lightCameraSpace;
 
 
@@ -21,8 +21,8 @@ out vec4 shadowCoord;
 out float distSquared;
 
 void main(void) {
-    vec3 n = normalize(normMatrix * normal);
-    vec3 t = normalize(normMatrix * tangent);
+    vec3 n = normalize(normalMatrix * normal);
+    vec3 t = normalize(normalMatrix * tangent);
     vec3 b = cross(n, t);
     b *= handedness;
     

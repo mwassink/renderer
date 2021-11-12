@@ -216,9 +216,13 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 shadowRendererUtil = &renderer.utilHelper;
                 if (!ran) {
                     SpotLight s;
-                    s.worldSpaceCoord = Vector3(0, -38, 0);
+                    s.worldSpaceCoord = Vector3(0, 5, -60);
                     s.color = Vector3(1,1,1);
-                    s.irradiance = 500.0f;
+                    s.irradiance = 50.0f;
+                    s.lightSpace.r = Vector3(1,0,0);
+                    s.lightSpace.s = Vector3(0, 0, -1);
+                    s.lightSpace.t = Vector3(0, 1, 0);
+                    s.lightSpace.origin = Vector3(0, 5, -60);
 #if 1
                     populateModels(&models);
                     
