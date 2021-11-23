@@ -47,7 +47,7 @@ void setPixelAttrs(HDC windowDC);
 #define GL_FRAMEBUFFER_COMPLETE           0x8CD5
 #define GL_TEXTURE_CUBE_MAP               0x8513
 #define GL_TEXTURE_CUBE_MAP_POSITIVE_X    0x8515
-
+#define GL_TEXTURE_CUBE_MAP_SEAMLESS      0x884F
 
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;

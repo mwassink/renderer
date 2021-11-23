@@ -75,7 +75,7 @@ RendererContext::RendererContext() {
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
     glGenFramebuffers(1, &shadowMappingFramebuffer);
-        
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 

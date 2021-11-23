@@ -237,11 +237,16 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     pointLights.push(pl());
                     models.push(car(0, -25, -60));
                     spotLights.push(s);
-                    const char* top = "../tests/resources/skybox1-y.bmp";
-                    const char* sides = "../tests/resources/skyboxzx.bmp";
-                    const char* bottom = "../tests/resources/skybox--y.bmp";
+                    // r, l, t, b, f, b
+                    const char* px = "../tests/resources/SunnyDay_px.bmp";
+                    const char* nx = "../tests/resources/SunnyDay_nx.bmp";
+                    const char* py = "../tests/resources/SunnyDay_py.bmp";
+                    const char* ny = "../tests/resources/SunnyDay_ny.bmp";
+                    const char* pz = "../tests/resources/SunnyDay_pz.bmp";
+                    const char* nz = "../tests/resources/SunnyDay_nz.bmp";
                     
-                    const char* files[6] = {sides, sides, top, bottom, sides, sides};
+                    
+                    const char* files[6] = {px, nx, py, ny, pz, nz};
                     box = renderer.MakeSkybox(files);
                 }
                 
