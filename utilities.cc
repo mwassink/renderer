@@ -449,7 +449,7 @@ char* AlterShaderArgs(char** argList, char* shader, int lenShader ) {
 
     
 // TODO... I do not like the GL code making its way into here....
-int BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
+u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
 
     GLuint tex;
     GLint err;

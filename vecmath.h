@@ -2,7 +2,7 @@
 #define VMATH_H
 typedef float f32;
 #define FLOAT_MIN 0.0001
-#define ASSERT(expr) if (!(expr)) { *(volatile int*)0 = 0;}
+
 #define PI 3.14159
 
 #include <math.h>
@@ -678,6 +678,7 @@ inline Matrix4 changeOfBasis(Vector4& r, Vector4& u, Vector4& v) {
 // We want to express a point in world space as the sum of elements of our new basis
 // (e.g) in world space the point (4,2,3) is just the sum of 4<1,0,0> + 2<0,1,0> + 3<0,0,1>
 // But we also want to subtract elements of the distance included that are already included in the origin
+// If we look at the matrix mult we see DOT PRODUCTS -> <rx, ry, rz> * <x, y, z> 
 inline Matrix4 WorldObjectMatrix(const CoordinateSpace& modelCoordSpace){
     return Matrix4(modelCoordSpace.r.x, modelCoordSpace.r.y, modelCoordSpace.r.z, -dot(modelCoordSpace.origin, modelCoordSpace.r ),
                    modelCoordSpace.s.x, modelCoordSpace.s.y, modelCoordSpace.s.z, -dot(modelCoordSpace.origin, modelCoordSpace.s),
@@ -699,8 +700,7 @@ inline Matrix4 ObjectWorldMatrix(const CoordinateSpace& modelCoordSpace) {
 // therefore the 3rd column of the usual projection matrix has its sign flipped
 inline Matrix4 glProjectionMatrix(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane) {
 
-    //assert(farPlane > -.001f);
-    //ASSERT(nearPlane > -.001f);
+
     f32 c = 1.0f/ tanf(vFOV/2);
     // this maps n, f -> -1 to 1 
     #if 1
@@ -790,6 +790,41 @@ inline Matrix3 Matrix3x3(const Matrix4& in) {
                    in(1,0), in(1,1), in(1,2),
                    in(2,0), in(2,1), in(2,2));
 }
+
+// So we want this to have an up dir of (0, 1, 0)
+// We also want to look at something in the negative z direction
+// Make sure it is in front of us
+inline Matrix4 lookAt(const Vector3 &at, const Vector3 &eye) {
+    const Vector3 up = Vector3(0, 1, 0);
+
+    Vector3 z = at - eye;
+    z *= -1; // now z points in the "wrong" direction
+    Vector3 x = cross(up, z); // it is perpendicular now to y and to the new axis. cp wraps around
+    Vector3 y = cross(z, x); // now this is perpendicular to both x and z... we should have a basis
+    z.normalize();
+    y.normalize();
+    x.normalize();
+    CoordinateSpace coordSpace(x, y, z, eye);
+
+    return WorldObjectMatrix(coordSpace);
+}
+
+inline CoordinateSpace lookAtCoordSpace( Vector3 &at, const Vector3 &eye) {
+    const Vector3 up = Vector3(0, 1, 0);
+
+    Vector3 z = at - eye;
+    z *= -1; // now z points in the "wrong" direction
+    Vector3 x = cross(up, z); // it is perpendicular now to y and to the new axis. cp wraps around
+    Vector3 y = cross(z, x); // now this is perpendicular to both x and z... we should have a basis
+    z.normalize();
+    y.normalize();
+    x.normalize();
+    CoordinateSpace coordSpace(x, y, z, eye);
+
+    return coordSpace;
+
+}
+
 
 
 #endif

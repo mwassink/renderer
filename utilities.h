@@ -2,9 +2,10 @@
 #define UTILITIES_H
 #include "types.h"
 typedef unsigned char u8;
+#define ASSERT(expr) if (!(expr)) { fatalError("The program encountered an error", "Error");}
 
 char* readFile(const char* name, int* size);
-
+void fatalError(char* msg, char* title);
 bool fileExists(const char* str);
 u8* loadBitmap(const char* fileName, u32* w, u32* h, u32* bpp);
 Mesh loadMesh(const char* objPrefix, Texture texRequest);
@@ -20,7 +21,7 @@ void uplumbMatrix3(u32 s, Matrix3& m, const char* n);
 void uplumbVector4(u32 s, Vector4& v, const char* n);
 void uplumbVector3(u32 s, Vector3& v, const char* n);
 void uplumbf(u32 s, f32 f, const char* n);
-int BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
+u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
 
 
 #pragma pack(push, 1)

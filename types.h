@@ -217,6 +217,10 @@ struct PointLight {
     bool shadows = true;
 };
 
+struct Skybox {
+    int texture, vbo, vao;
+};
+
 
 #endif
 

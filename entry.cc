@@ -11,8 +11,6 @@
 #include "renderer.h"
 
 
-
-
 static bool runnable = 1;
 
 
@@ -26,6 +24,13 @@ static bool runnable = 1;
 #include "tests/loadplane.cc"
 
 #endif
+
+
+void fatalError(char* msg, char* title) {
+    MessageBox(0, msg, title,  MB_OK | MB_ICONERROR );
+    ExitProcess(1);
+}
+
 
 static void initOpenGL(HWND Window ) {
     HDC WindowDC = GetDC(Window);
@@ -229,12 +234,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     models.push(barrel());
 #endif
                     pointLights.push(pl());
-                    models.push(car(0, -5, -60));
-                    models.push(car(0, 15, -60));
-                    models.push(car(0, 5, -55));
-                    models.push(car(0, 5, -65));
-                    models.push(car(5, 5, -60));
-                    models.push(car(-5, 5, -60));
+                    models.push(car(0, -25, -60));
                     p = plane();
                     models.push(p);
                     spotLights.push(s);
@@ -243,8 +243,12 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 //renderer.renderPointShadow(&models, &pointLights[0]);
                 testShadow(&models, &spotLights[0]);
 
-#endif
+
+                renderer.context.cameraSpace = lookAtCoordSpace(Vector3(0, -25, -60),                                                      renderer.context.cameraSpace.origin);
                 
+
+#endif
+
                 HDC windowDC = GetDC(windowHandle);
                 SwapBuffers(windowDC);
                 

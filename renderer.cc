@@ -9,6 +9,59 @@
 #include <stdio.h>
 #endif
 
+// Poached from the interwebs
+float cubeVertices[] = {
+           
+    -1.0f,  1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     
+     1.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f,  1.0f,
+     
+     1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,
+     
+     1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f
+};
+
+
 RendererContext::RendererContext() {
     RendererUtil tmp;
     vFOV = 3.14f/6.0f;
@@ -20,6 +73,7 @@ RendererContext::RendererContext() {
         
     texturedShadowShader = tmp.setShaders("../shaders/shadowedVertex.glsl","../shaders/shadowedPixel.glsl" );
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
+    skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
     glGenFramebuffers(1, &shadowMappingFramebuffer);
         
 }
@@ -716,16 +770,90 @@ Renderer::Renderer() {
 
 
 
+int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
+
+    GLuint tex;
+    void* textureData[6];
+    u32 widths[6];
+    u32 heights[6];
+    u32 bpps[6];
+    u32 mips = 0;
+    u32 widthCounter;
+    f32 borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    
+
+    for (int i = 0; i < 6; ++i) {
+        textureData[i] = (void*)loadBitmap(fileNames[i], &widths[i], &heights[i], &bpps[i]);
+        ASSERT(bpps[i] == 24 && widths[i] == heights[i]); // for now
+        if (i) {
+            ASSERT(widths[i] == widths[i-1]);
+            ASSERT(heights[i] == heights[i-1]);
+        }
+    }
+    u32 width = widths[0];
+    u32 height = heights[0];
+    widthCounter = widths[0];
+    while (widthCounter >>= 1) mips++;
+    glCreateTextures(1, GL_TEXTURE_CUBE_MAP, &tex);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
+    
+    for (int f = 0; f < 6; f++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData[f]);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameterfv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR, borderColor);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    for (int i = 0; i < 6; i++) {
+        free(textureData[i]);
+    }
+    if (mips != 1) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glGenerateTextureMipmap(tex);
+    }
+    return tex;
+}
+
+
+Skybox Renderer::MakeSkybox(const char* fileNames[6]) {
 
 
 
+    Skybox skybox;
+    u32 vao, vbo;
+    skybox.texture = utilHelper.InitializeCubeMaps(fileNames);
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) *3, 0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    skybox.vao = vao;
+    skybox.vbo = vbo;
+    return skybox;
+    
+}
 
+void Renderer::RenderSkybox(Skybox& box) {
 
+    glUseProgram(context.skyboxShader);
+    CoordinateSpace cameraOrigin = context.cameraSpace;
+    cameraOrigin.origin = Vector3(0, 0, 0);
+    Matrix4 v = WorldObjectMatrix(cameraOrigin);
+    Matrix4 p = glProjectionMatrix(context.vFOV, context.aspectRatio, context.znear, context.zfar);
+    uplumbMatrix4(context.skyboxShader, p * v, "viewProjection" );
 
-
-
-
-
-
+    
+    glDepthMask(GL_FALSE);
+    glBindBuffer(GL_ARRAY_BUFFER, box.vbo);
+    glBindVertexArray(box.vao);
+    glBindTextureUnit(0, box.texture);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDepthMask(GL_TRUE);
+    
+}
 

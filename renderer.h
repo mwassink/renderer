@@ -7,6 +7,7 @@ struct RendererContext {
     u32 shadowMappingShader;
     u32 texturedShadowShader;
     u32 shadowMappingFramebuffer;
+    u32 skyboxShader;
     HWND windowHandle;
     RendererContext();
 };
@@ -40,15 +41,15 @@ struct RendererUtil {
     int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
     void depthRenderCleanup(void);
     void addMeshTangents(Mesh* mesh);
-    
+    int InitializeCubeMaps(const char* fileNames[6]);
 };
 
 
 struct Renderer {
     RendererContext context;
     RendererUtil utilHelper;
-
-
+    Array<s32> handles;
+    
     
     void setDrawModel(Model* model);
     void testViz(Model* model, CoordinateSpace* cs);
@@ -64,4 +65,6 @@ struct Renderer {
     void envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f);
     void CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f, CubeArgs* renderArgs);
     Renderer();
+    Skybox MakeSkybox(const char* fileNames[6]);
+    void RenderSkybox(Skybox& box);
 };
