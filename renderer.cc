@@ -768,7 +768,7 @@ Renderer::Renderer() {
 
 }
 
-
+#define CHECKGL(str) if (glGetError() != GL_NO_ERROR) {fatalError(str, "Error");}
 
 int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
 
@@ -781,7 +781,6 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
     u32 widthCounter;
     f32 borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     
-
     for (int i = 0; i < 6; ++i) {
         textureData[i] = (void*)loadBitmap(fileNames[i], &widths[i], &heights[i], &bpps[i]);
         ASSERT(bpps[i] == 24 && widths[i] == heights[i]); // for now
@@ -794,9 +793,9 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
     u32 height = heights[0];
     widthCounter = widths[0];
     while (widthCounter >>= 1) mips++;
-    glCreateTextures(1, GL_TEXTURE_CUBE_MAP, &tex);
+    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &tex);
+
     glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
-    
     for (int f = 0; f < 6; f++) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData[f]);
     }
@@ -805,6 +804,7 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
     glTexParameterfv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR, borderColor);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
     for (int i = 0; i < 6; i++) {
         free(textureData[i]);
     }
@@ -812,6 +812,7 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glGenerateTextureMipmap(tex);
     }
+
     return tex;
 }
 

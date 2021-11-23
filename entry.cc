@@ -219,6 +219,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 testUtil = &renderer.utilHelper;
                 shadowRenderer = &renderer;
                 shadowRendererUtil = &renderer.utilHelper;
+                Skybox box;
                 if (!ran) {
                     SpotLight s;
                     s.worldSpaceCoord = Vector3(0, 5, -60);
@@ -238,9 +239,13 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     p = plane();
                     models.push(p);
                     spotLights.push(s);
+                    const char* file = "../tests/resources/kevin.bmp";
+                    const char* files[6] = {file, file, file, file, file, file};
+                    box = renderer.MakeSkybox(files);
                 }
                 
                 //renderer.renderPointShadow(&models, &pointLights[0]);
+                renderer.RenderSkybox(box);
                 testShadow(&models, &spotLights[0]);
 
 
