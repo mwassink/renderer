@@ -42,6 +42,10 @@ struct Vector3 {
         f32 mag = sqrt(z*z + y*y + x*x);
         x /= mag; y /= mag; z /= mag;
     }
+
+    f32 mag() {
+        return  sqrt(z*z + y*y + x*x);
+    }
 };
 
 struct Vector4 {

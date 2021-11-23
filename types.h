@@ -58,6 +58,7 @@ struct glTriangleNames {
     u32 smVao;
 };
 
+// pod array
 template <typename Type>
 struct Array {
     // can this be limited to plain old data types?
@@ -220,6 +221,12 @@ struct PointLight {
 struct Skybox {
     int texture, vbo, vao;
 };
+
+struct Sphere {
+    Vector3 p;
+    f32 radius;
+};
+
 
 
 #endif

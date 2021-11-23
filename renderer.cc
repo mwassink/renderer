@@ -861,3 +861,64 @@ void Renderer::RenderSkybox(Skybox& box) {
     CHECKGL("Failure rendering skybox")
 }
 
+// Project onto many different directions and find the most extreme difference
+// This gives a good estimate of the furthest points
+Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
+
+    const nDirs = 27;
+    Vector3 directions[nDirs];
+    f32 maxDots[nDirs];
+    f32 minDots[nDirs];
+    int minIndexes[nDirs];
+    int maxIndexed[nDirs];
+    int ctr = 0;
+    for int x = -1; x < 2; ++x {
+        for int y = -1; y < 2; ++y {
+            for int z = -1; z < 2; ++z {
+                directions[ctr++] = Vector3(x, y, z);
+            }
+        }
+    }
+
+    
+    for (int i = 0; i < nDirs; ++i) {
+        Vector3& direction = directions[i];
+        f32 dMin = 100000000f;
+        f32 dMax =  -100000000f;
+        int minIndex, maxIndex = -1;
+        for (int j = 0; j < numVerts; ++j) {
+            f32 dp = dot(direction, vertices[j]);
+            minIndex = dp < dMin ? j : minIndex;
+            maxIndex = dp > dMax ? j : maxIndex;
+            dMin = dp < dMin ? dp : dMin;
+            dMax = dp > dMax ? dp : dMax;
+        }
+        maxDots[i] = dMax;
+        minDots[i] = dMin;
+        minIndexes[i] = minIndex;
+        maxIndexes[i] = maxIndex;
+    }
+
+    f32 diameter = -1f;
+    int bestDir = -1;
+    Vector3 bestMin, bestMax;
+    for (int i = 0; i < nDirs; ++i) {
+        Vector3 minVec  = vertices[minIndexes[i]];
+        Vector3 maxVec = vertices[maxIndexes[i]];
+        Vector3 dv = maxVec - minVec;
+        if (dot(dv, dv) > diameter) {
+            diameter =  dot(dv, dv);
+            bestDir = i;
+            bestMax = maxVec;
+            bestMin = minVec;
+        }
+        
+    }
+
+    Sphere sp;
+    sp.p = (bestMax + bestMin) / 2.0f;
+    sp.radius = (bestMax - bestMin).mag() / 2.0f;
+    return Sphere
+    
+    
+}
