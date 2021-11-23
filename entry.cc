@@ -236,20 +236,21 @@ int CALLBACK WinMain(HINSTANCE hInstance,
 #endif
                     pointLights.push(pl());
                     models.push(car(0, -25, -60));
-                    p = plane();
-                    models.push(p);
                     spotLights.push(s);
-                    const char* file = "../tests/resources/kevin.bmp";
-                    const char* files[6] = {file, file, file, file, file, file};
+                    const char* top = "../tests/resources/skybox1-y.bmp";
+                    const char* sides = "../tests/resources/skyboxzx.bmp";
+                    const char* bottom = "../tests/resources/skybox--y.bmp";
+                    
+                    const char* files[6] = {sides, sides, top, bottom, sides, sides};
                     box = renderer.MakeSkybox(files);
                 }
                 
                 //renderer.renderPointShadow(&models, &pointLights[0]);
-                renderer.RenderSkybox(box);
+                
                 testShadow(&models, &spotLights[0]);
+                renderer.RenderSkybox(box);
 
-
-                renderer.context.cameraSpace = lookAtCoordSpace(Vector3(0, -25, -60),                                                      renderer.context.cameraSpace.origin);
+                //renderer.context.cameraSpace = lookAtCoordSpace(Vector3(0, -25, -60),                                                      renderer.context.cameraSpace.origin);
                 
 
 #endif

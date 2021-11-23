@@ -52,9 +52,17 @@ int length(char* str) {
 }
 
 // Do not overlap these
-int slowCopy(const char* src, char* trg, int maxLen) {
+int slowCopy(void* src, void* trg, int maxLen, bool str = true) {
+    char* s = (char*)src;
+    char *d = (char*) trg;
     int initMax = maxLen;
-    while (*src && initMax--) *trg = *src++;
+    if (str) {
+        while (*s && initMax--) *d++ = *s++;
+    }
+    else {
+        while (initMax--) *d++ = *s++;
+    }
+    
     return maxLen - initMax;
 }
 
@@ -101,6 +109,29 @@ int countTrianglesOccurences(const char* f) {
     return ctr;   
 }
 
+u8* flipBitmap(u32 bpp, u32 w, u32 h, u32 sizeBitmap, u8* bitmap) {
+    u8* newBitmap = (u8*)malloc(sizeBitmap);
+    u32 stride = 3 * w;
+    if (3 * w * h != sizeBitmap) {
+        fatalError("Unsupported resource given. Bitmap is not of 24 bit format", "ERROR");
+    }
+
+    for (int i = 0; i < h; ++i) {
+        int rowSrc = (h - i - 1);
+        int rowTrg = i;
+        //memcpy(newBitmap + rowTrg
+         //   * stride, rowSrc * stride + bitmap, stride);
+        slowCopy(rowSrc*stride + bitmap, newBitmap + rowTrg
+            *stride, stride, false);
+    }
+
+    writeOutBMP("testInput.bmp", w, h, bitmap );
+    free(bitmap);
+    
+    return newBitmap;
+
+    
+}
 
 u8* loadBitmap(const char* fileName, u32* width, u32* height, u32* bitsPerPixel) {
     u32 sizeBitmap;
@@ -131,6 +162,7 @@ u8* loadBitmap(const char* fileName, u32* width, u32* height, u32* bitsPerPixel)
         return 0;
     }
     fread(bitMap, 1, sizeBitmap, fp);
+    bitMap = flipBitmap(*bitsPerPixel, *width, *height, sizeBitmap, bitMap);
     fclose(fp);
     return bitMap;
 }
@@ -387,14 +419,13 @@ void Texture::activate() {
 }
 
 // Make sure when getting the bitmap it is a multiple of 4
-void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals) {
+void writeOutBMP(const char* target, u32 w, u32 h, u8* mem) {
     BMPFileHeader fileHeader = {};
     BitmapHeader header = {};
 
     FILE* fp = fopen(target, "wb");
 
-    u8* mem = (u8*)malloc(w * h * 3);
-    u8* tmp = mem;
+    
     fileHeader.fileType = 0x4D42;
     fileHeader.fileSize = sizeof(fileHeader) + sizeof(header) + w*h*3;
     fileHeader.bitmapOffset = sizeof(fileHeader) + sizeof(header);
@@ -413,19 +444,26 @@ void writeOutNormalMapBMP(const char* target, u32 w, u32 h, Vector3* normals) {
 
     fwrite(&fileHeader, 1, sizeof(fileHeader), fp);
     fwrite(&header, 1, sizeof(header), fp);
+    fwrite(mem, 1, w * h * 3, fp);
+    fclose(fp);
+}
+
+
+void writeNormalMapBitmap(u32 w, u32 h, Vector3* normals, const char* target) {
+    u8* mem = (u8*)malloc(w * h * 3);
+    u8* tmp = mem;
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             Vector3& normal = *normals;
-            u8 r = (normal[0] + 1.0f)*127.0f;
-            u8 g = (normal[1] + 1.0f)*127.0f;
-            u8 b = (normal[2] + 1.0f)*127.0f;
+            u8 r = (normal[0] + 1.0f) * 127.0f;
+            u8 g = (normal[1] + 1.0f) * 127.0f;
+            u8 b = (normal[2] + 1.0f) * 127.0f;
             tmp[0] = b; tmp[1] = g; tmp[2] = r;
             tmp += 3;
             normals++;
         }
     }
-    fwrite(mem, 1, w * h * 3, fp);
-    fclose(fp);
+    writeOutBMP(target, w, h, mem);
 }
 
 // Deletes the original shader, creates a new shader
@@ -487,3 +525,5 @@ u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u3
     }
     return tex;
 }
+
+

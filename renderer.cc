@@ -387,7 +387,7 @@ void RendererUtil::buildNormalMap(const char* hFile, const char* n) {
     f32* heightmap = convertBitmapHeightmap(hFile, &w, &h ,20.0f);
     Vector3* normalMapVecs = (Vector3*)malloc(sizeof(Vector3)*w*h);
     normalMap(heightmap, normalMapVecs, h, w);
-    writeOutNormalMapBMP(n, w, h, normalMapVecs);
+    writeNormalMapBitmap(w, h, normalMapVecs, n);
 }
 
 f32* RendererUtil::convertBitmapHeightmap(const char* bitmapFile, u32* w, u32* h, f32 maxHeight) {
@@ -783,10 +783,13 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
     
     for (int i = 0; i < 6; ++i) {
         textureData[i] = (void*)loadBitmap(fileNames[i], &widths[i], &heights[i], &bpps[i]);
+
         ASSERT(bpps[i] == 24 && widths[i] == heights[i]); // for now
         if (i) {
             ASSERT(widths[i] == widths[i-1]);
             ASSERT(heights[i] == heights[i-1]);
+        } else {
+            writeOutBMP("testOutput.bmp", widths[i], heights[i], (u8*)textureData[i]);
         }
     }
     u32 width = widths[0];
@@ -849,12 +852,12 @@ void Renderer::RenderSkybox(Skybox& box) {
     uplumbMatrix4(context.skyboxShader, p * v, "viewProjection" );
 
     
-    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
     glBindBuffer(GL_ARRAY_BUFFER, box.vbo);
     glBindVertexArray(box.vao);
     glBindTextureUnit(0, box.texture);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-    glDepthMask(GL_TRUE);
-    
+    glDepthFunc(GL_LESS);
+    CHECKGL("Failure rendering skybox")
 }
 

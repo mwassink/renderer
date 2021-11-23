@@ -10,6 +10,6 @@ uniform mat4 viewProjection;
 
 void main(void) {
     tCoord = inPos;
-    gl_Position = viewProjection * vec4(inPos, 1.0f);
+    gl_Position = (viewProjection * vec4(inPos, 1.0f)).xyww;
 }
 
