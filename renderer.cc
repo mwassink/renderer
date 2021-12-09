@@ -865,16 +865,16 @@ void Renderer::RenderSkybox(Skybox& box) {
 // This gives a good estimate of the furthest points
 Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
 
-    const nDirs = 27;
+    const int nDirs = 27;
     Vector3 directions[nDirs];
     f32 maxDots[nDirs];
     f32 minDots[nDirs];
     int minIndexes[nDirs];
-    int maxIndexed[nDirs];
+    int maxIndexes[nDirs];
     int ctr = 0;
-    for int x = -1; x < 2; ++x {
-        for int y = -1; y < 2; ++y {
-            for int z = -1; z < 2; ++z {
+    for (int x = -1; x < 2; ++x) {
+        for (int y = -1; y < 2; ++y) {
+            for (int z = -1; z < 2; ++z) {
                 directions[ctr++] = Vector3(x, y, z);
             }
         }
@@ -883,8 +883,8 @@ Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
     
     for (int i = 0; i < nDirs; ++i) {
         Vector3& direction = directions[i];
-        f32 dMin = 100000000f;
-        f32 dMax =  -100000000f;
+        f32 dMin = 10000000.0f;
+        f32 dMax =  10000000.0f;
         int minIndex, maxIndex = -1;
         for (int j = 0; j < numVerts; ++j) {
             f32 dp = dot(direction, vertices[j]);
@@ -899,7 +899,7 @@ Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
         maxIndexes[i] = maxIndex;
     }
 
-    f32 diameter = -1f;
+    f32 diameter = -1.0f;
     int bestDir = -1;
     Vector3 bestMin, bestMax;
     for (int i = 0; i < nDirs; ++i) {
@@ -918,7 +918,18 @@ Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
     Sphere sp;
     sp.p = (bestMax + bestMin) / 2.0f;
     sp.radius = (bestMax - bestMin).mag() / 2.0f;
-    return Sphere
+    return sp;
     
     
+}
+
+void Renderer::AdjustBoundingSphere(Sphere* sp, Vector3* vertices, int numVerts ) {
+
+    Vector3 center = sp->p;
+    for (int i = 0; i < numVerts; i++) {
+        f32 ds = center.dist(vertices[i]);
+        if (ds > sp->radius) {
+            sp->radius = ds;
+        }
+    }
 }

@@ -67,4 +67,6 @@ struct Renderer {
     Renderer();
     Skybox MakeSkybox(const char* fileNames[6]);
     void RenderSkybox(Skybox& box);
+    Sphere OKBoundingSphere(Vector3* verts, int nVerts);
+    void AdjustBoundingSphere(Sphere *sp, Vector3* vertices, int nVerts);
 };

@@ -46,6 +46,12 @@ struct Vector3 {
     f32 mag() {
         return  sqrt(z*z + y*y + x*x);
     }
+
+    f32 dist(const Vector3& other) {
+        f32 dx = other.x - x, dy =  other.y - y, dz = other.z - z;
+        return sqrt((dx*dx + dy*dy + dz*dz));
+    }
+    
 };
 
 struct Vector4 {
@@ -85,6 +91,11 @@ struct Vector4 {
         z *= scale;
         w *= scale;
         return (*this);
+    }
+
+    f32 dist(const Vector4& other) {
+        f32 dx = other.x - x, dy =  other.y - y, dz = other.z - z;
+        return sqrt((dx*dx + dy*dy + dz*dz));
     }
     
     
