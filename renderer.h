@@ -9,6 +9,8 @@ struct RendererContext {
     u32 shadowMappingFramebuffer;
     u32 skyboxShader;
     u32 quadShader;
+    u32 ballTracerShader;
+    Texture computeTarget;
     HWND windowHandle;
     RendererContext();
 };

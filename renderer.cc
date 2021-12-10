@@ -75,6 +75,7 @@ RendererContext::RendererContext() {
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
     quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/vpixel.glsl");
+    computeTarget = RenderTarget();
     glGenFramebuffers(1, &shadowMappingFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
@@ -941,21 +942,23 @@ void Renderer::DrawTexture(Texture* texture) {
     FullScreenQuad();
 }
 
-int Renderer::RenderTarget(void) {
+Texture Renderer::RenderTarget() {
+    Texture texture;
     RECT rect;
     GetWindowRect(context.windowHandle, &rect);
     int w = rect.width, h = rect.height
-    GLuint texture;
-    glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture.id);
     utilHelper.defaultTexParams(GL_TEXTURE_2D);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT,
                  NULL);
-    glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    texture.width = w;
+    texture.height = h;
     return texture;
 }
 
-void Renderer::RunComputeShader(int computeShader) {
-    glUseProgram(computeShader);
+// Assumes the compute shader is bound before this
+void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ) {
+
     int maxGroupX, maxGroupY, maxGroupZ;
     int maxSizeX, maxSizeY, maxSizeZ;
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxGroupX);
@@ -964,6 +967,20 @@ void Renderer::RunComputeShader(int computeShader) {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxSizeX);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxSizeY);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxSizeZ);
+
+    if (maxSizeX < minX || maxSizeY < minY || maxSizeZ < minZ) {
+        return;
+    }
+    
+    glDispatchCompute(minX, minY, minZ);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    
+    
+}
+
+
+void Renderer::RayTraceBoundingSphere() {
+    glBindImageTexture(0, context.computeTarget.id,0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     
     
 }
