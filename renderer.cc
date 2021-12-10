@@ -75,7 +75,7 @@ RendererContext::RendererContext() {
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
     quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/vpixel.glsl");
-    computeTarget = RenderTarget();
+    computeTarget = tmp.RenderTarget();
     glGenFramebuffers(1, &shadowMappingFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
@@ -942,13 +942,15 @@ void Renderer::DrawTexture(Texture* texture) {
     FullScreenQuad();
 }
 
-Texture Renderer::RenderTarget() {
+Texture RendererUtil::RenderTarget(void) {
+    GLuint texID;
     Texture texture;
     RECT rect;
-    GetWindowRect(context.windowHandle, &rect);
-    int w = rect.width, h = rect.height
-    glCreateTextures(GL_TEXTURE_2D, 1, &texture.id);
-    utilHelper.defaultTexParams(GL_TEXTURE_2D);
+    GetWindowRect(context->windowHandle, &rect);
+    int w = rect.right - rect.left, h = rect.bottom - rect.top;
+    glCreateTextures(GL_TEXTURE_2D, 1, &texID);
+    texture.id = (int)texID;
+    defaultTexParams(GL_TEXTURE_2D);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT,
                  NULL);
     texture.width = w;
@@ -979,7 +981,7 @@ void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ)
 }
 
 
-void Renderer::RayTraceBoundingSphere() {
+void Renderer::RayTraceBoundingSphere(void) {
     glBindImageTexture(0, context.computeTarget.id,0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     
     

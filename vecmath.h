@@ -6,9 +6,17 @@ typedef float f32;
 #define PI 3.14159
 
 #include <math.h>
+
+
+
+#if defined(_MSC_VER)
 #include <intrin.h>
-
-
+#elif defined(__clang__)
+#include <x86intrin.h>
+#else 
+#error No valid compiler available for build!
+#end
+#endif
 
 
 
@@ -737,7 +745,8 @@ inline Matrix4 glModelViewProjection(const CoordinateSpace& objSpace, const Coor
     Matrix4 m = ObjectWorldMatrix(objSpace);
     Matrix4 v = WorldObjectMatrix(cameraSpace);
     Matrix4 p = glProjectionMatrix(vFOV, aspectRatio, nearPlane, farPlane);
-    return (p*(v*m));
+    Matrix4 vm = v*m;
+    return (p*vm);
 }
 
 inline Matrix4 modelView(const CoordinateSpace& objSpace, const CoordinateSpace& cameraSpace) {
@@ -797,7 +806,8 @@ inline void CoordinateSpace::rotate( Matrix3& rotation) {
     }
 
 inline Matrix3 normalTransform(Matrix3& transform) {
-    return inv3x3(transform.transpose());
+    Matrix3 transpose = transform.transpose();
+    return inv3x3(transpose);
 }
 
 inline Matrix3 Matrix3x3(const Matrix4& in) {

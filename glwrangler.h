@@ -48,10 +48,17 @@ void setPixelAttrs(HDC windowDC);
 #define GL_TEXTURE_CUBE_MAP               0x8513
 #define GL_TEXTURE_CUBE_MAP_POSITIVE_X    0x8515
 #define GL_TEXTURE_CUBE_MAP_SEAMLESS      0x884F
+#define GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS 0x90EB
+#define GL_MAX_COMPUTE_WORK_GROUP_COUNT   0x91BE
+#define GL_MAX_COMPUTE_WORK_GROUP_SIZE    0x91BF
+#define GL_SHADER_IMAGE_ACCESS_BARRIER_BIT 0x00000020
+#define GL_WRITE_ONLY                     0x88B9
+
 
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
 typedef char GLchar;
+typedef unsigned int GLbitfield;
 
 typedef void WINAPI t_GenVertexArrays(GLsizei n, GLuint *arrays);
 typedef void WINAPI t_BindVertexArray(GLuint array);
@@ -139,6 +146,26 @@ typedef void WINAPI t_Uniform3fv(	GLint location,
 typedef void WINAPI t_Uniform4fv(	GLint location,
  	GLsizei count,
  	const GLfloat *value);
+
+typedef void WINAPI t_GetIntegeri_v(GLenum target,
+ 	GLuint index,
+ 	GLint *data);
+
+
+typedef void WINAPI t_DispatchCompute(GLuint num_groups_x,
+ 	GLuint num_groups_y,
+ 	GLuint num_groups_z);
+
+typedef void WINAPI t_MemoryBarrier(GLbitfield barriers);
+
+
+typedef void WINAPI t_BindImageTexture(	GLuint unit,
+ 	GLuint texture,
+ 	GLint level,
+ 	GLboolean layered,
+ 	GLint layer,
+ 	GLenum access,
+ 	GLenum format);
 #if 0
 typedef void WINAPI t_TexImage2D(	GLenum target,
  	GLint level,
@@ -149,6 +176,10 @@ typedef void WINAPI t_TexImage2D(	GLenum target,
  	GLenum format,
  	GLenum type,
  	const void * data);
+
+
+
+
 #endif
 
 
@@ -206,6 +237,11 @@ EXPORT(FramebufferTexture2D);
 EXPORT(CheckFramebufferStatus);
 EXPORT(Uniform3fv);
 EXPORT(Uniform4fv);
+EXPORT(GetIntegeri_v);
+EXPORT(DispatchCompute);
+EXPORT(MemoryBarrier);
+EXPORT(BindImageTexture);
+
 
 void setPixelAttrs(HDC windowDC);
 void wrangleSetup(void);

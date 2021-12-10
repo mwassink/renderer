@@ -44,8 +44,10 @@ DECLARE(FramebufferTexture2D);
 DECLARE(CheckFramebufferStatus);
 DECLARE(Uniform3fv);
 DECLARE(Uniform4fv);
-
-
+DECLARE(GetIntegeri_v);
+DECLARE(DispatchCompute);
+DECLARE(MemoryBarrier);
+DECLARE(BindImageTexture);
 const int pixelAttribList[] =
 {
     WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -196,5 +198,8 @@ void wrangle(void) {
     WRANGLE(CheckFramebufferStatus);
     WRANGLE(Uniform3fv);
     WRANGLE(Uniform4fv);
-    
+    WRANGLE(GetIntegeri_v);
+    WRANGLE(DispatchCompute);
+    WRANGLE(MemoryBarrier);
+    WRANGLE(BindImageTexture);
 }

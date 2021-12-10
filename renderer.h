@@ -26,7 +26,7 @@ struct RendererUtil {
     Model addModel(const char* fileName, const char* textureName);
     void activateModel(Model* model);
     void attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO);
-    void defaultShadowTexParams(GLenum target);
+    void defaultTexParams(GLenum target);
     void createShadowMapTexture(SpotLight* light, u32 res);
     void addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV, glTriangleNames* names );
     void addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
@@ -45,6 +45,7 @@ struct RendererUtil {
     void depthRenderCleanup(void);
     void addMeshTangents(Mesh* mesh);
     int InitializeCubeMaps(const char* fileNames[6]);
+    Texture RenderTarget();
     
 };
 
@@ -74,5 +75,8 @@ struct Renderer {
     Sphere OKBoundingSphere(Vector3* verts, int nVerts);
     void AdjustBoundingSphere(Sphere *sp, Vector3* vertices, int nVerts);
     void FullScreenQuad(void);
+    void DrawTexture(Texture* t);
+    void RunComputeShader(int c, int x, int y, int z);
+    void RayTraceBoundingSphere(void);
 };
 
