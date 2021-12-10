@@ -8,6 +8,7 @@ struct RendererContext {
     u32 texturedShadowShader;
     u32 shadowMappingFramebuffer;
     u32 skyboxShader;
+    u32 quadShader;
     HWND windowHandle;
     RendererContext();
 };
@@ -42,6 +43,7 @@ struct RendererUtil {
     void depthRenderCleanup(void);
     void addMeshTangents(Mesh* mesh);
     int InitializeCubeMaps(const char* fileNames[6]);
+    
 };
 
 
@@ -69,4 +71,6 @@ struct Renderer {
     void RenderSkybox(Skybox& box);
     Sphere OKBoundingSphere(Vector3* verts, int nVerts);
     void AdjustBoundingSphere(Sphere *sp, Vector3* vertices, int nVerts);
+    void FullScreenQuad(void);
 };
+

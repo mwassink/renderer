@@ -10,7 +10,7 @@
 #endif
 
 // Poached from the interwebs
-float cubeVertices[] = {
+f32 cubeVertices[] = {
            
     -1.0f,  1.0f, -1.0f,
     -1.0f, -1.0f, -1.0f,
@@ -74,6 +74,7 @@ RendererContext::RendererContext() {
     texturedShadowShader = tmp.setShaders("../shaders/shadowedVertex.glsl","../shaders/shadowedPixel.glsl" );
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
+    quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/vpixel.glsl");
     glGenFramebuffers(1, &shadowMappingFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
@@ -166,7 +167,7 @@ void RendererUtil::attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO) {
     bool complete = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 }
 
-void RendererUtil::defaultShadowTexParams(GLenum target) {
+void RendererUtil::defaultTexParams(GLenum target) {
     f32 border[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -186,7 +187,7 @@ void RendererUtil::createShadowMapTexture(SpotLight* light, u32 res) {
     glBindTexture(GL_TEXTURE_2D, depthTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
                  res, res, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    defaultShadowTexParams(GL_TEXTURE_2D);
+    defaultTexParams(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0); // done
 
     light->depthTexture = depthTex;
@@ -718,7 +719,7 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     if (renderArgs->tex == -1) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
-        utilHelper.defaultShadowTexParams(GL_TEXTURE_CUBE_MAP);
+        utilHelper.defaultTexParams(GL_TEXTURE_CUBE_MAP);
         for (int i = 0; i < 6; ++i) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, renderArgs->internalFormat, renderArgs->res, renderArgs->res, 0, renderArgs->format, GL_FLOAT, 0);   
             GLint err = glGetError();
@@ -932,4 +933,51 @@ void Renderer::AdjustBoundingSphere(Sphere* sp, Vector3* vertices, int numVerts 
             sp->radius = ds;
         }
     }
+}
+
+void Renderer::DrawTexture(Texture* texture) {
+    glUseProgram(context.quadShader);
+    glBindTextureUnit(0, texture->id);
+    FullScreenQuad();
+}
+
+int Renderer::RenderTarget(void) {
+    RECT rect;
+    GetWindowRect(context.windowHandle, &rect);
+    int w = rect.width, h = rect.height
+    GLuint texture;
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+    utilHelper.defaultTexParams(GL_TEXTURE_2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT,
+                 NULL);
+    glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    return texture;
+}
+
+void Renderer::RunComputeShader(int computeShader) {
+    glUseProgram(computeShader);
+    int maxGroupX, maxGroupY, maxGroupZ;
+    int maxSizeX, maxSizeY, maxSizeZ;
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxGroupX);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxGroupY);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxGroupZ);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxSizeX);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxSizeY);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxSizeZ);
+    
+    
+}
+
+
+// Assumes whatever prior work that needs to be done is already done
+void Renderer::FullScreenQuad(void) {
+    f32 vertices[] = {
+        -1.0f, -1.0f,
+        3.0f, -1.0f,
+        -1.0f, 3.0f
+    };
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(f32), vertices);
+    glEnableVertexAttribArray(0);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    
 }
