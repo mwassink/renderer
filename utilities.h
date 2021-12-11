@@ -5,7 +5,7 @@ typedef unsigned char u8;
 #define ASSERT(expr) if (!(expr)) { fatalError("The program encountered an error", "Error");}
 
 char* readFile(const char* name, int* size);
-void fatalError(char* msg, char* title);
+void fatalError(const char* msg, const char* title);
 bool fileExists(const char* str);
 u8* loadBitmap(const char* fileName, u32* w, u32* h, u32* bpp);
 Mesh loadMesh(const char* objPrefix, Texture texRequest);

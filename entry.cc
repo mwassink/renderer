@@ -26,7 +26,7 @@ static bool runnable = 1;
 #endif
 
 
-void fatalError(char* msg, char* title) {
+void fatalError(const char* msg, const char* title) {
     MessageBox(0, msg, title,  MB_OK | MB_ICONERROR );
     ExitProcess(1);
 }

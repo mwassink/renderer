@@ -16,7 +16,14 @@
 #define TEXTURED "define TEXTURED 1\n"
 
 #define VERSIONSTRING "version 450 core\n"
-
+#if defined(_MSC_VER)
+#include <intrin.h>
+#elif defined(__clang__)
+#include <x86intrin.h>
+#else 
+#error No valid compiler available for build!
+#end
+#endif
 
 
 void uplumbMatrix4(u32 s, Matrix4& m, const char* n) {
@@ -45,14 +52,14 @@ void uplumbf(u32 s, f32 f, const char* n) {
     glUniform1f(loc, f);
 }
 
-int length(char* str) {
-    char* init = str;
+int length(const char* str) {
+    const char* init = str;
     while ( *str) str++;
     return str - init;
 }
 
 // Do not overlap these
-int slowCopy(void* src, void* trg, int maxLen, bool str = true) {
+int slowCopy(const void* src, void* trg, int maxLen, bool str = true) {
     char* s = (char*)src;
     char *d = (char*) trg;
     int initMax = maxLen;

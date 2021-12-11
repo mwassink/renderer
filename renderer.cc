@@ -87,8 +87,12 @@ void RendererUtil::SetupBasicShader(Model* model, PointLight* light, GLuint shad
     GLint mvLoc, mvpLoc, normMatrix, lightPos, diffCol, specCol, lightCol, lightPow, err;
     Matrix4 mv = modelView(model->modelSpace, context->cameraSpace);
     Matrix4 mvp = glModelViewProjection(model->modelSpace, context->cameraSpace, context->vFOV, context->aspectRatio, context->znear, context->zfar );
-    Matrix3 normalMatrix = normalTransform(Matrix3x3(mv));
-    Vector3 l = ( WorldObjectMatrix(context->cameraSpace)* Vector4(light->worldSpaceCoord, 1.0f)).v3();
+    Matrix3 tmp = Matrix3x3(mv);
+    Matrix3 normalMatrix = normalTransform(tmp);
+    Matrix4 worldObject = WorldObjectMatrix(context->cameraSpace);
+    Vector4 pt = Vector4(light->worldSpaceCoord, 1.0f);
+        
+    Vector3 l = (worldObject*pt).v3();
 
     
     glUseProgram(shader);
@@ -113,10 +117,11 @@ void RendererUtil::AddTexturingToShader (Model* model, SpotLight* light, GLuint 
 void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint shader) {
 
     Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 40.0f);
-    Matrix4 sMatrix = Matrix4(.5f, 0.0f, 0.0f, 0.5f,
+    Matrix4 l = Matrix4(.5f, 0.0f, 0.0f, 0.5f,
                               0.0f, 0.5f, 0.0f, 0.5f,
                               0.0f, 0.0f, 0.5f, 0.5f,
-                              0.0f, 0.0f, 0.0f, 1.0f) * glproj;
+                       0.0f, 0.0f, 0.0f, 1.0f);
+    Matrix4 sMatrix = l  * glproj;
     uplumbMatrix4(shader, sMatrix, "shadowMatrix");
     glBindTextureUnit(2, light->depthTexture);
     
@@ -485,8 +490,9 @@ void RendererUtil::addMeshTangents(Mesh* mesh) {
         qmat = qmat.transpose();
         // <- q1 ->
         // <- q2 ->
-        // 0  0  0 
-        Matrix3 res = adjScale * tsmat * qmat;
+        // 0  0  0
+        Matrix3 res = tsmat * qmat;
+        res *= adjScale;
 
         res = res.transpose();
         
@@ -661,7 +667,7 @@ Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
 }
 
 void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
-    if (light->cubeArgs.tex = -1) {
+    if (light->cubeArgs.tex == -1) {
         light->cubeArgs.internalFormat = GL_DEPTH_COMPONENT32;
         light->cubeArgs.format = GL_DEPTH_COMPONENT;
         light->cubeArgs.shader = context.shadowMappingShader;
@@ -686,7 +692,10 @@ Matrix4 Renderer::shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 fa
 void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
 
     //Matrix4 modelViewProjection = shadowMapProj(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
-    Matrix4 modelViewProjection = glProjectionMatrix(PI / 4, 1.0f, n, f) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
+    Matrix4 proj = glProjectionMatrix(PI / 4, 1.0f, n, f);
+    Matrix4 m = ObjectWorldMatrix(model->modelSpace);
+    Matrix4 vm = (invCameraMatrix * m);
+    Matrix4 modelViewProjection =  proj * vm;
     GLint err = glGetError();
     GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
@@ -701,7 +710,9 @@ void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 
 // (TODO) add this later
 // For offline rendering
 void Renderer::envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
-    Matrix4 modelViewProjection = glProjectionMatrix(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
+    Matrix4 p = glProjectionMatrix(PI/4, 1.0f, n, f  ), m = ObjectWorldMatrix(model->modelSpace);
+    Matrix4 vm = invCameraMatrix * m;
+    Matrix4 modelViewProjection =  p * vm;
     glViewport(0, 0, res, res);
     glClear(GL_COLOR_BUFFER_BIT);
     GLint err = glGetError();
@@ -851,7 +862,8 @@ void Renderer::RenderSkybox(Skybox& box) {
     cameraOrigin.origin = Vector3(0, 0, 0);
     Matrix4 v = WorldObjectMatrix(cameraOrigin);
     Matrix4 p = glProjectionMatrix(context.vFOV, context.aspectRatio, context.znear, context.zfar);
-    uplumbMatrix4(context.skyboxShader, p * v, "viewProjection" );
+    Matrix4 pv = p * v;
+    uplumbMatrix4(context.skyboxShader, pv, "viewProjection" );
 
     
     glDepthFunc(GL_LEQUAL);
