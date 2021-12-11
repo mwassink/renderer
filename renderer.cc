@@ -75,7 +75,7 @@ RendererContext::RendererContext() {
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
     quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/vpixel.glsl");
-    computeTarget = tmp.RenderTarget();
+    computeTarget = Texture();
     glGenFramebuffers(1, &shadowMappingFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
@@ -994,6 +994,9 @@ void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ)
 
 
 void Renderer::RayTraceBoundingSphere(void) {
+    if (context.computeTarget.id < 0) {
+        context.computeTarget = utilHelper.RenderTarget();
+    }
     glBindImageTexture(0, context.computeTarget.id,0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     
     
