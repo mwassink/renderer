@@ -915,14 +915,18 @@ void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ)
     
     int maxGroupX, maxGroupY, maxGroupZ;
     int maxSizeX, maxSizeY, maxSizeZ;
+    int groupInvocations;
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxGroupX);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxGroupY);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxGroupZ);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxSizeX);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxSizeY);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxSizeZ);
-    
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &groupInvocations);
     if (maxSizeX < minX || maxSizeY < minY || maxSizeZ < minZ) {
+        return;
+    }
+    if (minX * minY > groupInvocations) {
         return;
     }
     
@@ -938,6 +942,7 @@ void Renderer::RayTraceBoundingSphere(void) {
         context.computeTarget = utilHelper.RenderTarget();
     }
     glBindImageTexture(0, context.computeTarget.id,0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glUseProgram(context.computeTarget);
     
     
 }

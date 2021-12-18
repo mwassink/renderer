@@ -22,7 +22,7 @@ struct RendererUtil {
     void SetupBasicShader(Model* model, PointLight* light, GLuint shader);
     void AddTexturingToShader (Model* model, SpotLight* light, GLuint shader);
     void AddShadowsToShader(Model* model, SpotLight* light, GLuint shader);
-    Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap, bool f= false);
+    Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap, bool f= true);
     Model addModel(const char* fileName, const char* textureName);
     void activateModel(Model* model);
     void attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO);
