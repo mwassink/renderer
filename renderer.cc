@@ -588,7 +588,6 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
     RECT rect;
     GetWindowRect(context.windowHandle, &rect);
     glUseProgram(context.shadowMappingShader);
-    // (TODO) can I reuse these buffers?
 
     if (light->depthTexture < 0) {
         utilHelper.createShadowMapTexture(light, RES);
@@ -647,8 +646,6 @@ Matrix4 Renderer::invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace) {
 
 Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
     Array<Matrix4> invCameraMatrices(6);
-    // ORDER of cube map storage +X, -X, +Y, -Y, +Z, -Z
-    // M faces
     Matrix4 mCube = ObjectWorldMatrix(renderSpace);
     invCameraMatrices[0] = Matrix4(0,0,1,0,-1,0,-1,0,0);
     invCameraMatrices[1] = Matrix4(0,0,-1,0,-1,0,1,0,0);
@@ -691,7 +688,6 @@ Matrix4 Renderer::shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 fa
 // don't try to reuse the plumbing for some of the other ones
 void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
 
-    //Matrix4 modelViewProjection = shadowMapProj(PI/4, 1.0f, n, f  ) * invCameraMatrix * ObjectWorldMatrix(model->modelSpace);
     Matrix4 proj = glProjectionMatrix(PI / 4, 1.0f, n, f);
     Matrix4 m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 vm = (invCameraMatrix * m);
@@ -708,7 +704,6 @@ void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 
 
 
 // (TODO) add this later
-// For offline rendering
 void Renderer::envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
     Matrix4 p = glProjectionMatrix(PI/4, 1.0f, n, f  ), m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 vm = invCameraMatrix * m;
