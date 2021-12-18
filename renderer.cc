@@ -128,15 +128,26 @@ void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint sha
 }
 
 
-Model RendererUtil::addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap ) {
+
+
+// (TODO) join duplicate code in this and the one below it
+Model RendererUtil::addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap, bool fast) {
     Model model;
     Texture tex(textureName);
     Texture norm(normalMap);
-    model.mesh = loadMesh(fileName, tex);
+    if (fast) {
+        model.mesh = BinaryMesh(fileName);
+        model.mesh.textures = tex;
+    } else {
+        model.mesh = loadMesh(fileName, tex);
+    }
     model.mesh.normalMap = norm;
     
     
-    addMeshTangents(&model.mesh);
+    if (!model.mesh.normalVertices) {
+        addMeshTangents(&model.mesh);
+    }
+    
     activateModel(&model);
     return model;
 }
@@ -453,73 +464,7 @@ void RendererUtil::depthRenderCleanup(void) {
 
 // Lengyel, Eric. "Computing Tangent Space Basis Vectors for an Arbitrary Mesh". Terathon Software 3D Graphics Library,2001. http://www.terathon.com/code/tangent.html
 void RendererUtil::addMeshTangents(Mesh* mesh) {
-    VertexLarge* normalVerts = (VertexLarge*)malloc(sizeof(VertexLarge)*mesh->numVertices);
-    Vertex* verts = mesh->vertices;
-    u32* indexList = mesh->triangles;
-    Vector3* bitangents = (Vector3*)malloc(sizeof(Vector3)*mesh->numVertices);
-    for (int i = 0; i < mesh->numVertices; ++i) {
-        normalVerts[i].coord = verts[i].coord;
-        normalVerts[i].normal  = verts[i].normal;
-        normalVerts[i].tangent = Vector3(0.0f, 0.0f, 0.0f);
-        normalVerts[i].uv = verts[i].uv;
-        normalVerts[i].handedness = 1.0f;
-        bitangents[i] = Vector3(0.0f, 0.0f, 0.0f);
-    }
-    for (int i = 0; i < mesh->numIndices/3; ++i) {
-        u32 i0 = mesh->triangles[i*3], i1 = mesh->triangles[i*3+1], i2 = mesh->triangles[i*3+2];
-        Vector3 p0 = verts[i0].coord.v3();
-        Vector3 p1 = verts[i1].coord.v3();
-        Vector3 p2 = verts[i2].coord.v3();
-        
-        UV uv0 = verts[i0].uv;
-        UV uv1 = verts[i1].uv;
-        UV uv2 = verts[i2].uv;
-        
-        Vector3 q1 = p1 - p0;
-        Vector3 q2 = p2 - p0;
-        f32 s1 = uv1.u - uv0.u, s2 = uv2.u - uv0.u;
-        f32 t1 = uv1.v - uv0.v, t2 = uv2.v - uv0.v;
-        
-        f32 adjScale = 1/(s1*t2 - s2*t1);
-        Matrix3 tsmat  = Matrix3(t2, -t1, 0, -s2, s1, 0, 0, 0,0);
-        //tsmat:
-        // t2 -t1 0
-        // -s2 s1 0
-        // 0   0  0
-        Matrix3 qmat = Matrix3(q1, q2, Vector3(0,0,0));
-        qmat = qmat.transpose();
-        // <- q1 ->
-        // <- q2 ->
-        // 0  0  0
-        Matrix3 res = tsmat * qmat;
-        res *= adjScale;
-        
-        res = res.transpose();
-        
-        Vector3 t = res[0];
-        Vector3 b = res[1];
-        
-        normalVerts[i0].tangent = normalVerts[i0].tangent + t;
-        bitangents[i0] = bitangents[i0] + b;
-        normalVerts[i1].tangent = normalVerts[i1].tangent + t;
-        bitangents[i1] = bitangents[i1] + b;
-        normalVerts[i2].tangent = normalVerts[i2].tangent + t;
-        bitangents[i2] = bitangents[i2] + b;
-    }
-    for (int i = 0; i < mesh->numVertices; ++i) {
-        Vector3 t = normalVerts[i].tangent;
-        Vector3& n = normalVerts[i].normal;
-        normalVerts[i].tangent = t - dot(normalVerts[i].normal, t)*normalVerts[i].normal;
-        normalVerts[i].tangent.normalize();
-        if (dot(cross(t, bitangents[i]), n) < 0.0f) {
-            normalVerts[i].handedness = -1.0f;
-        }
-    }
-    
-    mesh->normalVertices = normalVerts;
-    free(verts);
-    free(bitangents);
-    mesh->vertices = 0;
+    MeshTangentsInternal(mesh);
 }
 
 void Renderer::setDrawModel(Model* model) {

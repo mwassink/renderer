@@ -19,9 +19,9 @@ void writeOutBMP(const char* target, u32 w, u32 h, u8* mem);
 void writeNormalMapBitmap(u32 w, u32 h, Vector3* normals, const char* target);
 void uplumbf(u32 s, f32 f, const char* n);
 u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
-Mesh ReadModel(const char* file);
-void SerializeModel(const char* f, const char* dst);
-
+Mesh BinaryMesh(const char* file);
+void SerializeModel(const char* f, const char* dst, bool n);
+void MeshTangentsInternal(Mesh* mesh);
 #ifndef ASSET_BUILD
 void uplumbMatrix4(u32 s, Matrix4& m, const char* n);
 void uplumbMatrix3(u32 s, Matrix3& m, const char* n);

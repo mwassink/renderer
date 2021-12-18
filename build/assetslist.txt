@@ -1,0 +1,7 @@
+#this is a list of the files for the assets that should be changed
+#lines beginning with a # should be ignored
+#they should be the obj files for use with the parsing
+../tests/models/barrel/barrel.obj
+#../tests/models/stanford-dragon-obj/stanford-dragon.obj
+#../tests/models/tiefighter/star-wars-vader-tie-fighter.obj
+#../tests/models/car/car_obj.obj

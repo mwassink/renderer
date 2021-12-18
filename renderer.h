@@ -22,7 +22,7 @@ struct RendererUtil {
     void SetupBasicShader(Model* model, PointLight* light, GLuint shader);
     void AddTexturingToShader (Model* model, SpotLight* light, GLuint shader);
     void AddShadowsToShader(Model* model, SpotLight* light, GLuint shader);
-    Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap );
+    Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap, bool f= false);
     Model addModel(const char* fileName, const char* textureName);
     void activateModel(Model* model);
     void attachDepthTextureFramebuffer(u32 depthTex, u32 depthFBO);
@@ -60,7 +60,7 @@ struct Renderer {
     void testViz(Model* model, CoordinateSpace* cs);
     void renderModel(Model* model, SpotLight* light);
     void renderModel(Model* model, PointLight* pointLight);
-
+    
     void ShadowPass(Model* models, SpotLight* light, u32 numModels);
     Matrix4 invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace);
     Array<Matrix4> cubeMapMatrices(CoordinateSpace& renderSpace);
