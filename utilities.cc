@@ -1,12 +1,13 @@
-#include <stdio.h>
+#ifndef ASSET_BUILD
 #include <windows.h>
 #include <gl/gl.h>
-#include <string.h>
 #include <intrin.h>
-
-
-#include "types.h"
 #include "glwrangler.h"
+#endif
+
+#include <string.h>
+#include <stdio.h>
+#include "types.h"
 #include "utilities.h"
 #define MAXU32 0xFFFFFFFF
 
@@ -28,7 +29,7 @@
 #define VERTEX_BASIC 0
 #define VERTEX_NORMAL 0x010100
 
-
+#ifndef ASSET_BUILD
 void uplumbMatrix4(u32 s, Matrix4& m, const char* n) {
     GLint loc = glGetUniformLocation(s, n);
     if (loc != -1)
@@ -54,7 +55,7 @@ void uplumbf(u32 s, f32 f, const char* n) {
     GLint loc = glGetUniformLocation(s, n);
     glUniform1f(loc, f);
 }
-
+#endif 
 int length(const char* str) {
     const char* init = str;
     while ( *str) str++;
@@ -125,21 +126,21 @@ u8* flipBitmap(u32 bpp, u32 w, u32 h, u32 sizeBitmap, u8* bitmap) {
     if (3 * w * h != sizeBitmap) {
         fatalError("Unsupported resource given. Bitmap is not of 24 bit format", "ERROR");
     }
-
+    
     for (int i = 0; i < h; ++i) {
         int rowSrc = (h - i - 1);
         int rowTrg = i;
         //memcpy(newBitmap + rowTrg
-         //   * stride, rowSrc * stride + bitmap, stride);
+        //   * stride, rowSrc * stride + bitmap, stride);
         slowCopy(rowSrc*stride + bitmap, newBitmap + rowTrg
-            *stride, stride, false);
+                 *stride, stride, false);
     }
-
+    
     writeOutBMP("testInput.bmp", w, h, bitmap );
     free(bitmap);
     
     return newBitmap;
-
+    
     
 }
 
@@ -178,7 +179,7 @@ u8* loadBitmap(const char* fileName, u32* width, u32* height, u32* bitsPerPixel)
 }
 
 void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,Array<Vector3>* coords, Array<Vector3>* normals, Array<UV>* uvcoords,
-                Array<Vertex>* vertices) {
+                 Array<Vertex>* vertices) {
     unsigned int p, t, n, occurences;
     occurences = countOccurrences(s, '/', 0);
     if (occurences == 2) {
@@ -203,8 +204,8 @@ void parseVertex(const char* s, HashTable* indexHashTable, Array<u32>* indices,A
     }
     
     indices->push(val);
-
-
+    
+    
 }
 
 Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV>* uvcoords, u32 p, u32 t, u32 n  ) {
@@ -219,7 +220,7 @@ Vertex constructVertex(Array<Vector3>* coords, Array<Vector3>* normals, Array<UV
     else
         v.uv = {2.5f, 2.5f};
     return v;
-
+    
 }
 
 Mesh parseObj(const char* f, Texture texRequest) {
@@ -232,7 +233,7 @@ Mesh parseObj(const char* f, Texture texRequest) {
     coords.push(dummyVec);
     normals.push(dummyVec);
     tcoords.push(dummyUV);
-
+    
     
     // is an estimate
     int triangles = countTrianglesOccurences(f);
@@ -240,8 +241,12 @@ Mesh parseObj(const char* f, Texture texRequest) {
         return Mesh(0, 0, Texture(), 0, 0);
     }
     HashTable mappingTable(triangles * 4);
-
+    
     FILE* fp = fopen(f, "rb");
+    
+    if (!fp) {
+        fatalError("unable to read in obj file","Invalid file"); 
+    }
     char arr[200];
     char type[100];
     char tri1[80]; char tri2[80]; char tri3[80]; char tri4[80];
@@ -292,20 +297,21 @@ Mesh parseObj(const char* f, Texture texRequest) {
 
 
 Mesh loadMesh(const char* objFile,  Texture textureRequest) {
-
+    
     Mesh mesh = parseObj(objFile, textureRequest);
     return mesh;
 }
 
+#ifndef ASSET_BUILD
 char* readFileWindows(const char* name, int* sz) {
     char* mem;
     HANDLE hFile;
     union _LARGE_INTEGER size;
-
-
+    
+    
     DWORD  read;
-
-
+    
+    
     hFile = CreateFileA(name, GENERIC_READ, 0, 0, OPEN_EXISTING,0 , 0 );
     if (!GetFileSizeEx(hFile, &size )) {
         printf("Failure getting file size for %s!\n", name);
@@ -321,8 +327,9 @@ char* readFileWindows(const char* name, int* sz) {
     
     
     
-
+    
 }
+#endif
 
 char* readFile(const char* name, int32* sizePtr) {
     FILE* fp = fopen(name, "rb");
@@ -350,14 +357,14 @@ char* readFile(const char* name, int32* sizePtr) {
 u32 hash432(u32 a, u32 b, u32 c, u32 d) {
     unsigned char seed[16] {
         0x0b , 0x6a , 0xf8 , 0xf4 , 0x7b , 0x85 , 0x5b , 0xc1 , 0x38 , 0x6b , 0x97 , 0x07 , 0x09 , 0x00 , 0x58 , 0x7b
-            };
+    };
     
     __m128i val = _mm_set_epi32(a, b, c, d);
     __m128i seedmm = _mm_loadu_si128((__m128i*) seed);
     __m128i res = _mm_aesdec_si128(val, seedmm);
     res = _mm_aesdec_si128(res, seedmm);
     res = _mm_aesdec_si128(res, seedmm);
-
+    
     // Take the least significant bits
     return (_mm_extract_epi32(res, 0));
     
@@ -366,40 +373,40 @@ u32 hash432(u32 a, u32 b, u32 c, u32 d) {
 }
 
 HashTable::HashTable(int sz) {
-        TripleKeyVal tkv(0, 0, 0, -1);
-        ctr = 0;
-        arr = (TripleKeyVal*)malloc(sizeof(TripleKeyVal)*sz); // this will be aligned fine
-        for (int i = 0; i < sz; ++i) {
-            arr[i] = tkv;
-        }
-        this->sz = sz;
+    TripleKeyVal tkv(0, 0, 0, -1);
+    ctr = 0;
+    arr = (TripleKeyVal*)malloc(sizeof(TripleKeyVal)*sz); // this will be aligned fine
+    for (int i = 0; i < sz; ++i) {
+        arr[i] = tkv;
+    }
+    this->sz = sz;
 }
 
 int32 HashTable::insert(u32 a, u32 b, u32 c, u32 empty) {
-        TripleKeyVal tkv(a, b, c, empty);
-        u32 bucketIndex = hash432(a, b, c, empty) % sz;
-        while (arr[bucketIndex].arr[3] != -1) {
-            bucketIndex = ((bucketIndex + 1) % sz);
-        }
-        arr[bucketIndex].arr[0] = a;
-        arr[bucketIndex].arr[1] = b;
-        arr[bucketIndex].arr[2] = c;
-        arr[bucketIndex].arr[3] = ctr;
-        return ctr++;
-
-        
-        
+    TripleKeyVal tkv(a, b, c, empty);
+    u32 bucketIndex = hash432(a, b, c, empty) % sz;
+    while (arr[bucketIndex].arr[3] != -1) {
+        bucketIndex = ((bucketIndex + 1) % sz);
+    }
+    arr[bucketIndex].arr[0] = a;
+    arr[bucketIndex].arr[1] = b;
+    arr[bucketIndex].arr[2] = c;
+    arr[bucketIndex].arr[3] = ctr;
+    return ctr++;
+    
+    
+    
 }
 
 int32 HashTable::at(u32 a, u32 b, u32 c, u32 empty ) {
-        TripleKeyVal tkv(a, b, c, empty );
-        u32 bucketIndex = hash432(a, b, c, empty) % sz;
-        // If we find an empty index or our bucket we stop
-        while ((!(arr[bucketIndex] == tkv )) && arr[bucketIndex].arr[3] != -1) {
-             bucketIndex = ((bucketIndex + 1) % sz);
-        }
-        return arr[bucketIndex].arr[3];
-        
+    TripleKeyVal tkv(a, b, c, empty );
+    u32 bucketIndex = hash432(a, b, c, empty) % sz;
+    // If we find an empty index or our bucket we stop
+    while ((!(arr[bucketIndex] == tkv )) && arr[bucketIndex].arr[3] != -1) {
+        bucketIndex = ((bucketIndex + 1) % sz);
+    }
+    return arr[bucketIndex].arr[3];
+    
 }
 
 void HashTable::release() {
@@ -422,25 +429,30 @@ f32 clampNormal(f32 in) {
 void Texture::activate() {
     
     u32 bpp;
+#if defined(ASSET_BUILD)
+    id = -1;
+#else
     id = BitmapTextureInternal(fileName, &width, &height, &bpp);
+#endif
     if (bpp != 24) {
         ASSERT(0);
     }
 }
 
+
 // Make sure when getting the bitmap it is a multiple of 4
 void writeOutBMP(const char* target, u32 w, u32 h, u8* mem) {
     BMPFileHeader fileHeader = {};
     BitmapHeader header = {};
-
+    
     FILE* fp = fopen(target, "wb");
-
+    
     
     fileHeader.fileType = 0x4D42;
     fileHeader.fileSize = sizeof(fileHeader) + sizeof(header) + w*h*3;
     fileHeader.bitmapOffset = sizeof(fileHeader) + sizeof(header);
     fileHeader.reserved1 = 0; fileHeader.reserved2 = 0;
-
+    
     header.size = sizeof(header);
     header.width = w;
     header.height = h;
@@ -451,7 +463,7 @@ void writeOutBMP(const char* target, u32 w, u32 h, u8* mem) {
     header.xRes = 1; //???
     header.yRes = 1; //???
     header.numColorsPalette = 0;
-
+    
     fwrite(&fileHeader, 1, sizeof(fileHeader), fp);
     fwrite(&header, 1, sizeof(header), fp);
     fwrite(mem, 1, w * h * 3, fp);
@@ -495,21 +507,21 @@ char* AlterShaderArgs(char** argList, char* shader, int lenShader ) {
 
 
 
-    
+#ifndef ASSET_BUILD
 // TODO... I do not like the GL code making its way into here....
 u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
-
+    
     GLuint tex;
     GLint err;
     u32 mips = 0;
     f32 borderColor[] = { 1.0f, 0.0f, 1.0f, 1.0f };
     
-
+    
     u8* bitmapTexture = loadBitmap(textureString , width, height, bitsPerPixel);
-
+    
     u32 wc = *width;
     while (wc >>= 1) mips++;
-
+    
     if (*width != *height) mips = 1;
     
     glCreateTextures(GL_TEXTURE_2D, 1, &tex);
@@ -535,13 +547,18 @@ u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u3
     }
     return tex;
 }
-
+#endif
 // File format: 4 bytes (type), 4 bytes (vertices size), 4  bytes (indices size)
 // little endian. No big endian
-void SerializeModel(const char* f, const char* dst, bool normalMapped) {
+void SerializeModel(const char* f, const char* dst) {
     int texReq = 0;
+    bool normalMapped = false;
     Mesh m = parseObj(f, 0);
-
+    
+    if (m.normalVertices != 0) {
+        normalMapped = true;
+    }
+    
     FILE* filePointer = fopen(f, "wb+");
     u32 type = VERTEX_BASIC;
     if (normalMapped) {
@@ -555,15 +572,15 @@ void SerializeModel(const char* f, const char* dst, bool normalMapped) {
     } else {
         fwrite(&m.vertices, sizeof(Vertex), m.numVertices, filePointer);
     }
-
+    
     fwrite(&m.triangles, sizeof(u32), m.numIndices, filePointer);
     fclose(filePointer);
     
     
 }
 
-Mesh ReadModel(const char* m) {
-    FILE* filePointer = fopen(m, "rb");
+Mesh ReadModel(const char* file) {
+    FILE* filePointer = fopen(file, "rb");
     u32 numIndices, numVertices, type;
     VertexLarge* normalVertices = 0;
     Vertex* basicVertices = 0;
@@ -571,14 +588,23 @@ Mesh ReadModel(const char* m) {
     fread(&type, sizeof(u32), 1, filePointer);
     fread(&numVertices, sizeof(u32), 1, filePointer);
     fread(&numIndices, sizeof(u32), 1, filePointer);
+    u32* indices = (u32*) malloc(sizeof(u32) * numIndices);
     if (type == VERTEX_BASIC) {
-
+        basicVertices= (Vertex*) malloc(sizeof(Vertex) * numVertices);
+        fread(basicVertices, sizeof(Vertex), numVertices, filePointer);
     } else if (type == VERTEX_NORMAL) {
-        
+        normalVertices =  (VertexLarge*) malloc(sizeof(VertexLarge) * numVertices);
+        fread(normalVertices, sizeof(VertexLarge), numVertices, filePointer);
     } else {
-        
+        fatalError("Unknown file type for serialized mesh!", "File Error");
     }
     
+    Texture tex;
+    Mesh m(basicVertices, indices, tex, numVertices, numIndices);
+    if (type == VERTEX_NORMAL) {
+        m.normalVertices = normalVertices;
+    }
+    return m;
     
     
     

@@ -17,12 +17,17 @@ int32 clampRangei(int32 min, int32 max, int32 in);
 f32 clampNormal(f32 in);
 void writeOutBMP(const char* target, u32 w, u32 h, u8* mem);
 void writeNormalMapBitmap(u32 w, u32 h, Vector3* normals, const char* target);
+void uplumbf(u32 s, f32 f, const char* n);
+u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
+Mesh ReadModel(const char* file);
+void SerializeModel(const char* f, const char* dst);
+
+#ifndef ASSET_BUILD
 void uplumbMatrix4(u32 s, Matrix4& m, const char* n);
 void uplumbMatrix3(u32 s, Matrix3& m, const char* n);
 void uplumbVector4(u32 s, Vector4& v, const char* n);
 void uplumbVector3(u32 s, Vector3& v, const char* n);
-void uplumbf(u32 s, f32 f, const char* n);
-u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
+#endif
 
 
 #pragma pack(push, 1)

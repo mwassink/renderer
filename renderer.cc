@@ -11,15 +11,15 @@
 
 // Poached from the interwebs
 f32 cubeVertices[] = {
-           
+    
     -1.0f,  1.0f, -1.0f,
     -1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     
-     1.0f, -1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
+    
+    1.0f, -1.0f, -1.0f,
+    1.0f,  1.0f, -1.0f,
     -1.0f,  1.0f, -1.0f,
-
+    
     -1.0f, -1.0f,  1.0f,
     -1.0f, -1.0f, -1.0f,
     -1.0f,  1.0f, -1.0f,
@@ -27,38 +27,38 @@ f32 cubeVertices[] = {
     -1.0f,  1.0f, -1.0f,
     -1.0f,  1.0f,  1.0f,
     -1.0f, -1.0f,  1.0f,
-
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-
+    
+    1.0f, -1.0f, -1.0f,
+    1.0f, -1.0f,  1.0f,
+    1.0f,  1.0f,  1.0f,
+    
+    1.0f,  1.0f,  1.0f,
+    1.0f,  1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
+    
     -1.0f, -1.0f,  1.0f,
     -1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     
-     1.0f,  1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f,
+    1.0f,  1.0f,  1.0f,
+    
+    1.0f,  1.0f,  1.0f,
+    1.0f, -1.0f,  1.0f,
     -1.0f, -1.0f,  1.0f,
-
+    
     -1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f,  1.0f,
-     
-     1.0f,  1.0f,  1.0f,
+    1.0f,  1.0f, -1.0f,
+    1.0f,  1.0f,  1.0f,
+    
+    1.0f,  1.0f,  1.0f,
     -1.0f,  1.0f,  1.0f,
     -1.0f,  1.0f, -1.0f,
-
+    
     -1.0f, -1.0f, -1.0f,
     -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,
-     
-     1.0f, -1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f,
+    
+    1.0f, -1.0f, -1.0f,
     -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f
+    1.0f, -1.0f,  1.0f
 };
 
 
@@ -70,7 +70,7 @@ RendererContext::RendererContext() {
     zfar = 125.0f;
     basicLightingShader =  tmp.setShaders("../shaders/blinnPhongVertex.glsl", "../shaders/blinnPhongPixel.glsl");
     texturedLightingShader = tmp.setShaders("../shaders/basicTexturedVertex.glsl", "../shaders/basicTexturedPixel.glsl" );
-        
+    
     texturedShadowShader = tmp.setShaders("../shaders/shadowedVertex.glsl","../shaders/shadowedPixel.glsl" );
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
@@ -91,9 +91,9 @@ void RendererUtil::SetupBasicShader(Model* model, PointLight* light, GLuint shad
     Matrix3 normalMatrix = normalTransform(tmp);
     Matrix4 worldObject = WorldObjectMatrix(context->cameraSpace);
     Vector4 pt = Vector4(light->worldSpaceCoord, 1.0f);
-        
+    
     Vector3 l = (worldObject*pt).v3();
-
+    
     
     glUseProgram(shader);
     uplumbMatrix4(shader, mv, "modelView");
@@ -106,7 +106,7 @@ void RendererUtil::SetupBasicShader(Model* model, PointLight* light, GLuint shad
     uplumbf(shader, light->irradiance, "lightBrightness");
     
     
-
+    
 }
 
 void RendererUtil::AddTexturingToShader (Model* model, SpotLight* light, GLuint shader) {
@@ -115,26 +115,26 @@ void RendererUtil::AddTexturingToShader (Model* model, SpotLight* light, GLuint 
     glBindTextureUnit(1, model->mesh.normalMap.id);
 }
 void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint shader) {
-
+    
     Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 40.0f);
     Matrix4 l = Matrix4(.5f, 0.0f, 0.0f, 0.5f,
-                              0.0f, 0.5f, 0.0f, 0.5f,
-                              0.0f, 0.0f, 0.5f, 0.5f,
-                       0.0f, 0.0f, 0.0f, 1.0f);
+                        0.0f, 0.5f, 0.0f, 0.5f,
+                        0.0f, 0.0f, 0.5f, 0.5f,
+                        0.0f, 0.0f, 0.0f, 1.0f);
     Matrix4 sMatrix = l  * glproj;
     uplumbMatrix4(shader, sMatrix, "shadowMatrix");
     glBindTextureUnit(2, light->depthTexture);
     
 }
 
-    
+
 Model RendererUtil::addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap ) {
     Model model;
     Texture tex(textureName);
     Texture norm(normalMap);
     model.mesh = loadMesh(fileName, tex);
     model.mesh.normalMap = norm;
-
+    
     
     addMeshTangents(&model.mesh);
     activateModel(&model);
@@ -179,7 +179,7 @@ void RendererUtil::defaultTexParams(GLenum target) {
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
     glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-
+    
     glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, border);
     glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -188,37 +188,37 @@ void RendererUtil::defaultTexParams(GLenum target) {
 
 void RendererUtil::createShadowMapTexture(SpotLight* light, u32 res) {
     GLuint depthTex;
-
+    
     glGenTextures(1, &depthTex);
     glBindTexture(GL_TEXTURE_2D, depthTex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32,
                  res, res, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     defaultTexParams(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0); // done
-
+    
     light->depthTexture = depthTex;
     
 }
 
-    
+
 void RendererUtil::addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV, glTriangleNames* names ) {
     
     glGenBuffers(1, &names->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices* sizeof(u32), indices
                  , GL_STATIC_DRAW);
-
+    
     glGenVertexArrays(1, &names->vao);
     glBindVertexArray(names->vao);
     glGenBuffers(1, &names->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*numVertices, vertices, GL_STATIC_DRAW);
-
-
+    
+    
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)));
     glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, normal)));
     glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, uv)));
-
+    
     glEnableVertexAttribArray(positionCoord);
     glEnableVertexAttribArray(positionNorm); 
     glEnableVertexAttribArray(positionUV);
@@ -227,35 +227,35 @@ void RendererUtil::addBasicTexturedVerticesToShader(Vertex* vertices, u32* indic
 
 
 void RendererUtil::addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
-                         u32 positionCoord, u32 positionNorm, u32 positionTangent, u32 positionUV, u32 positionHandedness, glTriangleNames* names) {
+                                       u32 positionCoord, u32 positionNorm, u32 positionTangent, u32 positionUV, u32 positionHandedness, glTriangleNames* names) {
     glGenBuffers(1, &names->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(u32), indices, GL_STATIC_DRAW);
-
+    
     glGenVertexArrays(1, &names->vao);
     glBindVertexArray(names->vao);
     glGenBuffers(1, &names->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VertexLarge)*numVertices, vertices, GL_STATIC_DRAW);
-
+    
     
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, coord)));
     glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, normal)));
     glVertexAttribPointer(positionTangent, 3, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, tangent)));
     glVertexAttribPointer(positionUV, 2, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, uv)));
     glVertexAttribPointer(positionHandedness, 1, GL_FLOAT, GL_FALSE, sizeof(VertexLarge), reinterpret_cast<void*>(offsetof(VertexLarge, handedness)));
-
+    
     glEnableVertexAttribArray(positionCoord);
     glEnableVertexAttribArray(positionNorm);
     glEnableVertexAttribArray(positionTangent);
     glEnableVertexAttribArray(positionUV);
     glEnableVertexAttribArray(positionHandedness);
-
-
+    
+    
     
 }
 
-    
+
 // Returns 0 on success
 int RendererUtil::checkFailure(int shader, GLenum status) {
     
@@ -277,7 +277,7 @@ int RendererUtil::checkFailureLink(int shader, GLenum status) {
     int success = 0;
     char log[512] = { 0 };
     glGetProgramiv(shader, status, &success);
-
+    
     if (!success) {
         glGetProgramInfoLog(shader, 512, NULL, log);
         FILE* fp = fopen("error.log", "w");
@@ -328,23 +328,23 @@ int RendererUtil::setShaders(const char* vertexFile, const char* fragmentFile) {
     if (checkFailureLink(program, GL_LINK_STATUS)) {
         return -1;
     }
-
+    
     
     
     return program;
-
+    
 }
 
 // This would be necessary if it were not loaded in in the texture
 Vector3* RendererUtil::loadNormals(const char* fileName, u32* widthOut, u32* heightOut) {
     u32 w, h, bpp;
     u8* data = loadBitmap(fileName, &w, &h, &bpp);
-
+    
     if (bpp != 24) {
         free(data);
         return 0;
     }
-
+    
     Vector3* vecs = (Vector3*)malloc(sizeof(Vector3)*w*h);
     for (int y = 0; y < h; ++y){
         for (int x = 0; x < w; ++x) {
@@ -356,7 +356,7 @@ Vector3* RendererUtil::loadNormals(const char* fileName, u32* widthOut, u32* hei
         }
     }
     free(data);
-
+    
     *widthOut = w;
     *heightOut = h;
     return vecs;
@@ -379,7 +379,7 @@ void RendererUtil::normalMap(f32* heightMap, Vector3* normalMap, int32 height, i
             // if we went down from say height 2 at x = 1 to height 0 at x = 3, then the normal would point to +x, which is correct
             f32 npdx = (left - right) * .5f;
             f32 npdy = (above - below) * .5f;
-
+            
             f32 mag = sqrt(npdx * npdx + npdy*npdy + 1.0f);
             tmp.x = clampNormal(npdx/mag);
             tmp.y = clampNormal(npdy/mag);
@@ -411,7 +411,7 @@ f32* RendererUtil::convertBitmapHeightmap(const char* bitmapFile, u32* w, u32* h
             bitmap += 3;
         }
     }
-
+    
     free(mem);
     *w = width;
     *h = height;
@@ -421,7 +421,7 @@ f32* RendererUtil::convertBitmapHeightmap(const char* bitmapFile, u32* w, u32* h
 void RendererUtil::addBasicVerticesShadowMapping(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, glTriangleNames* names) {
     glGenVertexArrays(1, &names->smVao );
     glBindVertexArray(names->smVao);
-
+    
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)) );
     glEnableVertexAttribArray(positionCoord);
@@ -429,23 +429,23 @@ void RendererUtil::addBasicVerticesShadowMapping(Vertex* vertices, u32* indices,
 }
 
 void RendererUtil::addVerticesShadowMapping(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
-                              u32 positionCoord, glTriangleNames* names) {
+                                            u32 positionCoord, glTriangleNames* names) {
     glGenVertexArrays(1, &names->smVao );
     glBindVertexArray(names->smVao);
-
+    
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, coord)) );
     glEnableVertexAttribArray(positionCoord);
     
 }
 
-    
-int RendererUtil::setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
 
+int RendererUtil::setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel) {
+    
     return BitmapTextureInternal(textureString, width, height, bitsPerPixel);
 }
 
-    
+
 void RendererUtil::depthRenderCleanup(void) {
     glDisable(GL_POLYGON_OFFSET_FILL);
 }
@@ -470,16 +470,16 @@ void RendererUtil::addMeshTangents(Mesh* mesh) {
         Vector3 p0 = verts[i0].coord.v3();
         Vector3 p1 = verts[i1].coord.v3();
         Vector3 p2 = verts[i2].coord.v3();
-
+        
         UV uv0 = verts[i0].uv;
         UV uv1 = verts[i1].uv;
         UV uv2 = verts[i2].uv;
-
+        
         Vector3 q1 = p1 - p0;
         Vector3 q2 = p2 - p0;
         f32 s1 = uv1.u - uv0.u, s2 = uv2.u - uv0.u;
         f32 t1 = uv1.v - uv0.v, t2 = uv2.v - uv0.v;
-
+        
         f32 adjScale = 1/(s1*t2 - s2*t1);
         Matrix3 tsmat  = Matrix3(t2, -t1, 0, -s2, s1, 0, 0, 0,0);
         //tsmat:
@@ -493,12 +493,12 @@ void RendererUtil::addMeshTangents(Mesh* mesh) {
         // 0  0  0
         Matrix3 res = tsmat * qmat;
         res *= adjScale;
-
+        
         res = res.transpose();
         
         Vector3 t = res[0];
         Vector3 b = res[1];
-
+        
         normalVerts[i0].tangent = normalVerts[i0].tangent + t;
         bitangents[i0] = bitangents[i0] + b;
         normalVerts[i1].tangent = normalVerts[i1].tangent + t;
@@ -515,13 +515,13 @@ void RendererUtil::addMeshTangents(Mesh* mesh) {
             normalVerts[i].handedness = -1.0f;
         }
     }
-
+    
     mesh->normalVertices = normalVerts;
     free(verts);
     free(bitangents);
     mesh->vertices = 0;
 }
-    
+
 void Renderer::setDrawModel(Model* model) {
     glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
     glBindVertexArray(model->identifiers.vao);
@@ -531,7 +531,7 @@ void Renderer::setDrawModel(Model* model) {
 
 void Renderer::testViz(Model* model, CoordinateSpace* cs) {
     Matrix4 mvp = glModelViewProjection(model->modelSpace, *cs, context.vFOV, context.aspectRatio, context.znear, context.zfar);
-
+    
     if (model->mesh.normalVertices) {
         for (int i = 0; i < 10; ++i) {
             Vector4 t = model->mesh.normalVertices[i].coord;
@@ -576,23 +576,23 @@ void Renderer::renderModel(Model* model, PointLight* pointLight) {
     //stub
 }
 
-    
+
 
 // (TODO)allow for config of near, far plane
 // This will give the shadows in the texture... we still need to add them to the rendering pipeline
 void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
 #define RES 500
-
-
+    
+    
     GLint err;
     RECT rect;
     GetWindowRect(context.windowHandle, &rect);
     glUseProgram(context.shadowMappingShader);
-
+    
     if (light->depthTexture < 0) {
         utilHelper.createShadowMapTexture(light, RES);
     }
-
+    
     GLint err1 = glGetError();
     glBindFramebuffer(GL_FRAMEBUFFER, context.shadowMappingFramebuffer);
     
@@ -604,7 +604,7 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2.0f, 4.0f);
-
+    
     
     for (int i = 0; i < numModels; ++i) {
         GLint err2 = glGetError();
@@ -613,7 +613,7 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
         testViz(&models[i], &light->lightSpace);
         GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&modelLightProjection.data[0]);
-
+        
         glBindBuffer(GL_ARRAY_BUFFER, models[i].identifiers.vbo);
         glBindVertexArray(models[i].identifiers.smVao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, models[i].identifiers.ebo);
@@ -630,11 +630,11 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     err3 = glGetError();
-
+    
 #undef RES
 }
 
-    
+
 // Returns Mcamera with a cube map
 // Model space is analogous to cube space
 // In the case of the shadow then mcube should be at the light
@@ -653,7 +653,7 @@ Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
     invCameraMatrices[3] = Matrix4(1,0,0,0,0 ,-1,0,-1,0);
     invCameraMatrices[4] = Matrix4(1,0,0,0,-1,0, 0,0,1);
     invCameraMatrices[5] = Matrix4(-1,0,0,0,-1,0,0,0,-1);
-
+    
     invCameraMatrices[0] = invCubeFaceCamera(mCube, invCameraMatrices[0] );
     invCameraMatrices[1] = invCubeFaceCamera(mCube, invCameraMatrices[1] );
     invCameraMatrices[2] = invCubeFaceCamera(mCube, invCameraMatrices[2] );
@@ -684,10 +684,10 @@ Matrix4 Renderer::shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 fa
                    0, 0, -1, 0); 
 }
 
-    
+
 // don't try to reuse the plumbing for some of the other ones
 void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
-
+    
     Matrix4 proj = glProjectionMatrix(PI / 4, 1.0f, n, f);
     Matrix4 m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 vm = (invCameraMatrix * m);
@@ -695,7 +695,7 @@ void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 
     GLint err = glGetError();
     GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
-
+    
     glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
     glBindVertexArray(model->identifiers.smVao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
@@ -716,7 +716,7 @@ void Renderer::envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32
 
 
 void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f, CubeArgs* renderArgs) {
-
+    
     
     GLuint id;
     RECT rect;
@@ -734,11 +734,11 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
         }
         renderArgs->tex = id;
     }
-
+    
     glUseProgram(renderArgs->shader);
     glBindFramebuffer(GL_FRAMEBUFFER, context.shadowMappingFramebuffer);        
     for (int i = 0; i < 6; ++i) {
-
+        
         glBindTexture(GL_TEXTURE_CUBE_MAP, renderArgs->tex);
         glFramebufferTexture2D(GL_FRAMEBUFFER, renderArgs->attachment,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                                renderArgs->tex, 0);
@@ -756,30 +756,30 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
         }
         glFramebufferTexture2D(GL_FRAMEBUFFER, renderArgs->attachment,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0);
     }
-
+    
     if (renderArgs->shader == context.shadowMappingShader) {
         utilHelper.depthRenderCleanup();
     }
-
+    
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     invCameraMatrices.release();
-
+    
 }
 
 
 Renderer::Renderer() {
-    #define DEPTHTEXRES 500
+#define DEPTHTEXRES 500
     context = RendererContext();
     utilHelper.context = &context;
-
+    
 }
 
 #define CHECKGL(str) if (glGetError() != GL_NO_ERROR) {fatalError(str, "Error");}
 
 int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
-
+    
     GLuint tex;
     void* textureData[6];
     u32 widths[6];
@@ -791,7 +791,7 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
     
     for (int i = 0; i < 6; ++i) {
         textureData[i] = (void*)loadBitmap(fileNames[i], &widths[i], &heights[i], &bpps[i]);
-
+        
         ASSERT(bpps[i] == 24 && widths[i] == heights[i]); // for now
         if (i) {
             ASSERT(widths[i] == widths[i-1]);
@@ -805,7 +805,7 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
     widthCounter = widths[0];
     while (widthCounter >>= 1) mips++;
     glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &tex);
-
+    
     glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
     for (int f = 0; f < 6; f++) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData[f]);
@@ -815,7 +815,7 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
     glTexParameterfv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR, borderColor);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
+    
     for (int i = 0; i < 6; i++) {
         free(textureData[i]);
     }
@@ -823,15 +823,15 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glGenerateTextureMipmap(tex);
     }
-
+    
     return tex;
 }
 
 
 Skybox Renderer::MakeSkybox(const char* fileNames[6]) {
-
-
-
+    
+    
+    
     Skybox skybox;
     u32 vao, vbo;
     skybox.texture = utilHelper.InitializeCubeMaps(fileNames);
@@ -840,7 +840,7 @@ Skybox Renderer::MakeSkybox(const char* fileNames[6]) {
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-
+    
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) *3, 0);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -851,7 +851,7 @@ Skybox Renderer::MakeSkybox(const char* fileNames[6]) {
 }
 
 void Renderer::RenderSkybox(Skybox& box) {
-
+    
     glUseProgram(context.skyboxShader);
     CoordinateSpace cameraOrigin = context.cameraSpace;
     cameraOrigin.origin = Vector3(0, 0, 0);
@@ -859,7 +859,7 @@ void Renderer::RenderSkybox(Skybox& box) {
     Matrix4 p = glProjectionMatrix(context.vFOV, context.aspectRatio, context.znear, context.zfar);
     Matrix4 pv = p * v;
     uplumbMatrix4(context.skyboxShader, pv, "viewProjection" );
-
+    
     
     glDepthFunc(GL_LEQUAL);
     glBindBuffer(GL_ARRAY_BUFFER, box.vbo);
@@ -873,7 +873,7 @@ void Renderer::RenderSkybox(Skybox& box) {
 // Project onto many different directions and find the most extreme difference
 // This gives a good estimate of the furthest points
 Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
-
+    
     const int nDirs = 27;
     Vector3 directions[nDirs];
     f32 maxDots[nDirs];
@@ -888,7 +888,7 @@ Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
             }
         }
     }
-
+    
     
     for (int i = 0; i < nDirs; ++i) {
         Vector3& direction = directions[i];
@@ -907,7 +907,7 @@ Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
         minIndexes[i] = minIndex;
         maxIndexes[i] = maxIndex;
     }
-
+    
     f32 diameter = -1.0f;
     int bestDir = -1;
     Vector3 bestMin, bestMax;
@@ -923,7 +923,7 @@ Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
         }
         
     }
-
+    
     Sphere sp;
     sp.p = (bestMax + bestMin) / 2.0f;
     sp.radius = (bestMax - bestMin).mag() / 2.0f;
@@ -933,7 +933,7 @@ Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
 }
 
 void Renderer::AdjustBoundingSphere(Sphere* sp, Vector3* vertices, int numVerts ) {
-
+    
     Vector3 center = sp->p;
     for (int i = 0; i < numVerts; i++) {
         f32 ds = center.dist(vertices[i]);
@@ -967,7 +967,7 @@ Texture RendererUtil::RenderTarget(void) {
 
 // Assumes the compute shader is bound before this
 void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ) {
-
+    
     int maxGroupX, maxGroupY, maxGroupZ;
     int maxSizeX, maxSizeY, maxSizeZ;
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxGroupX);
@@ -976,7 +976,7 @@ void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ)
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxSizeX);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxSizeY);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxSizeZ);
-
+    
     if (maxSizeX < minX || maxSizeY < minY || maxSizeZ < minZ) {
         return;
     }
