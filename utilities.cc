@@ -25,6 +25,9 @@
 #end
 #endif
 
+#define VERTEX_BASIC 0
+#define VERTEX_NORMAL 0x010100
+
 
 void uplumbMatrix4(u32 s, Matrix4& m, const char* n) {
     GLint loc = glGetUniformLocation(s, n);
@@ -533,4 +536,50 @@ u32 BitmapTextureInternal(const char* textureString, u32* width, u32* height, u3
     return tex;
 }
 
+// File format: 4 bytes (type), 4 bytes (vertices size), 4  bytes (indices size)
+// little endian. No big endian
+void SerializeModel(const char* f, const char* dst, bool normalMapped) {
+    int texReq = 0;
+    Mesh m = parseObj(f, 0);
 
+    FILE* filePointer = fopen(f, "wb+");
+    u32 type = VERTEX_BASIC;
+    if (normalMapped) {
+        type = VERTEX_NORMAL;
+    }
+    fwrite(&type, sizeof(u32), 1, filePointer);
+    fwrite(&m.numVertices, sizeof(u32), 1, filePointer);
+    fwrite(&m.numIndices, sizeof(u32), 1, filePointer);
+    if (normalMapped) {
+        fwrite(&m.normalVertices, sizeof(VertexLarge), m.numVertices, filePointer);
+    } else {
+        fwrite(&m.vertices, sizeof(Vertex), m.numVertices, filePointer);
+    }
+
+    fwrite(&m.triangles, sizeof(u32), m.numIndices, filePointer);
+    fclose(filePointer);
+    
+    
+}
+
+Mesh ReadModel(const char* m) {
+    FILE* filePointer = fopen(m, "rb");
+    u32 numIndices, numVertices, type;
+    VertexLarge* normalVertices = 0;
+    Vertex* basicVertices = 0;
+    
+    fread(&type, sizeof(u32), 1, filePointer);
+    fread(&numVertices, sizeof(u32), 1, filePointer);
+    fread(&numIndices, sizeof(u32), 1, filePointer);
+    if (type == VERTEX_BASIC) {
+
+    } else if (type == VERTEX_NORMAL) {
+        
+    } else {
+        
+    }
+    
+    
+    
+    
+}
