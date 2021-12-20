@@ -53,7 +53,7 @@ void setPixelAttrs(HDC windowDC);
 #define GL_MAX_COMPUTE_WORK_GROUP_SIZE    0x91BF
 #define GL_SHADER_IMAGE_ACCESS_BARRIER_BIT 0x00000020
 #define GL_WRITE_ONLY                     0x88B9
-
+#define GL_COMPUTE_SHADER                 0x91B9
 
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;
@@ -86,96 +86,96 @@ typedef void WINAPI  t_GetShaderInfoLog(GLuint shader,GLsizei maxLength, GLsizei
 typedef void WINAPI t_CreateTextures( GLenum target, GLsizei n, GLuint *textures);
 typedef void WINAPI t_TextureStorage2D(	GLuint texture, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height);
 typedef void WINAPI t_TextureSubImage2D(	GLuint texture,
- 	GLint level,
- 	GLint xoffset,
- 	GLint yoffset,
- 	GLsizei width,
- 	GLsizei height,
- 	GLenum format,
- 	GLenum type,
- 	const void *pixels);
+                                        GLint level,
+                                        GLint xoffset,
+                                        GLint yoffset,
+                                        GLsizei width,
+                                        GLsizei height,
+                                        GLenum format,
+                                        GLenum type,
+                                        const void *pixels);
 
 typedef void WINAPI t_TextureParameteri( GLenum target,
- 	GLenum pname,
- 	GLint param);
+                                        GLenum pname,
+                                        GLint param);
 typedef void WINAPI t_GenerateTextureMipmap(GLuint texture);
 typedef void WINAPI t_UniformMatrix4fv(	GLint location,
- 	GLsizei count,
- 	GLboolean transpose,
- 	const GLfloat *value);
+                                       GLsizei count,
+                                       GLboolean transpose,
+                                       const GLfloat *value);
 typedef GLuint WINAPI t_GetUniformLocation(	GLuint program,
- 	const GLchar *name);
+                                           const GLchar *name);
 
 typedef void WINAPI t_GetProgramInfoLog(GLuint program,
- 	GLsizei maxLength,
- 	GLsizei *length,
- 	GLchar *infoLog);
+                                        GLsizei maxLength,
+                                        GLsizei *length,
+                                        GLchar *infoLog);
 typedef void WINAPI  t_GetProgramiv(	GLuint program,
- 	GLenum pname,
- 	GLint *params);
+                                    GLenum pname,
+                                    GLint *params);
 
 typedef void WINAPI t_UniformMatrix3fv(	GLint location,
- 	GLsizei count,
- 	GLboolean transpose,
- 	const GLfloat *value);
+                                       GLsizei count,
+                                       GLboolean transpose,
+                                       const GLfloat *value);
 typedef void WINAPI t_Uniform3f(GLint location,
- 	GLfloat v0,
- 	GLfloat v1,
- 	GLfloat v2);
+                                GLfloat v0,
+                                GLfloat v1,
+                                GLfloat v2);
 typedef void WINAPI t_Uniform1f(GLint location, GLfloat v0);
 typedef void WINAPI t_BindTextureUnit(GLuint unit, GLuint texture);
 typedef void WINAPI t_GenFramebuffers(GLsizei n,GLuint* ids );
 typedef void WINAPI t_BindFramebuffer(GLenum t, GLuint f);
 
 typedef void WINAPI t_FramebufferTexture(	GLenum target,
- 	GLenum attachment,
- 	GLuint texture,
- 	GLint level);
+                                         GLenum attachment,
+                                         GLuint texture,
+                                         GLint level);
 
 
 typedef void WINAPI t_FramebufferTexture2D(	GLenum target,
- 	GLenum attachment,
- 	GLenum textarget,
- 	GLuint texture,
- 	GLint level);
+                                           GLenum attachment,
+                                           GLenum textarget,
+                                           GLuint texture,
+                                           GLint level);
 typedef GLenum WINAPI t_CheckFramebufferStatus(	GLenum target);
 
 typedef void WINAPI t_Uniform3fv(	GLint location,
- 	GLsizei count,
- 	const GLfloat *value);
+                                 GLsizei count,
+                                 const GLfloat *value);
 typedef void WINAPI t_Uniform4fv(	GLint location,
- 	GLsizei count,
- 	const GLfloat *value);
+                                 GLsizei count,
+                                 const GLfloat *value);
 
 typedef void WINAPI t_GetIntegeri_v(GLenum target,
- 	GLuint index,
- 	GLint *data);
+                                    GLuint index,
+                                    GLint *data);
 
 
 typedef void WINAPI t_DispatchCompute(GLuint num_groups_x,
- 	GLuint num_groups_y,
- 	GLuint num_groups_z);
+                                      GLuint num_groups_y,
+                                      GLuint num_groups_z);
 
 typedef void WINAPI t_MemoryBarrier(GLbitfield barriers);
 
 
 typedef void WINAPI t_BindImageTexture(	GLuint unit,
- 	GLuint texture,
- 	GLint level,
- 	GLboolean layered,
- 	GLint layer,
- 	GLenum access,
- 	GLenum format);
+                                       GLuint texture,
+                                       GLint level,
+                                       GLboolean layered,
+                                       GLint layer,
+                                       GLenum access,
+                                       GLenum format);
 #if 0
 typedef void WINAPI t_TexImage2D(	GLenum target,
- 	GLint level,
- 	GLint internalformat,
- 	GLsizei width,
- 	GLsizei height,
- 	GLint border,
- 	GLenum format,
- 	GLenum type,
- 	const void * data);
+                                 GLint level,
+                                 GLint internalformat,
+                                 GLsizei width,
+                                 GLsizei height,
+                                 GLint border,
+                                 GLenum format,
+                                 GLenum type,
+                                 const void * data);
 
 
 

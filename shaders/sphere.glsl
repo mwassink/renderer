@@ -1,7 +1,6 @@
 #version 450 core
 layout(local_size_x = 1, local_size_y = 1) in;
 layout(rgba32f, binding = 0) uniform image2D imageOut;
-uniform vec3 eyePos;
 uniform float radius;
 uniform vec3 center;
 uniform vec3 colorSphere;
@@ -31,17 +30,10 @@ void main() {
 			imageStore(imageOut, coords, emptyPixel);
 		} else {
 			float q = sqrt(r2 - m2);
-			float t = dProjLength + q; //inside the sphere
-			// two intersection points
-			//
-			//if (ll > r2) {
-			//
-			//} 
+			//float t = dProjLength + q; //inside the sphere 
+			//t = dProjLength - q;  outside the sphere
 			vec4 colorNew = vec4(colorSphere, 1.0);
 			imageStore(imageOut, coords, colorNew);
-			
-			
-
 		}
 
 	}

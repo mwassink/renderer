@@ -75,6 +75,7 @@ RendererContext::RendererContext() {
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
     quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/vpixel.glsl");
+    sphereShader = tmp.CreateComputeShader("../shaders/sphere.glsl");
     computeTarget = Texture();
     glGenFramebuffers(1, &shadowMappingFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -342,6 +343,29 @@ int RendererUtil::setShaders(const char* vertexFile, const char* fragmentFile) {
     
     
     
+    return program;
+    
+}
+
+int RendererUtil::CreateComputeShader(const char* computeFile) {
+    if (!computeFile) {
+        return -1;
+    }
+    int size;
+    const char* src = readFile(computeFile, &size);
+    GLuint c = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(c, 1, &src, NULL);
+    glCompileShader(c);
+    if (checkFailure(c, GL_COMPILE_STATUS)) {
+        free((void*)src);
+        return -1;
+    }
+    GLuint program = glCreateProgram();
+    glAttachShader(program, c);
+    glLinkProgram(program);
+    if (checkFailureLink(program, GL_LINK_STATUS)) {
+        return -1;
+    }
     return program;
     
 }
@@ -937,12 +961,18 @@ void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ)
 }
 
 
-void Renderer::RayTraceBoundingSphere(void) {
+void Renderer::RayTraceBoundingSphere(Sphere* s, Vector3* color) {
     if (context.computeTarget.id < 0) {
         context.computeTarget = utilHelper.RenderTarget();
     }
     glBindImageTexture(0, context.computeTarget.id,0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    glUseProgram(context.computeTarget);
+    glUseProgram(context.sphereShader);
+    Vector3& center = s->p;
+    uplumbVector3(context.sphereShader, center, "center");
+    uplumbVector3(context.sphereShader, *color, "colorSphere");
+    uplumbf(context.sphereShader, s->radius, "radius");
+    
+    
     
     
 }

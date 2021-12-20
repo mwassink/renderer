@@ -8,6 +8,7 @@ struct RendererContext {
     u32 texturedShadowShader;
     u32 shadowMappingFramebuffer;
     u32 skyboxShader;
+    u32 sphereShader;
     u32 quadShader;
     u32 ballTracerShader;
     Texture computeTarget;
@@ -34,6 +35,7 @@ struct RendererUtil {
     int checkFailure(int shader, GLenum status);
     int checkFailureLink(int shader, GLenum status);
     int setShaders(const char* vertexFile, const char* fragmentFile);
+    int CreateComputeShader(const char *f);
     Vector3* loadNormals(const char* fileName, u32* widthOut, u32* heightOut);
     void normalMap(f32* heightMap, Vector3* normalMap, int32 height, int32 width );
     void buildNormalMap(const char* hFile, const char* n);
@@ -77,6 +79,6 @@ struct Renderer {
     void FullScreenQuad(void);
     void DrawTexture(Texture* t);
     void RunComputeShader(int c, int x, int y, int z);
-    void RayTraceBoundingSphere(void);
+    void RayTraceBoundingSphere(Sphere* s, Vector3* color);
 };
 
