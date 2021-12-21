@@ -237,17 +237,17 @@ void RendererUtil::createShadowMapTexture(SpotLight* light, u32 res) {
 
 void RendererUtil::addBasicTexturedVerticesToShader(Vertex* vertices, u32* indices, int numVertices, int numIndices, u32 positionCoord, u32 positionNorm, u32 positionUV, glTriangleNames* names ) {
     
+    glGenVertexArrays(1, &names->vao);
+    glBindVertexArray(names->vao);
+
+    glGenBuffers(1, &names->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*numVertices, vertices, GL_STATIC_DRAW);
+
     glGenBuffers(1, &names->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices* sizeof(u32), indices
                  , GL_STATIC_DRAW);
-    
-    glGenVertexArrays(1, &names->vao);
-    glBindVertexArray(names->vao);
-    glGenBuffers(1, &names->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*numVertices, vertices, GL_STATIC_DRAW);
-    
     
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)));
     glVertexAttribPointer(positionNorm, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, normal)));
@@ -262,15 +262,20 @@ void RendererUtil::addBasicTexturedVerticesToShader(Vertex* vertices, u32* indic
 
 void RendererUtil::addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
                                        u32 positionCoord, u32 positionNorm, u32 positionTangent, u32 positionUV, u32 positionHandedness, glTriangleNames* names) {
+ 
+    glGenVertexArrays(1, &names->vao);
+    glBindVertexArray(names->vao);
+ 
+    glGenBuffers(1, &names->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexLarge)*numVertices, vertices, GL_STATIC_DRAW);
+
     glGenBuffers(1, &names->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(u32), indices, GL_STATIC_DRAW);
     
-    glGenVertexArrays(1, &names->vao);
-    glBindVertexArray(names->vao);
-    glGenBuffers(1, &names->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexLarge)*numVertices, vertices, GL_STATIC_DRAW);
+    
+    
     
     
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, coord)));
@@ -480,6 +485,7 @@ void RendererUtil::addBasicVerticesShadowMapping(Vertex* vertices, u32* indices,
     glBindVertexArray(names->smVao);
     
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),reinterpret_cast<void*>(offsetof(Vertex, coord)) );
     glEnableVertexAttribArray(positionCoord);
     
@@ -491,6 +497,7 @@ void RendererUtil::addVerticesShadowMapping(VertexLarge* vertices, u32* indices,
     glBindVertexArray(names->smVao);
     
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glVertexAttribPointer(positionCoord, 4, GL_FLOAT, GL_FALSE, sizeof(VertexLarge),reinterpret_cast<void*>(offsetof(VertexLarge, coord)) );
     glEnableVertexAttribArray(positionCoord);
     
@@ -514,10 +521,9 @@ void RendererUtil::addMeshTangents(Mesh* mesh) {
 }
 
 void Renderer::setDrawModel(Model* model) {
-    glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
     glBindVertexArray(model->identifiers.vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
     glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
 
 void Renderer::testViz(Model* model, CoordinateSpace* cs) {
@@ -584,17 +590,17 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
         utilHelper.createShadowMapTexture(light, RES);
     }
     
-    GLint err1 = glGetError();
     glBindFramebuffer(GL_FRAMEBUFFER, context.shadowMappingFramebuffer);
     
-    bool z = glIsEnabled(GL_DEPTH_TEST);
     
     utilHelper.attachDepthTextureFramebuffer(light->depthTexture, context.shadowMappingFramebuffer);
     glViewport(0, 0, RES, RES);
     glClearDepth(1.0f);
+    
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2.0f, 4.0f);
+ 
     
     
     for (int i = 0; i < numModels; ++i) {
@@ -605,22 +611,18 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
         GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&modelLightProjection.data[0]);
         
-        glBindBuffer(GL_ARRAY_BUFFER, models[i].identifiers.vbo);
+        
         glBindVertexArray(models[i].identifiers.smVao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, models[i].identifiers.ebo);
+        
         glDrawElements(GL_TRIANGLES, models[i].mesh.numIndices, GL_UNSIGNED_INT, 0);
-        err2 = glGetError();
+        glBindVertexArray(0);
         
     }
-    GLint err3 = glGetError();
     glDisable(GL_POLYGON_OFFSET_FILL);
-    err3 = glGetError();
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  0, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    err3 = glGetError();
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    err3 = glGetError();
     
 #undef RES
 }
@@ -687,9 +689,7 @@ void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 
     GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
     
-    glBindBuffer(GL_ARRAY_BUFFER, model->identifiers.vbo);
     glBindVertexArray(model->identifiers.smVao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->identifiers.ebo);
     glDrawElements(GL_TRIANGLES, model->mesh.numIndices, GL_UNSIGNED_INT, 0);
 }
 
@@ -853,12 +853,12 @@ void Renderer::RenderSkybox(Skybox& box) {
     
     
     glDepthFunc(GL_LEQUAL);
-    glBindBuffer(GL_ARRAY_BUFFER, box.vbo);
     glBindVertexArray(box.vao);
     glBindTextureUnit(0, box.texture);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthFunc(GL_LESS);
     CHECKGL("Failure rendering skybox")
+    glBindVertexArray(0);
 }
 
 // Project onto many different directions and find the most extreme difference
@@ -1018,9 +1018,8 @@ void Renderer::RayTraceBoundingSphere(Sphere* s, Vector3* color) {
 // Assumes whatever prior work that needs to be done is already done
 void Renderer::FullScreenQuad(void) {
 
-    glBindBuffer(GL_ARRAY_BUFFER, context.quadVBO);
+    
     glBindVertexArray(context.quadVAO);
-    glEnableVertexAttribArray(0);
     glDepthFunc(GL_LEQUAL);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glDepthFunc(GL_LESS);

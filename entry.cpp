@@ -66,11 +66,10 @@ static void ResizeDIBSection(int width, int height, HWND wind) {
     ReleaseDC(wind, windowDC);
 }
 
-void clear(HWND wind) {
-    HDC windowDC = GetDC(wind);
+void clear(HWND wind, HDC windowDC) {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glFlush();
+    //glFlush();
     ReleaseDC(wind, windowDC);
 }
 
@@ -187,6 +186,9 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     Array<SpotLight> spotLights;
     Array<PointLight> pointLights;
     Model p;
+    int64_t frames = 0;
+    HDC windowDC;
+
     if (RegisterClass(&WindowClass)) {
         HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
                                              CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
@@ -197,9 +199,11 @@ int CALLBACK WinMain(HINSTANCE hInstance,
             
             renderer.context.windowHandle = windowHandle;
             for (; runnable; ) {
-                clear(windowHandle);
+                if (!ran) {
+                    windowDC = GetDC(windowHandle);
+                }
                 MSG msg = {};
-                BOOL msg_res = PeekMessage(&msg, windowHandle, 0, 1000, PM_REMOVE);
+                BOOL msg_res = PeekMessage(&msg, windowHandle, 0, 0, PM_REMOVE);
                 if (msg_res > 0) {
                     
                     if (msg.message ==  WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP ||
@@ -259,12 +263,16 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 }
                 
                 
+                
+                
 #endif
                 
-                HDC windowDC = GetDC(windowHandle);
+               
                 SwapBuffers(windowDC);
                 
                 ran = true;
+
+                frames++;
             }
         }
         return (0);
