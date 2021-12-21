@@ -150,8 +150,16 @@ struct PlainVertex {
     Vector3 norm;
 };
 
+struct Sphere {
+    Vector3 p;
+    f32 radius;
+};
+
+
 struct Mesh {
-    Mesh() {};
+    Mesh() {
+        boundingSphere.radius = -1;
+    };
     Vertex* vertices;
     VertexLarge* normalVertices = 0;
     u32* triangles;
@@ -161,8 +169,11 @@ struct Mesh {
     u32 numIndices;
     Vector3 diffuseColor;
     Vector3 specColor;
+    Sphere boundingSphere;
 
-    Mesh(Vertex* v, u32* tr, Texture tx, u32 numV, u32 numI) : vertices(v), triangles(tr), textures(tx), numVertices(numV), numIndices(numI) {}
+    Mesh(Vertex* v, u32* tr, Texture tx, u32 numV, u32 numI) : vertices(v), triangles(tr), textures(tx), numVertices(numV), numIndices(numI) {
+        boundingSphere.radius = -1.0f;
+    }
     
 };
 
@@ -222,10 +233,6 @@ struct Skybox {
     int texture, vbo, vao;
 };
 
-struct Sphere {
-    Vector3 p;
-    f32 radius;
-};
 
 
 

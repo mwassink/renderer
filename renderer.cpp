@@ -884,7 +884,7 @@ Sphere Renderer::OKBoundingSphere(Vector3* vertices, int numVerts) {
     for (int i = 0; i < nDirs; ++i) {
         Vector3& direction = directions[i];
         f32 dMin = 10000000.0f;
-        f32 dMax =  10000000.0f;
+        f32 dMax =  -10000000.0f;
         int minIndex, maxIndex = -1;
         for (int j = 0; j < numVerts; ++j) {
             f32 dp = dot(direction, vertices[j]);
@@ -938,7 +938,7 @@ void Renderer::DrawTexture(Texture* texture) {
     glUseProgram(context.quadShader);
     glBindTextureUnit(0, texture->id);
     CHECKGL("ERROR w/ FULL SCREEN QUAD")
-        FullScreenQuad();
+    FullScreenQuad();
 }
 
 Texture RendererUtil::RenderTarget(void) {
@@ -1021,7 +1021,9 @@ void Renderer::FullScreenQuad(void) {
     glBindBuffer(GL_ARRAY_BUFFER, context.quadVBO);
     glBindVertexArray(context.quadVAO);
     glEnableVertexAttribArray(0);
+    glDepthFunc(GL_LEQUAL);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDepthFunc(GL_LESS);
     
     
 }
@@ -1050,21 +1052,22 @@ Vector3* GetVertices(Model* model) {
 
 // (TODO) retain this as part of the model
 void Renderer::DrawBoundingSphere(Model* model) {
-    Vector3* verts = GetVertices(model);
-    Vector3 red = Vector3(1.0f, 0.0f, 0.0f);
-    Sphere s = GetBoundingSphere(verts, model->mesh.numVertices);
+    if (model->mesh.boundingSphere.radius < 0) {
+        Vector3* verts = GetVertices(model);
+        model->mesh.boundingSphere = GetBoundingSphere(verts, model->mesh.numVertices);
+        free(verts);
+    }
+    
+    Sphere s = model->mesh.boundingSphere;
     Matrix4 toWorldSpace = ObjectWorldMatrix(model->modelSpace);
     Matrix4 toCameraSpace= WorldObjectMatrix(context.cameraSpace);
     Vector4 spw = Vector4(s.p, 1.0f);
     spw = toWorldSpace * spw;
     spw = toCameraSpace * spw;
     s.p = spw.v3();
+    Vector3 red = Vector3(1.0f, 0.0f, 0.0f);
     RayTraceBoundingSphere(&s, &red);
-    free(verts);
+    
 }
 
-void Renderer::DrawBoundingSphere(Sphere* boundingSphere) {
-    Vector3 color = Vector3(1.0f, 0.0f, 0.0f);
-    RayTraceBoundingSphere(boundingSphere, &color);
-}
 

@@ -254,7 +254,10 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 
                 testShadow(&models, &spotLights[0]);
                 renderer.RenderSkybox(box);
-                testRayTraceII(&renderer, &models[0]);
+                for (int i = 0; i < models.sz; i++) {
+                    renderer.DrawBoundingSphere(&models[i]);
+                }
+                
                 
 #endif
                 

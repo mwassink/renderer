@@ -84,6 +84,5 @@ struct Renderer {
     void RayTraceBoundingSphere(Sphere* s, Vector3* color);
     void DrawBoundingSphere(Model* model);
     Sphere GetBoundingSphere(Vector3* verts, int numVerts);
-    void DrawBoundingSphere(Sphere* boundingSphere);
 };
 
