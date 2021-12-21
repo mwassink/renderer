@@ -19,9 +19,9 @@ static bool runnable = 1;
 //#include "tests/gltest2.cc"
 //#include "tests/gltest3.cc"
 //#include "tests/basiclighting.cc"
-#include "tests/normalmapping.cc"
-#include "tests/shadowmapping.cc"
-#include "tests/loadplane.cc"
+#include "tests/normalmapping.cpp"
+#include "tests/shadowmapping.cpp"
+#include "tests/loadplane.cpp"
 #include "tests/raytrace.cpp"
 #endif
 

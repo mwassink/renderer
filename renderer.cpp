@@ -1018,9 +1018,45 @@ void Renderer::FullScreenQuad(void) {
 
     glBindBuffer(GL_ARRAY_BUFFER, context.quadVBO);
     glBindVertexArray(context.quadVAO);
-    CHECKGL("ERROR after vertex attrib ptr")
-        glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     
     
 }
+
+Sphere Renderer::GetBoundingSphere(Vector3* verts, int numVerts) {
+    Sphere s = OKBoundingSphere(verts, numVerts);
+    AdjustBoundingSphere(&s, verts, numVerts);
+    return s;
+}
+
+// Need to call free on these
+Vector3* GetVertices(Model* model) {
+    
+    Vector3* vertices = (Vector3*) malloc(model->mesh.numVertices * sizeof (Vector3));
+    if (model->mesh.normalVertices) {
+        for (int i = 0; i < model->mesh.numVertices; i++) {
+            vertices[i] = model->mesh.normalVertices[i].coord.v3();
+        }
+    } else {
+        for (int i = 0; i < model->mesh.numVertices; i++) {
+            vertices[i] = model->mesh.vertices[i].coord.v3();
+        }
+    }
+    return vertices;
+}
+
+// (TODO) retain this as part of the model
+void Renderer::DrawBoundingSphere(Model* model) {
+    Vector3* verts = GetVertices(model);
+    Vector3 red = Vector3(1.0f, 0.0f, 0.0f);
+    Sphere s = GetBoundingSphere(verts, model->mesh.numVertices);
+    RayTraceBoundingSphere(&s, &red);
+    free(verts);
+}
+
+void Renderer::DrawBoundingSphere(Sphere* boundingSphere) {
+    Vector3 color = Vector3(1.0f, 0.0f, 0.0f);
+    RayTraceBoundingSphere(boundingSphere, &color);
+}
+
