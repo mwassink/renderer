@@ -9,6 +9,9 @@
 #include <stdio.h>
 #endif
 
+
+#define TEXTURE_SIZE 512
+#define ASPECT_RATIO 16/9
 // Poached from the interwebs
 f32 cubeVertices[] = {
     
@@ -74,8 +77,25 @@ RendererContext::RendererContext() {
     texturedShadowShader = tmp.setShaders("../shaders/shadowedVertex.glsl","../shaders/shadowedPixel.glsl" );
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
-    quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/vpixel.glsl");
+    quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/pquad.glsl");
     sphereShader = tmp.CreateComputeShader("../shaders/sphere.glsl");
+    
+    f32 vertices[] = {
+        -1.0f, -1.0f,
+        3.0f, -1.0f,
+        -1.0f, 3.0f
+    };
+    
+    glGenVertexArrays(1, &quadVAO);
+    glBindVertexArray(quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+    
+    
     computeTarget = Texture();
     glGenFramebuffers(1, &shadowMappingFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -915,7 +935,8 @@ void Renderer::AdjustBoundingSphere(Sphere* sp, Vector3* vertices, int numVerts 
 void Renderer::DrawTexture(Texture* texture) {
     glUseProgram(context.quadShader);
     glBindTextureUnit(0, texture->id);
-    FullScreenQuad();
+    CHECKGL("ERROR w/ FULL SCREEN QUAD")
+        FullScreenQuad();
 }
 
 Texture RendererUtil::RenderTarget(void) {
@@ -923,19 +944,22 @@ Texture RendererUtil::RenderTarget(void) {
     Texture texture;
     RECT rect;
     GetWindowRect(context->windowHandle, &rect);
-    int w = rect.right - rect.left, h = rect.bottom - rect.top;
+    //int w = rect.right - rect.left, h = rect.bottom - rect.top;
+    int w = TEXTURE_SIZE * ASPECT_RATIO, h = TEXTURE_SIZE;
     glCreateTextures(GL_TEXTURE_2D, 1, &texID);
     texture.id = (int)texID;
+    glBindTexture(GL_TEXTURE_2D, texture.id);
     defaultTexParams(GL_TEXTURE_2D);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT,
                  NULL);
+    
     texture.width = w;
     texture.height = h;
     return texture;
 }
 
 // Assumes the compute shader is bound before this
-void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ) {
+void Renderer::RunComputeShader(int minX, int minY, int minZ) {
     
     int maxGroupX, maxGroupY, maxGroupZ;
     int maxSizeX, maxSizeY, maxSizeZ;
@@ -950,9 +974,12 @@ void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ)
     if (maxSizeX < minX || maxSizeY < minY || maxSizeZ < minZ) {
         return;
     }
+#if 0
+    // (TODO) change this to be LOCAL work groups
     if (minX * minY > groupInvocations) {
         return;
     }
+#endif
     
     glDispatchCompute(minX, minY, minZ);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -962,6 +989,7 @@ void Renderer::RunComputeShader(int computeShader, int minX, int minY, int minZ)
 
 
 void Renderer::RayTraceBoundingSphere(Sphere* s, Vector3* color) {
+    
     if (context.computeTarget.id < 0) {
         context.computeTarget = utilHelper.RenderTarget();
     }
@@ -971,6 +999,13 @@ void Renderer::RayTraceBoundingSphere(Sphere* s, Vector3* color) {
     uplumbVector3(context.sphereShader, center, "center");
     uplumbVector3(context.sphereShader, *color, "colorSphere");
     uplumbf(context.sphereShader, s->radius, "radius");
+    RECT rect;
+    GetWindowRect(context.windowHandle, &rect);
+    //int w = rect.right - rect.left, h = rect.bottom - rect.top;
+    int w = TEXTURE_SIZE * ASPECT_RATIO , h = TEXTURE_SIZE;
+    RunComputeShader(w, h, 1);
+    CHECKGL("ERROR w/ running compute shader")
+    DrawTexture(&context.computeTarget);
     
     
     
@@ -980,13 +1015,12 @@ void Renderer::RayTraceBoundingSphere(Sphere* s, Vector3* color) {
 
 // Assumes whatever prior work that needs to be done is already done
 void Renderer::FullScreenQuad(void) {
-    f32 vertices[] = {
-        -1.0f, -1.0f,
-        3.0f, -1.0f,
-        -1.0f, 3.0f
-    };
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(f32), vertices);
-    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, context.quadVBO);
+    glBindVertexArray(context.quadVAO);
+    CHECKGL("ERROR after vertex attrib ptr")
+        glEnableVertexAttribArray(0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    
     
 }

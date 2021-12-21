@@ -13,6 +13,8 @@ struct RendererContext {
     u32 ballTracerShader;
     Texture computeTarget;
     HWND windowHandle;
+    GLuint quadVAO;
+    GLuint quadVBO;
     RendererContext();
 };
 
@@ -78,7 +80,7 @@ struct Renderer {
     void AdjustBoundingSphere(Sphere *sp, Vector3* vertices, int nVerts);
     void FullScreenQuad(void);
     void DrawTexture(Texture* t);
-    void RunComputeShader(int c, int x, int y, int z);
+    void RunComputeShader(int x, int y, int z);
     void RayTraceBoundingSphere(Sphere* s, Vector3* color);
 };
 
