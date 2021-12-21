@@ -99,6 +99,8 @@ RendererContext::RendererContext() {
     computeTarget = Texture();
     glGenFramebuffers(1, &shadowMappingFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 
@@ -1051,6 +1053,12 @@ void Renderer::DrawBoundingSphere(Model* model) {
     Vector3* verts = GetVertices(model);
     Vector3 red = Vector3(1.0f, 0.0f, 0.0f);
     Sphere s = GetBoundingSphere(verts, model->mesh.numVertices);
+    Matrix4 toWorldSpace = ObjectWorldMatrix(model->modelSpace);
+    Matrix4 toCameraSpace= WorldObjectMatrix(context.cameraSpace);
+    Vector4 spw = Vector4(s.p, 1.0f);
+    spw = toWorldSpace * spw;
+    spw = toCameraSpace * spw;
+    s.p = spw.v3();
     RayTraceBoundingSphere(&s, &red);
     free(verts);
 }

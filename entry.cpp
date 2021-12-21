@@ -248,15 +248,13 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     
                     const char* files[6] = {px, nx, py, ny, pz, nz};
                     box = renderer.MakeSkybox(files);
+                    renderer.context.cameraSpace = lookAtCoordSpace(models[0].modelSpace.origin, renderer.context.cameraSpace.origin);
                 }
                 
-                //renderer.renderPointShadow(&models, &pointLights[0]);
                 
-                //testShadow(&models, &spotLights[0]);
-                //renderer.RenderSkybox(box);
-                testRayTrace(&renderer);
-                //renderer.context.cameraSpace = lookAtCoordSpace(Vector3(0, -25, -60),                                                      renderer.context.cameraSpace.origin);
-                
+                testShadow(&models, &spotLights[0]);
+                renderer.RenderSkybox(box);
+                testRayTraceII(&renderer, &models[0]);
                 
 #endif
                 
