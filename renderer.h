@@ -1,4 +1,3 @@
-
 struct RendererContext {
     f32 vFOV, aspectRatio, znear, zfar;
     CoordinateSpace cameraSpace;
@@ -85,5 +84,6 @@ struct Renderer {
     void DrawBoundingSphere(Model* model, Vector3 color);
     Sphere GetBoundingSphere(Vector3* verts, int numVerts);
     Model CreateLightModel(SpotLight* s, f32 r);
+    bool SphereFrustumCull(Model* m);
 };
 

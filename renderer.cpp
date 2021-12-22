@@ -1087,3 +1087,47 @@ Model Renderer::CreateLightModel(SpotLight* s, f32 radius = 0.3f) {
     return lightModel;
 }
 
+// Returns whether the model can be culled based on its bounding sphere
+bool Renderer::SphereFrustumCull(Model* model) {
+    Sphere s = model->mesh.boundingSphere;
+    Matrix4 toWorldSpace = ObjectWorldMatrix(model->modelSpace);
+    Matrix4 toCameraSpace= WorldObjectMatrix(context.cameraSpace);
+    Vector4 spw = Vector4(s.p, 1.0f);
+    spw = toWorldSpace * spw;
+    spw = toCameraSpace * spw;
+    s.p = spw.v3();
+
+    Plane farPlane = Plane(0.0f, 0.0f, 1.0f, context.zfar);
+    Plane nearPlane = Plane(0.0f, 0.0f, -1.0f, -context.znear  );
+    f32 yMax = tan(context.vFOV/2) * context.zfar;
+    f32 xMax = yMax*context.aspectRatio;
+    Vector3 eye = Vector3(0, 0, 0);
+    Vector3 ll = Vector3(-xMax, -yMax, -context.zfar);
+    Vector3 ul = Vector3(-xMax, yMax, -context.zfar);
+    Vector3 lr = Vector3(xMax, -yMax, -context.zfar);
+    Vector3 ur = Vector3(xMax, yMax, -context.zfar);
+    Plane left = Plane(eye, ll, ul);
+    Plane right = Plane(eye, lr, ur);
+    Vector3 leftNormal = left.GetNormal();
+    Vector3 rightNormal = right.GetNormal();
+    Vector3 x = Vector3(1,0,0);
+
+    if (dot(leftNormal, x ) < 0) {
+        // wrong way. This is supposed to point to the right
+        left = Plane(leftNormal*-1, left.d*-1);
+    }
+    if (dot(rightNormal, x) > 0) {
+        right = Plane(rightNormal*-1, right.d*-1);
+    }
+    f32 dots[4];
+    dots[0]= dot(s.p, farPlane);
+    dots[1] = dot(s.p, nearPlane);
+    dots[2] = dot(s.p, left);
+    dots[3] = dot(s.p, right);
+    for (int i = 0; i < 4; i++) {
+        if (dots[i] <= s.radius ) {
+            return false;
+        }
+    }
+    return true;
+}
