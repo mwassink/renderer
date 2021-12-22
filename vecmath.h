@@ -396,6 +396,17 @@ inline Vector3 operator/(f32 scale, const Vector3& rhs) {
     return Vector3(rhs.x/scale, rhs.y/scale, rhs.z/ scale);
 }
 
+inline f32 dot(const Vector3& lhs, const Vector3& rhs) {
+    return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+}
+
+
+inline f32 dot(const Vector4& lhs, const Vector4& rhs) {
+    return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w;
+}
+
+
+
 struct Plane {
     f32 x, y, z, d;
     Plane(f32 _x, f32 _y, f32 _z, f32 _d) {
@@ -403,9 +414,14 @@ struct Plane {
     }
 
     Plane(Vector3 p1, Vector3 p2, Vector3 p3) {
-        Vector3 v1  = p2 - p1;
+        Vector3 v1  = p3 - p1;
         Vector3 v2 = p3 - p2;
         Vector3 cp = cross(v1, v2);
+        cp.normalize();
+        x = cp.x;
+        y = cp.y;
+        z = cp.z;
+        d = -1.0f * dot(v1, cp);
     }
 
     Plane(Vector3 xyz, f32 _d) {
@@ -420,14 +436,6 @@ struct Plane {
 };
 
 
-inline f32 dot(const Vector3& lhs, const Vector3& rhs) {
-    return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z* rhs.z; 
-}
-
-
-inline f32 dot(const Vector4& lhs, const Vector4& rhs) {
-    return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z* rhs.z + lhs.w * rhs.w; 
-}
 
 inline f32 dot(const Vector3& point, const Plane& plane) {
     return point.x * plane.x + point.y * plane.y + point.z * plane.z + plane.d;

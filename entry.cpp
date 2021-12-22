@@ -261,14 +261,15 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 spotLights[0].lightSpace = lookAtCoordSpace(models[0].modelSpace.origin, spotLights[0].lightSpace.origin);
                 testShadow(&models, &spotLights[0]);
                 Vector3 yellow = Vector3(1.0f, 1.0f, 0.0f);
-                renderer.DrawBoundingSphere(&lightOne, Vector3(1.0f, 1.0f, 1.0f));
+                renderer.DrawBoundingSphere(&lightOne);
 
                 #if 0
                 renderer.RenderSkybox(box);
+#else
                 for (int i = 0; i < models.sz; i++) {
                     renderer.DrawBoundingSphere(&models[i]);
                 }
-                #endif        
+#endif
 #endif
                 SwapBuffers(windowDC);
                 

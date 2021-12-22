@@ -1056,8 +1056,7 @@ Vector3* GetVertices(Model* model) {
     return vertices;
 }
 
-// (TODO) retain this as part of the model
-void Renderer::DrawBoundingSphere(Model* model, Vector3 color) {
+void Renderer::DrawBoundingSphere(Model* model) {
     if (model->mesh.boundingSphere.radius < 0) {
         Vector3* verts = GetVertices(model);
         model->mesh.boundingSphere = GetBoundingSphere(verts, model->mesh.numVertices);
@@ -1071,7 +1070,11 @@ void Renderer::DrawBoundingSphere(Model* model, Vector3 color) {
     spw = toWorldSpace * spw;
     spw = toCameraSpace * spw;
     s.p = spw.v3();
-    
+    bool cullable = SphereFrustumCull(model, &context.cameraSpace);
+    Vector3 color = Vector3(0.0f, 1.0f, 0.0f );
+    if (cullable) {
+        color = Vector3(1.0f, 0.0f, 0.0f );
+    }
     RayTraceBoundingSphere(&s, &color);
     
 }
@@ -1088,10 +1091,10 @@ Model Renderer::CreateLightModel(SpotLight* s, f32 radius = 0.3f) {
 }
 
 // Returns whether the model can be culled based on its bounding sphere
-bool Renderer::SphereFrustumCull(Model* model) {
+bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix) {
     Sphere s = model->mesh.boundingSphere;
     Matrix4 toWorldSpace = ObjectWorldMatrix(model->modelSpace);
-    Matrix4 toCameraSpace= WorldObjectMatrix(context.cameraSpace);
+    Matrix4 toCameraSpace= WorldObjectMatrix(*viewMatrix);
     Vector4 spw = Vector4(s.p, 1.0f);
     spw = toWorldSpace * spw;
     spw = toCameraSpace * spw;
@@ -1099,7 +1102,7 @@ bool Renderer::SphereFrustumCull(Model* model) {
 
     Plane farPlane = Plane(0.0f, 0.0f, 1.0f, context.zfar);
     Plane nearPlane = Plane(0.0f, 0.0f, -1.0f, -context.znear  );
-    f32 yMax = tan(context.vFOV/2) * context.zfar;
+    f32 yMax = tanf(context.vFOV/2) * context.zfar;
     f32 xMax = yMax*context.aspectRatio;
     Vector3 eye = Vector3(0, 0, 0);
     Vector3 ll = Vector3(-xMax, -yMax, -context.zfar);
@@ -1125,9 +1128,9 @@ bool Renderer::SphereFrustumCull(Model* model) {
     dots[2] = dot(s.p, left);
     dots[3] = dot(s.p, right);
     for (int i = 0; i < 4; i++) {
-        if (dots[i] <= s.radius ) {
-            return false;
+        if (dots[i] < -s.radius ) {
+            return true;
         }
     }
-    return true;
+    return false;
 }
