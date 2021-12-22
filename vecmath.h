@@ -321,28 +321,7 @@ inline Vector3 cross(const Vector3& a ,const Vector3& b) {
     return Vector3(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
 }
 
-struct Plane {
-    f32 x, y, z, d;
-    Plane(f32 _x, f32 _y, f32 _z, f32 _d) {
-        x = _x; y = _y; z = _z; d = _d;
-    }
 
-    Plane(Vector3 p1, Vector3 p2, Vector3 p3) {
-        Vector3 v1  = p2 - p1;
-        Vector3 v2 = p3 - p2;
-        Vector3 cp = cross(v1, v2);
-    }
-
-    Plane(Vector3 xyz, f32 _d) {
-        x = xyz.x; y = xyz.y; z = xyz.z; d = _d;
-    }
-
-    Plane() {}
-
-    Vector3 GetNormal()  {
-        return Vector3(x, y, z);
-    }
-};
 
 inline Vector3 operator+(const Vector3& lhs, const Vector3& rhs) {
     return Vector3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
@@ -417,6 +396,28 @@ inline Vector3 operator/(f32 scale, const Vector3& rhs) {
     return Vector3(rhs.x/scale, rhs.y/scale, rhs.z/ scale);
 }
 
+struct Plane {
+    f32 x, y, z, d;
+    Plane(f32 _x, f32 _y, f32 _z, f32 _d) {
+        x = _x; y = _y; z = _z; d = _d;
+    }
+
+    Plane(Vector3 p1, Vector3 p2, Vector3 p3) {
+        Vector3 v1  = p2 - p1;
+        Vector3 v2 = p3 - p2;
+        Vector3 cp = cross(v1, v2);
+    }
+
+    Plane(Vector3 xyz, f32 _d) {
+        x = xyz.x; y = xyz.y; z = xyz.z; d = _d;
+    }
+
+    Plane() {}
+
+    Vector3 GetNormal()  {
+        return Vector3(x, y, z);
+    }
+};
 
 
 inline f32 dot(const Vector3& lhs, const Vector3& rhs) {
