@@ -12,6 +12,7 @@
 
 
 static bool runnable = 1;
+static bool boundingVolumesVisible = 0;
 
 
 #define RUNTESTS 1
@@ -111,6 +112,12 @@ void orientCameraFromInput(UINT msg, WPARAM wparam, CoordinateSpace* cameraSpace
                 case VK_RIGHT: {
                     Matrix3 m = rotateY3(3.14/80.0f);
                     cameraSpace->rotate(m);
+                } break;
+                case '1': {
+                    if (msg == WM_KEYUP || msg == WM_SYSKEYUP ){
+                        boundingVolumesVisible = !boundingVolumesVisible;
+                    }
+                    
                 } break;
                 
                 
@@ -261,15 +268,18 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 spotLights[0].lightSpace = lookAtCoordSpace(models[0].modelSpace.origin, spotLights[0].lightSpace.origin);
                 testShadow(&models, &spotLights[0]);
                 Vector3 yellow = Vector3(1.0f, 1.0f, 0.0f);
+                renderer.RenderSkybox(box);
                 renderer.DrawBoundingSphere(&lightOne);
 
-                #if 0
-                renderer.RenderSkybox(box);
-#else
-                for (int i = 0; i < models.sz; i++) {
-                    renderer.DrawBoundingSphere(&models[i]);
+                
+
+                if (boundingVolumesVisible) {
+                    for (int i = 0; i < models.sz; i++) {
+                        renderer.DrawBoundingSphere(&models[i]);
+                    }
                 }
-#endif
+
+
 #endif
                 SwapBuffers(windowDC);
                 

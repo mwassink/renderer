@@ -84,6 +84,7 @@ struct Renderer {
     void DrawBoundingSphere(Model* model);
     Sphere GetBoundingSphere(Vector3* verts, int numVerts);
     Model CreateLightModel(SpotLight* s, f32 r);
-    bool SphereFrustumCull(Model* m, CoordinateSpace* vm);
+    bool SphereFrustumCull(Model* m, CoordinateSpace* vm, f32 f, f32 n, f32 as);
+    f32 farPlaneSpotLight(SpotLight* s);
 };
 

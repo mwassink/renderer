@@ -10,7 +10,7 @@
 #endif
 
 #define CHECKGL(str) if (glGetError() != GL_NO_ERROR) {fatalError(str, "Error");}
-
+#define MINLIGHT .01f
 #define TEXTURE_SIZE 512
 #define ASPECT_RATIO 16/9
 // Poached from the interwebs
@@ -554,7 +554,10 @@ void Renderer::testViz(Model* model, CoordinateSpace* cs) {
 
 // Shadow maps need to be set up BEFORE this is called
 void Renderer::renderModel(Model* model, SpotLight* light) {
-    
+
+    // after it gets to .01, cull it
+    f32 distAtten = farPlaneSpotLight(light);
+
     u32 shader = context.basicLightingShader;
     if (model->mesh.normalVertices) {
         shader = context.texturedLightingShader;
@@ -611,10 +614,15 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
     
     
     for (int i = 0; i < numModels; ++i) {
-        GLint err2 = glGetError();
+
+        if (SphereFrustumCull(&models[i], &light->lightSpace, 40.0f, 1.0f, 1.0f)) {
+            continue;
+        }
+
+        
         Matrix4 modelLightProjection = glModelViewProjection(models[i].modelSpace, light->lightSpace, PI/4.0f,
                                                              1, 1.0f, 40.0f);
-        testViz(&models[i], &light->lightSpace);
+        
         GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
         glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)&modelLightProjection.data[0]);
         
@@ -1070,7 +1078,8 @@ void Renderer::DrawBoundingSphere(Model* model) {
     spw = toWorldSpace * spw;
     spw = toCameraSpace * spw;
     s.p = spw.v3();
-    bool cullable = SphereFrustumCull(model, &context.cameraSpace);
+    bool cullable = SphereFrustumCull(model, &context.cameraSpace, context.zfar, context.znear,
+        context.aspectRatio);
     Vector3 color = Vector3(0.0f, 1.0f, 0.0f );
     if (cullable) {
         color = Vector3(1.0f, 0.0f, 0.0f );
@@ -1091,7 +1100,14 @@ Model Renderer::CreateLightModel(SpotLight* s, f32 radius = 0.3f) {
 }
 
 // Returns whether the model can be culled based on its bounding sphere
-bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix) {
+bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix, f32 f, f32 n,
+    f32 aspectRatio ) {
+    // (TODO) do this when the model is created
+    if (model->mesh.boundingSphere.radius < 0) {
+        Vector3* verts = GetVertices(model);
+        model->mesh.boundingSphere = GetBoundingSphere(verts, model->mesh.numVertices);
+        free(verts);
+    }
     Sphere s = model->mesh.boundingSphere;
     Matrix4 toWorldSpace = ObjectWorldMatrix(model->modelSpace);
     Matrix4 toCameraSpace= WorldObjectMatrix(*viewMatrix);
@@ -1100,10 +1116,10 @@ bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix) {
     spw = toCameraSpace * spw;
     s.p = spw.v3();
 
-    Plane farPlane = Plane(0.0f, 0.0f, 1.0f, context.zfar);
-    Plane nearPlane = Plane(0.0f, 0.0f, -1.0f, -context.znear  );
-    f32 yMax = tanf(context.vFOV/2) * context.zfar;
-    f32 xMax = yMax*context.aspectRatio;
+    Plane farPlane = Plane(0.0f, 0.0f, 1.0f, f);
+    Plane nearPlane = Plane(0.0f, 0.0f, -1.0f, n  );
+    f32 yMax = tanf(context.vFOV/2) * f;
+    f32 xMax = yMax*aspectRatio;
     Vector3 eye = Vector3(0, 0, 0);
     Vector3 ll = Vector3(-xMax, -yMax, -context.zfar);
     Vector3 ul = Vector3(-xMax, yMax, -context.zfar);
@@ -1134,3 +1150,9 @@ bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix) {
     }
     return false;
 }
+
+f32 Renderer::farPlaneSpotLight(SpotLight* s) {
+    f32 dSquared = s->irradiance / MINLIGHT;
+    return sqrt(dSquared);
+}
+

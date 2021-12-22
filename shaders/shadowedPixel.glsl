@@ -2,7 +2,7 @@
 
 #define M_PI 3.1415926535897932384626433832795
 
-#define DEBUG 1
+#define DEBUG 0
 layout (binding = 0) uniform sampler2D tex;
 layout (binding = 1) uniform sampler2D normalMap;
 layout (binding = 2) uniform sampler2DShadow depthTexture;
@@ -65,10 +65,6 @@ void main(void) {
     vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;
     vec3 ambient = ambientCoeff * diffColor;
 
-
-    #if DEBUG
-    ambient = vec3(0);
-    #endif
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
 
     
