@@ -5,7 +5,7 @@ It uses OpenGL 4.5, the C runtime library, and some platform specific functions 
 
 Cool Features:
 - Normal Mapping
-- Directional Shadows
-- Bounding Spheres (for frustum culling)
+- Spotlight Shadows
+- Bounding Spheres (frustum culling)
   - Visible through ray tracing compute shader
 - Skyboxes
