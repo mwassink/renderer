@@ -556,7 +556,10 @@ void Renderer::testViz(Model* model, CoordinateSpace* cs) {
 void Renderer::renderModel(Model* model, SpotLight* light) {
 
     // after it gets to .01, cull it
-    f32 distAtten = farPlaneSpotLight(light);
+    Vector3 v = light->lightSpace.origin - model->modelSpace.origin;
+    if (dot(v, v) > (100 * light->irradiance)) {
+        return;
+    }
 
     u32 shader = context.basicLightingShader;
     if (model->mesh.normalVertices) {
