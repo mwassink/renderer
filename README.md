@@ -1,7 +1,11 @@
-This is a 3D renderer I am working on. Now, it does basic rendering of models along with some other things. It has issues. It contains a demo to test models, which are not included in the source.
-I am writing it to
-1) implement and learn 3D geometry and some linear algebra
-2) explore and implement rendering and acceleration techiniques learned in Real-Time Rendering 4 and Foundations of Game Engine Development 2
-3) Potentially use in a simple game
+This is a 3D renderer. Now, it does basic rendering of models along with some other things. It contains a demo to test models, which are not included in the source.
+I am writing it to learn and use in a game.
 
-It uses OpenGL 4.5, a little of the C runtime library, and some platform stuff for Win32.
+It uses OpenGL 4.5, the C runtime library, and some platform specific functions for Windows.
+
+Cool Features:
+- Normal Mapping
+- Directional Shadows
+- Bounding Spheres (for frustum culling)
+  - Visible through ray tracing compute shader
+- Skyboxes

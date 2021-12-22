@@ -188,7 +188,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     Model p;
     int64_t frames = 0;
     HDC windowDC;
-
+    Model lightOne;
     if (RegisterClass(&WindowClass)) {
         HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
                                              CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
@@ -224,6 +224,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 shadowRenderer = &renderer;
                 shadowRendererUtil = &renderer.utilHelper;
                 Skybox box;
+                
                 if (!ran) {
                     SpotLight s;
                     s.worldSpaceCoord = Vector3(0, 5, -60);
@@ -253,21 +254,22 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     const char* files[6] = {px, nx, py, ny, pz, nz};
                     box = renderer.MakeSkybox(files);
                     renderer.context.cameraSpace = lookAtCoordSpace(models[0].modelSpace.origin, renderer.context.cameraSpace.origin);
+                    lightOne = renderer.CreateLightModel(&spotLights[0], 0.3f);
+
                 }
                 
-                
+                spotLights[0].lightSpace = lookAtCoordSpace(models[0].modelSpace.origin, spotLights[0].lightSpace.origin);
                 testShadow(&models, &spotLights[0]);
+                Vector3 yellow = Vector3(1.0f, 1.0f, 0.0f);
+                renderer.DrawBoundingSphere(&lightOne, Vector3(1.0f, 1.0f, 1.0f));
+
+                #if 0
                 renderer.RenderSkybox(box);
                 for (int i = 0; i < models.sz; i++) {
                     renderer.DrawBoundingSphere(&models[i]);
                 }
-                
-                
-                
-                
+                #endif        
 #endif
-                
-               
                 SwapBuffers(windowDC);
                 
                 ran = true;

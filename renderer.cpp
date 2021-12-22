@@ -9,6 +9,7 @@
 #include <stdio.h>
 #endif
 
+#define CHECKGL(str) if (glGetError() != GL_NO_ERROR) {fatalError(str, "Error");}
 
 #define TEXTURE_SIZE 512
 #define ASPECT_RATIO 16/9
@@ -146,6 +147,12 @@ void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint sha
                         0.0f, 0.0f, 0.0f, 1.0f);
     Matrix4 sMatrix = l  * glproj;
     uplumbMatrix4(shader, sMatrix, "shadowMatrix");
+    Matrix4 m = ObjectWorldMatrix(model->modelSpace);
+    Matrix4 lv = WorldObjectMatrix(light->lightSpace);
+    CHECKGL("Error plumbing shadow shader");
+    Matrix4 lightSpaceMatrix = lv * m;
+    uplumbMatrix4(shader, lightSpaceMatrix, "modelLightMatrix");
+    CHECKGL("Error plumbing shadow shader II");
     glBindTextureUnit(2, light->depthTexture);
     
 }
@@ -767,7 +774,7 @@ Renderer::Renderer() {
     
 }
 
-#define CHECKGL(str) if (glGetError() != GL_NO_ERROR) {fatalError(str, "Error");}
+
 
 int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
     
@@ -1050,7 +1057,7 @@ Vector3* GetVertices(Model* model) {
 }
 
 // (TODO) retain this as part of the model
-void Renderer::DrawBoundingSphere(Model* model) {
+void Renderer::DrawBoundingSphere(Model* model, Vector3 color) {
     if (model->mesh.boundingSphere.radius < 0) {
         Vector3* verts = GetVertices(model);
         model->mesh.boundingSphere = GetBoundingSphere(verts, model->mesh.numVertices);
@@ -1064,9 +1071,19 @@ void Renderer::DrawBoundingSphere(Model* model) {
     spw = toWorldSpace * spw;
     spw = toCameraSpace * spw;
     s.p = spw.v3();
-    Vector3 red = Vector3(1.0f, 0.0f, 0.0f);
-    RayTraceBoundingSphere(&s, &red);
+    
+    RayTraceBoundingSphere(&s, &color);
     
 }
 
+Model Renderer::CreateLightModel(SpotLight* s, f32 radius = 0.3f) {
+    Model lightModel;
+                
+    Sphere lightCapsule;
+    lightCapsule.p = Vector3(0, 0,0);
+    lightCapsule.radius = radius;
+    lightModel.mesh.boundingSphere = lightCapsule;
+    lightModel.modelSpace = s->lightSpace;
+    return lightModel;
+}
 

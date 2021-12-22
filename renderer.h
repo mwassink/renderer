@@ -82,7 +82,8 @@ struct Renderer {
     void DrawTexture(Texture* t);
     void RunComputeShader(int x, int y, int z);
     void RayTraceBoundingSphere(Sphere* s, Vector3* color);
-    void DrawBoundingSphere(Model* model);
+    void DrawBoundingSphere(Model* model, Vector3 color);
     Sphere GetBoundingSphere(Vector3* verts, int numVerts);
+    Model CreateLightModel(SpotLight* s, f32 r);
 };
 

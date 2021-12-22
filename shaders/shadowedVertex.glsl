@@ -8,6 +8,7 @@ uniform mat3 normalMatrix;
 uniform vec3 lightCameraSpace;
 
 
+
 layout (location = 0) in vec4 pos;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec3 tangent;
@@ -19,6 +20,8 @@ out vec3 lightDir;
 out vec3 eyeDir;
 out vec4 shadowCoord;
 out float distSquared;
+out vec4 posModel;
+
 
 void main(void) {
     vec3 n = normalize(normalMatrix * normal);
@@ -38,4 +41,5 @@ void main(void) {
     distSquared = dot(diff, diff);
     shadowCoord = shadowMatrix * pos;
     uvCoord = uvVertex;
+    posModel = pos;
 }

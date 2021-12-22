@@ -51,7 +51,7 @@ struct Vector3 {
         x /= mag; y /= mag; z /= mag;
     }
 
-    f32 mag() {
+    f32 mag() const {
         return  sqrt(z*z + y*y + x*x);
     }
 
@@ -816,14 +816,25 @@ inline Matrix3 Matrix3x3(const Matrix4& in) {
                    in(2,0), in(2,1), in(2,2));
 }
 
+// Do not use this on a vector of length 0....
+inline bool CheckParallel( const Vector3& lhs, const  Vector3& rhs) {
+    f32 d = dot(lhs, rhs);
+    f32 magprod = lhs.mag() * rhs.mag();
+    return fabsf(d - magprod) < .01f;
+}
+
+
 // So we want this to have an up dir of (0, 1, 0)
 // We also want to look at something in the negative z direction
 // Make sure it is in front of us
 inline Matrix4 lookAt(const Vector3 &at, const Vector3 &eye) {
-    const Vector3 up = Vector3(0, 1, 0);
+    Vector3 up = Vector3(0, 1, 0);
 
     Vector3 z = at - eye;
     z *= -1; // now z points in the "wrong" direction
+    if (CheckParallel(z, up)) {
+        up = Vector3(.707f, .707f, 0.0f);
+    }
     Vector3 x = cross(up, z); // it is perpendicular now to y and to the new axis. cp wraps around
     Vector3 y = cross(z, x); // now this is perpendicular to both x and z... we should have a basis
     z.normalize();
@@ -835,10 +846,13 @@ inline Matrix4 lookAt(const Vector3 &at, const Vector3 &eye) {
 }
 
 inline CoordinateSpace lookAtCoordSpace( Vector3 &at, const Vector3 &eye) {
-    const Vector3 up = Vector3(0, 1, 0);
+    Vector3 up = Vector3(0, 1, 0);
 
     Vector3 z = at - eye;
     z *= -1; // now z points in the "wrong" direction
+    if (CheckParallel(z, up)) {
+        up = Vector3(.707f, .707f, 0.0f);
+    }
     Vector3 x = cross(up, z); // it is perpendicular now to y and to the new axis. cp wraps around
     Vector3 y = cross(z, x); // now this is perpendicular to both x and z... we should have a basis
     z.normalize();
@@ -849,6 +863,7 @@ inline CoordinateSpace lookAtCoordSpace( Vector3 &at, const Vector3 &eye) {
     return coordSpace;
 
 }
+
 
 
 
