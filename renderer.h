@@ -49,7 +49,6 @@ struct RendererUtil {
     void addMeshTangents(Mesh* mesh);
     int InitializeCubeMaps(const char* fileNames[6]);
     Texture RenderTarget();
-    
 };
 
 

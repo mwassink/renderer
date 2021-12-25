@@ -197,6 +197,16 @@ struct SpotLight {
     SpotLight() {
         cubeArgs.tex = -1;
     }
+
+    SpotLight(Vector3 o, Vector3 r, Vector3 s, Vector3 t, f32 irrad, Vector3 color) {
+        worldSpaceCoord = o;
+        color = color;
+        irradiance = irrad;
+        lightSpace.r = r;
+        lightSpace.s = s;
+        lightSpace.t = t;
+        lightSpace.origin = o;
+    }
     union {
         struct {
             Vector3 worldSpaceCoord;

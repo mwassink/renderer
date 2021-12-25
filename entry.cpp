@@ -24,6 +24,7 @@ static bool boundingVolumesVisible = 0;
 #include "tests/shadowmapping.cpp"
 #include "tests/loadplane.cpp"
 #include "tests/raytrace.cpp"
+#include "tests/pointShadowDemo.cpp"
 #endif
 
 
