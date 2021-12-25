@@ -9,3 +9,6 @@ Cool Features:
 - Bounding Spheres (frustum culling)
   - Visible through ray tracing compute shader
 - Skyboxes
+
+##Build
+Use the most recent release to try and run the program. To build, navigate to the build/ folder and run build-clang.bat or click on it from the file explorer. You would need Clang installed to do this. This will create an executable called demo-clang.exe that can run the program. Run it from the same directory. It can also be built with MSVC if the user has the correct tools, but I usually use that to debug the program.

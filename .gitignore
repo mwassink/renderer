@@ -9,5 +9,6 @@ tests/resources
 *.log
 .gitignore
 build/.vs*
+tests/.vs*
 TAGS
 *.html
