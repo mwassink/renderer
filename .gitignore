@@ -1,6 +1,7 @@
 .vs/*
 *.ilk
-test*
+tests/models
+tests/resources
 *.obj
 *.pdb
 *.exe
@@ -9,3 +10,4 @@ test*
 .gitignore
 build/.vs*
 TAGS
+*.html
