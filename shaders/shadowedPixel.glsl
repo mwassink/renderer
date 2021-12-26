@@ -36,7 +36,7 @@ float circularFalloff(float ctheta) {
 float getFallOffRatio() {
     vec4 posLightSpace = modelLightMatrix * posModel;
     vec3 p = posLightSpace.xyz;
-    float ctheta = -1f * posLightSpace.z / length(p);
+    float ctheta = -1.0f * posLightSpace.z / length(p);
 
     return circularFalloff(ctheta) / (posLightSpace.z * posLightSpace.z); 
 }
