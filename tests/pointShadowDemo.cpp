@@ -49,6 +49,7 @@ void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
     barrel4.modelSpace = objSpace;
     objSpace.origin = Vector3(0,0, -45);
     s->lightSpace = lookAtCoordSpace(barrel1.modelSpace.origin, objSpace.origin);
+    s->irradiance = 200.0f;
     Vector3 x = Vector3(1,0,0);
     Vector3 y = Vector3(0,1,0);
     Vector3 z = Vector3(0,0,1);

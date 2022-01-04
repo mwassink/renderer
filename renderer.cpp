@@ -76,6 +76,8 @@ RendererContext::RendererContext() {
     texturedLightingShader = tmp.setShaders("../shaders/basicTexturedVertex.glsl", "../shaders/basicTexturedPixel.glsl" );
     
     texturedShadowShader = tmp.setShaders("../shaders/shadowedVertex.glsl","../shaders/shadowedPixel.glsl" );
+    texturedPointShadowShader = tmp.setShaders("../shaders/shadowedVertex.glsl", "../shaders/pointPixel.glsl");
+    CHECKGL("Point shadow shader setup FAILED");
     shadowMappingShader = tmp.setShaders("../shaders/vshadowMap.glsl", "../shaders/pshadowMap.glsl");
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
     quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/pquad.glsl");
@@ -150,12 +152,21 @@ void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint sha
     uplumbMatrix4(shader, sMatrix, "shadowMatrix");
     Matrix4 m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 lv = WorldObjectMatrix(light->lightSpace);
-    CHECKGL("Error plumbing shadow shader");
     Matrix4 lightSpaceMatrix = lv * m;
     uplumbMatrix4(shader, lightSpaceMatrix, "modelLightMatrix");
-    CHECKGL("Error plumbing shadow shader II");
     glBindTextureUnit(2, light->depthTexture);
     
+}
+
+void RendererUtil::AddShadowsToShader(Model* model, PointLight* light, GLuint shader) {
+    Matrix4 proj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 40.0f);
+    uplumbMatrix4(shader, proj, "shadowMatrix");
+    Matrix4 m = ObjectWorldMatrix(model->modelSpace);
+    Matrix4 lightView = WorldObjectMatrix(light->lightSpace);
+    Matrix4 toLightSpace = lightView * m;
+    uplumbMatrix4(shader, toLightSpace, "modelLightMatrix");
+    CHECKGL("plumbing error");
+    glBindTextureUnit(2, light->cubeArgs.tex);
 }
 
 
@@ -555,39 +566,80 @@ void Renderer::testViz(Model* model, CoordinateSpace* cs) {
     }
 }
 
+u32 Renderer::ShaderFlags(Model* model, bool shadows ) {
+    u32 flags = 0;
+    flags = model->mesh.normalVertices ? NORMALMAPPING : BASIC;
+    flags = shadows ? (flags | SHADOWS) : (flags);
+
+    return flags;
+}
+
 // Shadow maps need to be set up BEFORE this is called
 void Renderer::renderModel(Model* model, SpotLight* light) {
 
-    CHECKGL("Error before rendering the model");
-    // after it gets to .01, cull it
+    // (TODO) use bounding sphere instead of origin
     Vector3 v = light->lightSpace.origin - model->modelSpace.origin;
     if (dot(v, v) > (100 * light->irradiance)) {
         return;
     }
 
-    u32 shader = context.basicLightingShader;
-    if (model->mesh.normalVertices) {
+    u32 flags = ShaderFlags(model, light->shadows != NULL);
+    u32 shader;
+    switch (flags) {
+    case BASIC: {
+        shader = context.basicLightingShader;
+        utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
+
+    } break;
+    case NORMALMAPPING: {
         shader = context.texturedLightingShader;
-        if (light->shadows) {
-            shader = context.texturedShadowShader;
-        }
         utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
         utilHelper.AddTexturingToShader(model, light, shader);
-        
-        if (light->shadows) {
-            utilHelper.AddShadowsToShader(model, light, shader);
-        }
-        setDrawModel(model);
-    }
-    else if (model->mesh.vertices) {
+    } break;
+    case NORMALMAPPING | SHADOWS : {
+        shader = context.texturedShadowShader;
         utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
-        setDrawModel(model);
+        utilHelper.AddTexturingToShader(model, light, shader);
+        utilHelper.AddShadowsToShader(model, light, shader);
+    } break;
     }
+    
+    setDrawModel(model);    
     
 }
 
-void Renderer::renderModel(Model* model, PointLight* pointLight) {
-    //stub
+void Renderer::renderModel(Model* model, PointLight* light) {
+
+    CHECKGL("error before drawing cube map");
+    GLint err;
+    Vector3 l = light->lightSpace.origin - model->modelSpace.origin;
+    if (dot(l, l) > (100 * light->irradiance)) {
+        return;
+    }
+    u32 flags = ShaderFlags(model, light->shadows != NULL);
+    u32 shader;
+    switch (flags) {
+    case BASIC: {
+        shader = context.basicLightingShader;
+        utilHelper.SetupBasicShader(model, light, shader);
+
+    } break;
+    case NORMALMAPPING: {
+        shader = context.texturedLightingShader;
+        utilHelper.SetupBasicShader(model, light, shader);
+        utilHelper.AddTexturingToShader(model, (SpotLight* ) light, shader);
+    } break;
+    case NORMALMAPPING | SHADOWS : {
+        shader = context.texturedPointShadowShader;
+        utilHelper.SetupBasicShader(model, light, shader);
+        utilHelper.AddTexturingToShader(model, (SpotLight*) light, shader);
+        utilHelper.AddShadowsToShader(model, light, shader);
+        err = glGetError();
+
+    } break;
+    }
+    CHECKGL("error when drawing cube map");
+    setDrawModel(model);
 }
 
 
@@ -645,7 +697,8 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  0, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
     
 #undef RES
 }
@@ -674,6 +727,7 @@ Array<CoordinateSpace> Renderer::cubeMapCS(CoordinateSpace& renderSpace) {
     return renderBases;
 }
 
+// This will make it so that the light now has a texture attached
 void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
     if (light->cubeArgs.tex == -1) {
         light->cubeArgs.internalFormat = GL_DEPTH_COMPONENT32;
@@ -684,6 +738,9 @@ void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
     }
     // (TODO) could just have the far plane be after attenuates fully
     CubeMapRender(models, light->lightSpace, 1.0f, 20.0f, &light->cubeArgs  );
+    for (int i = 0; i < models->sz; ++i) {
+        renderModel(&(*models)[i], light);
+    }
 }
 
 // this is not just the regular projection matrix
@@ -777,6 +834,7 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     coordinateSpaces.release();
     
 }

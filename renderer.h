@@ -1,3 +1,9 @@
+
+#define BASIC 1
+#define NORMALMAPPING 2
+#define SHADOWS 4
+
+
 struct RendererContext {
     f32 vFOV, aspectRatio, znear, zfar;
     CoordinateSpace cameraSpace;
@@ -14,6 +20,7 @@ struct RendererContext {
     HWND windowHandle;
     GLuint quadVAO;
     GLuint quadVBO;
+    u32 texturedPointShadowShader;
     RendererContext();
 };
 
@@ -24,6 +31,7 @@ struct RendererUtil {
     void SetupBasicShader(Model* model, PointLight* light, GLuint shader);
     void AddTexturingToShader (Model* model, SpotLight* light, GLuint shader);
     void AddShadowsToShader(Model* model, SpotLight* light, GLuint shader);
+    void AddShadowsToShader(Model* model, PointLight* light, GLuint shader);
     Model addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap, bool f= true);
     Model addModel(const char* fileName, const char* textureName);
     void activateModel(Model* model);
@@ -85,5 +93,6 @@ struct Renderer {
     Model CreateLightModel(SpotLight* s, f32 r);
     bool SphereFrustumCull(Model* m, CoordinateSpace* vm, f32 f, f32 n, f32 as);
     f32 farPlaneSpotLight(SpotLight* s);
+    u32 ShaderFlags(Model* model, bool s);
 };
 

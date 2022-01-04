@@ -15,7 +15,7 @@ uniform float lightBrightness;
 // The algo requires this
 uniform vec2 AB; // A B of the proj matrix (2,2), (2,3)
     
-in vec2 uvCoordl;
+in vec2 uvCoord;
 in vec3 lightDir;
 in vec3 eyeDir;
 // this is the  coord in the space of the shadow
@@ -26,15 +26,11 @@ in float distSquared;
 const float shininess = 16.0f;
 const float ambientCoeff = .05f;
 
-float fetchCoeff(vec3 posIn) {
-    // the depth will be the maximum value (e.g if x is largest, then we will use +x and then the depth )
-    posIn = abs(posIn);
-    float maxDepth = max(posIn.x, max(posIn.y, posIn.z));
-    // With the OpenGL matrix given, (more negative) z values are mapped into larger z values after proj
-    // If I were to simply use the coeffs A and B, then the depth would be negative as A and B are neg
-    // The thing that saves it with the projection is that when the z value is stored as w it gets
-    // multiplied by -1 
-    float depth = -AB.x - AB.y / maxDepth; //those are surely neg values so the comp would always succeed otherwise
+out vec4 color;
+float fetchCoeff(vec4 posIn) {
+    // sample the cube map
+    float s = texture(depthMap, posIn); // do not need to divide by w, just use direction vector to sample the cube map
+    return s;
     
 }
 
@@ -43,8 +39,8 @@ void main(void) {
 
     vec3 l = normalize(lightDir);
     vec3 v = normalize(eyeDir);
-    vec4 normalOld = texture(normalMap, uvCoord);
-    vec3 n = normalize(2.0*normalOld.xyz - 1.0);
+    vec4 normalRaw = texture(normalMap, uvCoord);
+    vec3 n = normalize(2.0*normalRaw.xyz - 1.0); // [0, 1] -> [-1. 1]
     vec3 diffColor = texture(tex, uvCoord).xyz;
 
     float lambertian = max(dot(n, l), 0.0f);
@@ -54,8 +50,7 @@ void main(void) {
     float scaleQuad = 1.0f / (4*M_PI*distSquared);
     float lightIntensity = lightBrightness * scaleQuad;
 
-    float s = fetchCoeff(depthTexture, shadowCoord );
-    //float s = 1;
+    float s = fetchCoeff(shadowCoord);
     vec3 diffRefl = (lambertian* lightIntensity*s)*diffColor*lightColor;
 
     vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;

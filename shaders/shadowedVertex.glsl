@@ -29,8 +29,8 @@ void main(void) {
     vec3 b = cross(n, t);
     b *= handedness;
     
-    vec3 eyePos = (modelView * pos).xyz;
-    vec3 diff = lightCameraSpace - eyePos;
+    vec3 eyePos = (modelView * pos).xyz; // pos of pt in camera space. confusing...
+    vec3 diff = lightCameraSpace - eyePos; // from pos to light
     lightDir = vec3(dot(diff, t), dot(diff, b), dot(diff, n) );
     lightDir = normalize(lightDir);
 
