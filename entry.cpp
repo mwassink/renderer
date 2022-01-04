@@ -17,14 +17,7 @@ static bool boundingVolumesVisible = 0;
 
 #define RUNTESTS 1
 #if RUNTESTS
-//#include "tests/gltest2.cc"
-//#include "tests/gltest3.cc"
-//#include "tests/basiclighting.cc"
-#include "tests/normalmapping.cpp"
-#include "tests/shadowmapping.cpp"
-#include "tests/loadplane.cpp"
-#include "tests/raytrace.cpp"
-#include "tests/pointShadowDemo.cpp"
+#include "tests.h"
 #endif
 
 
