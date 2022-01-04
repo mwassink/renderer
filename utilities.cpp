@@ -136,7 +136,7 @@ u8* flipBitmap(u32 bpp, u32 w, u32 h, u32 sizeBitmap, u8* bitmap) {
                  *stride, stride, false);
     }
     
-    writeOutBMP("testInput.bmp", w, h, bitmap );
+    
     free(bitmap);
     
     return newBitmap;
@@ -289,7 +289,7 @@ Mesh parseObj(const char* f, Texture texRequest) {
     normals.release();
     tcoords.release();
     
-    
+    fclose(fp);
     Mesh mesh(verticesList.data, indices.data, texRequest, verticesList.sz, indices.sz);
     return mesh;
 }
@@ -445,7 +445,14 @@ void writeOutBMP(const char* target, u32 w, u32 h, u8* mem) {
     BMPFileHeader fileHeader = {};
     BitmapHeader header = {};
     
-    FILE* fp = fopen(target, "wb");
+    FILE* fp = fopen(target, "wb+");
+
+    if (!fp) {
+        
+        char msg[1000] = { 0 };
+        snprintf(msg, 1000, "Unable to open one of the files for writing %s with error: %s. Could another program be using it?", target, strerror(errno));
+        fatalError(msg, "Error");
+    }
     
     
     fileHeader.fileType = 0x4D42;
@@ -608,6 +615,8 @@ Mesh BinaryMesh(const char* file) {
     if (type == VERTEX_NORMAL) {
         m.normalVertices = normalVertices;
     }
+
+    fclose(filePointer);
     return m;
     
     

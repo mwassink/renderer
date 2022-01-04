@@ -263,6 +263,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     box = renderer.MakeSkybox(files);
                     renderer.context.cameraSpace = lookAtCoordSpace(models[0].modelSpace.origin, renderer.context.cameraSpace.origin);
                     lightOne = renderer.CreateLightModel(&spotLights[0], 0.3f);
+                    InitialPointDemoSetup(&renderer);
 
                 }
                 
@@ -271,7 +272,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 Vector3 yellow = Vector3(1.0f, 1.0f, 0.0f);
                 renderer.RenderSkybox(box);
                 renderer.DrawBoundingSphere(&lightOne);
-
+                TestPointShadow(&renderer);
                 
 
                 if (boundingVolumesVisible) {

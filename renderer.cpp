@@ -756,6 +756,9 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
             // TODO: can quickly cull most of the models. Just skip them with bounding boxes if possible
             if (renderArgs->shader == context.shadowMappingShader) {
                 Matrix4 invCamera  = WorldObjectMatrix(coordinateSpaces[i]);
+                // Directions need to be consistent when we sample these.
+                // Directions are consistent because they use the same directions (the lights for shadows)
+                // object's for env mapping
                 depthRender(&(*models)[k], invCamera, renderArgs->res, 1.0f, 20.0f);
             }
         }
