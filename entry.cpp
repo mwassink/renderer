@@ -256,8 +256,9 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     box = renderer.MakeSkybox(files);
                     renderer.context.cameraSpace = lookAtCoordSpace(models[0].modelSpace.origin, renderer.context.cameraSpace.origin);
                     lightOne = renderer.CreateLightModel(&spotLights[0], 0.3f);
+                    
                     InitialPointDemoSetup(&renderer);
-
+                    ASSERT(glGetError() == GL_NO_ERROR);
                 }
                 
                 spotLights[0].lightSpace = lookAtCoordSpace(models[0].modelSpace.origin, spotLights[0].lightSpace.origin);

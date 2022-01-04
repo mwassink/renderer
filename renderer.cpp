@@ -139,6 +139,7 @@ void RendererUtil::AddTexturingToShader (Model* model, SpotLight* light, GLuint 
     glBindTextureUnit(1, model->mesh.normalMap.id);
 }
 void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint shader) {
+    CHECKGL("Error before adding shadows");
     
     Matrix4 glproj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 40.0f);
     Matrix4 l = Matrix4(.5f, 0.0f, 0.0f, 0.5f,
@@ -162,9 +163,11 @@ void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint sha
 
 // (TODO) join duplicate code in this and the one below it
 Model RendererUtil::addModelNormalMap(const char* fileName, const char* textureName, const char* normalMap, bool fast) {
+    
     Model model;
     Texture tex(textureName);
     Texture norm(normalMap);
+    
     if (fast) {
         model.mesh = BinaryMesh(fileName);
         model.mesh.textures = tex;
@@ -555,6 +558,7 @@ void Renderer::testViz(Model* model, CoordinateSpace* cs) {
 // Shadow maps need to be set up BEFORE this is called
 void Renderer::renderModel(Model* model, SpotLight* light) {
 
+    CHECKGL("Error before rendering the model");
     // after it gets to .01, cull it
     Vector3 v = light->lightSpace.origin - model->modelSpace.origin;
     if (dot(v, v) > (100 * light->irradiance)) {
@@ -593,6 +597,7 @@ void Renderer::renderModel(Model* model, PointLight* pointLight) {
 void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
 #define RES 500
     
+    CHECKGL("Error w/ shadow pass");
     
     GLint err;
     RECT rect;

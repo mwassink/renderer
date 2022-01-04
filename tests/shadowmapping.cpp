@@ -7,6 +7,7 @@ void testShadow(Array<Model>* models, SpotLight* light ) {
     
     ASSERT(shadowRenderer != 0 && shadowRendererUtil != 0)
     // all these models should be added already
+        //ASSERT(glGetError() == GL_NO_ERROR);
     shadowRenderer->ShadowPass(models->data, light, models->sz );
 
 #if 1

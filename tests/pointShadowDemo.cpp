@@ -1,7 +1,10 @@
+#define CHECKGL(str) if (glGetError() != GL_NO_ERROR) {fatalError(str, "Error");}
+
 Model MakeNormalPlane(RendererUtil* helper, Vector3 r, Vector3 s, Vector3 t, Vector3 o) {
-    const char* m = "../tests/models/plane/plane.obj";
+
+    const char* m = "../tests/models/plane/plane.data";
     const char* texture = "../tests/models/plane/white.bmp";
-    const char* n = "../tests/models/barrel/normal.bmp";
+    const char* n = "../tests/models/barrel/barrelnormals.bmp";
     Model p = helper->addModelNormalMap(m, texture, n);
     CoordinateSpace oSpace;
     oSpace.origin = o;
@@ -9,9 +12,12 @@ Model MakeNormalPlane(RendererUtil* helper, Vector3 r, Vector3 s, Vector3 t, Vec
     oSpace.s = s;
     oSpace.t = t;
     p.modelSpace = oSpace;
+    CHECKGL("failure when making the normal plane");
     return p;
     
 }
+
+
 
 
 
@@ -22,6 +28,9 @@ PointLight plDemoTest;
 CubeArgs args;
 
 void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
+
+
+
     Model barrel1 = barrel();
     Model barrel2 = barrel();
     Model barrel3 = barrel();
@@ -77,6 +86,8 @@ void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
 
 void InitialPointDemoSetup(Renderer* r) {
     PointShadowDemo(r, &plDemoTest, &globalBarrels);
+
+
 }
 
 void TestPointShadow(Renderer* r) {
