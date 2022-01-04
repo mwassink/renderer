@@ -16,7 +16,12 @@ Model MakeNormalPlane(RendererUtil* helper, Vector3 r, Vector3 s, Vector3 t, Vec
 
 
 bool pointDemoRan = false;
-void PointShadowDemo(Renderer* renderer, SpotLight* s, Array<Model> *models, Array<Model> *walls ) {
+
+Array<Model> globalBarrels;
+PointLight plDemoTest;
+CubeArgs args;
+
+void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
     Model barrel1 = barrel();
     Model barrel2 = barrel();
     Model barrel3 = barrel();
@@ -64,15 +69,18 @@ void PointShadowDemo(Renderer* renderer, SpotLight* s, Array<Model> *models, Arr
     wall5.modelSpace.origin = o5;
     models->push(barrel1);models->push(barrel2);
     models->push(barrel3);models->push(barrel4);
-    walls->push(wall1); walls->push(wall2);
-    walls->push(wall3); walls->push(wall4);
-    walls->push(wall5);
+    models->push(wall1); models->push(wall2);
+    models->push(wall3); models->push(wall4);
+    models->push(wall5);    
+}
 
-    
 
-    
-    
-    
-    
+void InitialPointDemoSetup(Renderer* r) {
+    PointShadowDemo(r, &plDemoTest, &globalBarrels);
+}
+
+void TestPointShadow(Renderer* r) {
+
+    r->renderPointShadow(&globalBarrels, &plDemoTest);
     
 }

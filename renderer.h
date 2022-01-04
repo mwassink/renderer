@@ -65,7 +65,7 @@ struct Renderer {
     
     void ShadowPass(Model* models, SpotLight* light, u32 numModels);
     Matrix4 invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace);
-    Array<Matrix4> cubeMapMatrices(CoordinateSpace& renderSpace);
+    Array<CoordinateSpace> cubeMapCS(CoordinateSpace& renderSpace);
     void renderPointShadow(Array<Model>* models, PointLight* light);
     Matrix4 shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane );
     void depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f);

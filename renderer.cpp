@@ -646,32 +646,27 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
 }
 
 
-// Returns Mcamera with a cube map
-// Model space is analogous to cube space
-// In the case of the shadow then mcube should be at the light
-Matrix4 Renderer::invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace) {
-    Matrix4 mCamera = mCube * mFace;
-    return invTransform(mCamera);
-    
-}
+// Returns the inverse cube map matrices for rendering
+Array<CoordinateSpace> Renderer::cubeMapCS(CoordinateSpace& renderSpace) {
+    Array<CoordinateSpace> renderBases(6);
 
-Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
-    Array<Matrix4> invCameraMatrices(6);
-    Matrix4 mCube = ObjectWorldMatrix(renderSpace);
-    invCameraMatrices[0] = Matrix4(0,0,1,0,-1,0,-1,0,0);
-    invCameraMatrices[1] = Matrix4(0,0,-1,0,-1,0,1,0,0);
-    invCameraMatrices[2] = Matrix4(1,0,0,0,0,1,0,1,0);
-    invCameraMatrices[3] = Matrix4(1,0,0,0,0 ,-1,0,-1,0);
-    invCameraMatrices[4] = Matrix4(1,0,0,0,-1,0, 0,0,1);
-    invCameraMatrices[5] = Matrix4(-1,0,0,0,-1,0,0,0,-1);
+    Vector3 posX = renderSpace.origin + renderSpace.r;
+    Vector3 negX = renderSpace.origin - renderSpace.r;
+    Vector3 posY = renderSpace.origin + renderSpace.s;
+    Vector3 negY = renderSpace.origin - renderSpace.s;
+    Vector3 posZ = renderSpace.origin + renderSpace.t;
+    Vector3 negZ = renderSpace.origin - renderSpace.t;
+
+
+    renderBases[0] = lookAtCoordSpace(posX, renderSpace.origin);
+    renderBases[1] = lookAtCoordSpace(negX, renderSpace.origin);
+    renderBases[2] = lookAtCoordSpace(posY, renderSpace.origin);
+    renderBases[3] = lookAtCoordSpace(negY, renderSpace.origin);
+    renderBases[4] = lookAtCoordSpace(posZ, renderSpace.origin);
+    renderBases[5] = lookAtCoordSpace(negZ, renderSpace.origin);
+
     
-    invCameraMatrices[0] = invCubeFaceCamera(mCube, invCameraMatrices[0] );
-    invCameraMatrices[1] = invCubeFaceCamera(mCube, invCameraMatrices[1] );
-    invCameraMatrices[2] = invCubeFaceCamera(mCube, invCameraMatrices[2] );
-    invCameraMatrices[3] = invCubeFaceCamera(mCube, invCameraMatrices[3] );
-    invCameraMatrices[4] = invCubeFaceCamera(mCube, invCameraMatrices[4] );
-    invCameraMatrices[5] = invCubeFaceCamera(mCube, invCameraMatrices[5] );
-    return invCameraMatrices;
+    return renderBases;
 }
 
 void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
@@ -729,9 +724,9 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     
     GLuint id;
     RECT rect;
-    Array<Matrix4> invCameraMatrices = cubeMapMatrices(renderCS);
-    GetWindowRect(context.windowHandle, &rect);
     
+    GetWindowRect(context.windowHandle, &rect);
+    Array<CoordinateSpace> coordinateSpaces =  cubeMapCS(renderCS);
     if (renderArgs->tex == -1) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
@@ -757,10 +752,11 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(2.0f, 4.0f);
-        GLint err = glGetError();
         for (int k = 0; k < models->sz; ++k) {
+            // TODO: can quickly cull most of the models. Just skip them with bounding boxes if possible
             if (renderArgs->shader == context.shadowMappingShader) {
-                depthRender(&(*models)[k], invCameraMatrices[i], renderArgs->res, 1.0f, 20.0f);
+                Matrix4 invCamera  = WorldObjectMatrix(coordinateSpaces[i]);
+                depthRender(&(*models)[k], invCamera, renderArgs->res, 1.0f, 20.0f);
             }
         }
         glFramebufferTexture2D(GL_FRAMEBUFFER, renderArgs->attachment,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0);
@@ -773,7 +769,7 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    invCameraMatrices.release();
+    coordinateSpaces.release();
     
 }
 
