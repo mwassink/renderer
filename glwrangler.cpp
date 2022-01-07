@@ -48,7 +48,7 @@ DECLARE(GetIntegeri_v);
 DECLARE(DispatchCompute);
 DECLARE(MemoryBarrier);
 DECLARE(BindImageTexture);
-
+DECLARE(Uniform2fv);
 const int pixelAttribList[] =
 {
     WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -204,4 +204,5 @@ void wrangle(void) {
     const char* str_MemoryBarrier = "glMemoryBarrier";
     glMemoryBarrier = (t_MemoryBarrier *)wglGetProcAddress(str_MemoryBarrier);
     WRANGLE(BindImageTexture);
+    WRANGLE(Uniform2fv);
 }

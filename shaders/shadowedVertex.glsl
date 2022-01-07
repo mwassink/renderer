@@ -6,7 +6,8 @@ uniform mat4 modelView;
 uniform mat4 shadowMatrix;
 uniform mat3 normalMatrix;
 uniform vec3 lightCameraSpace;
-
+uniform vec2 FNTest;
+uniform mat4 modelLightMatrix;
 
 
 layout (location = 0) in vec4 pos;
@@ -21,7 +22,15 @@ out vec3 eyeDir;
 out vec4 shadowCoord;
 out float distSquared;
 out vec4 posModel;
+out float zTest;
 
+void getDepth(vec4 pIn) {
+    float zSample = max(abs(pIn.x), max(abs(pIn.y), abs(pIn.z)));
+    
+    float normZ = (FNTest.x + FNTest.y)/(FNTest.x - FNTest.y) - (2*FNTest.x * FNTest.y)/(FNTest.x-FNTest.y)/zSample;
+    zTest = (normZ + 1.0) * 0.5;
+    
+}
 
 void main(void) {
     vec3 n = normalize(normalMatrix * normal);
@@ -39,7 +48,8 @@ void main(void) {
 
     gl_Position = modelViewProjection * pos;
     distSquared = dot(diff, diff);
-    shadowCoord = shadowMatrix * pos;
+    shadowCoord = modelLightMatrix * pos;
     uvCoord = uvVertex;
     posModel = pos;
+    getDepth(shadowCoord);
 }

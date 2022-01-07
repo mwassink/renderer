@@ -36,7 +36,7 @@ void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
     Model barrel1 = barrel();
     Model barrel2 = barrel();
     Model barrel3 = barrel();
-    Model barrel4 = barrel();
+    Model carmodel = car(0, 0, -45);
     CoordinateSpace objSpace;
     objSpace.origin = Vector3(0, 0, -50);
     objSpace.r = Vector3(-1, 0, 0);
@@ -48,7 +48,7 @@ void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
     objSpace.origin = Vector3(5, 0, -45);
     barrel3.modelSpace = objSpace;
     objSpace.origin = Vector3(0, 0, -40);
-    barrel4.modelSpace = objSpace;
+    carmodel.modelSpace = objSpace;
     objSpace.origin = Vector3(0,0, -45);
     s->lightSpace = lookAtCoordSpace(barrel1.modelSpace.origin, objSpace.origin);
     s->irradiance = 200.0f;
@@ -81,20 +81,23 @@ void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
     wall3.modelSpace.origin = o3;
     wall4.modelSpace.origin = o4;
     wall5.modelSpace.origin = o5;
-    models->push(barrel1);models->push(barrel2);
-    models->push(barrel3);models->push(barrel4);
-    models->push(wall1);
-    models->push(wall2);
-    models->push(wall3);
-    models->push(wall4);
-    models->push(wall5);    
+    carmodel.modelSpace.rotate(r3);
+    barrel2.modelSpace.rotate(r1);
+    models->push(barrel1);//models->push(barrel2);
+    //models->push(barrel3); //models->push(carmodel);
+    //models->push(wall1);
+    //models->push(wall2);
+    //models->push(wall3);
+    //models->push(wall4);
+    //models->push(wall5);    
 }
 
 
 void InitialPointDemoSetup(Renderer* r) {
+    plDemoTest.color = Vector3(1, 1, 1);
     PointShadowDemo(r, &plDemoTest, &globalBarrels);
     lightModel = r->CreateLightModel((SpotLight*)&plDemoTest, 0.3f);
-    r->context.cameraSpace.origin = Vector3(-9, 0 , -45);
+    r->context.cameraSpace.origin = plDemoTest.lightSpace.origin;
 
 }
 

@@ -27,6 +27,7 @@ void uplumbMatrix4(u32 s, Matrix4& m, const char* n);
 void uplumbMatrix3(u32 s, Matrix3& m, const char* n);
 void uplumbVector4(u32 s, Vector4& v, const char* n);
 void uplumbVector3(u32 s, Vector3& v, const char* n);
+void uplumbVector2(u32 s, Vector2& v, const char* n);
 #endif
 
 

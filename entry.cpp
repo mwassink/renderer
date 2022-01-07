@@ -268,6 +268,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 renderer.DrawBoundingSphere(&lightOne);
                 TestPointShadow(&renderer);
                 
+                
 #if 0
                 if (boundingVolumesVisible) {
                     for (int i = 0; i < models.sz; i++) {

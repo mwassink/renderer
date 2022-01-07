@@ -147,6 +147,8 @@ typedef void WINAPI t_Uniform4fv(	GLint location,
                                  GLsizei count,
                                  const GLfloat *value);
 
+typedef void WINAPI t_Uniform2fv(GLint location, GLsizei count, const GLfloat* value);
+
 typedef void WINAPI t_GetIntegeri_v(GLenum target,
                                     GLuint index,
                                     GLint *data);
@@ -237,6 +239,7 @@ EXPORT(FramebufferTexture2D);
 EXPORT(CheckFramebufferStatus);
 EXPORT(Uniform3fv);
 EXPORT(Uniform4fv);
+EXPORT(Uniform2fv);
 EXPORT(GetIntegeri_v);
 EXPORT(DispatchCompute);
 EXPORT(MemoryBarrier);

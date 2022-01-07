@@ -51,6 +51,12 @@ void uplumbVector3(u32 s, Vector3& v, const char* n) {
         glUniform3fv(loc, 1, (f32*)&v.data[0]);
 }
 
+void uplumbVector2(u32 s, Vector2& v, const char* n) {
+    GLint loc = glGetUniformLocation(s, n);
+    if (loc != -1)
+        glUniform2fv(loc, 1, (f32*)&v.data[0]);
+}
+
 void uplumbf(u32 s, f32 f, const char* n) {
     GLint loc = glGetUniformLocation(s, n);
     glUniform1f(loc, f);

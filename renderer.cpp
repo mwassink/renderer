@@ -153,18 +153,25 @@ void RendererUtil::AddShadowsToShader(Model* model, SpotLight* light, GLuint sha
     Matrix4 m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 lv = WorldObjectMatrix(light->lightSpace);
     Matrix4 lightSpaceMatrix = lv * m;
+    
     uplumbMatrix4(shader, lightSpaceMatrix, "modelLightMatrix");
+    
     glBindTextureUnit(2, light->depthTexture);
     
 }
 
 void RendererUtil::AddShadowsToShader(Model* model, PointLight* light, GLuint shader) {
-    Matrix4 proj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/4.0f, 1, 1.0f, 40.0f);
+    Matrix4 proj = glModelViewProjection(model->modelSpace, light->lightSpace, PI/2.0f, 1, 3.0f, 40.0f);
     uplumbMatrix4(shader, proj, "shadowMatrix");
     Matrix4 m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 lightView = WorldObjectMatrix(light->lightSpace);
     Matrix4 toLightSpace = lightView * m;
     uplumbMatrix4(shader, toLightSpace, "modelLightMatrix");
+    Vector2 AB = GetABPointShadow(40.0f, 3.0f); // (TODO)do not hardcode the far and the near
+    Vector2 FN;
+    FN.x = 40.0f; FN.y = 3.0f;
+    uplumbVector2(shader, FN, "FN");
+    uplumbVector2(shader, FN, "FNTest");
     CHECKGL("plumbing error");
     glBindTextureUnit(2, light->cubeArgs.tex);
 }
@@ -703,28 +710,43 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
 #undef RES
 }
 
-
-// Returns the inverse cube map matrices for rendering
-Array<CoordinateSpace> Renderer::cubeMapCS(CoordinateSpace& renderSpace) {
-    Array<CoordinateSpace> renderBases(6);
-
-    Vector3 posX = renderSpace.origin + renderSpace.r;
-    Vector3 negX = renderSpace.origin - renderSpace.r;
-    Vector3 posY = renderSpace.origin + renderSpace.s;
-    Vector3 negY = renderSpace.origin - renderSpace.s;
-    Vector3 posZ = renderSpace.origin + renderSpace.t;
-    Vector3 negZ = renderSpace.origin - renderSpace.t;
-
-
-    renderBases[0] = lookAtCoordSpace(posX, renderSpace.origin);
-    renderBases[1] = lookAtCoordSpace(negX, renderSpace.origin);
-    renderBases[2] = lookAtCoordSpace(posY, renderSpace.origin);
-    renderBases[3] = lookAtCoordSpace(negY, renderSpace.origin);
-    renderBases[4] = lookAtCoordSpace(posZ, renderSpace.origin);
-    renderBases[5] = lookAtCoordSpace(negZ, renderSpace.origin);
-
+Matrix4 Renderer::invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace) {
+    Matrix4 mCamera = mCube * mFace;
+    return invTransform(mCamera);
     
-    return renderBases;
+}
+
+Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
+    Array<Matrix4> invCameraMatrices(6);
+    #if 0
+    Matrix4 mCube = ObjectWorldMatrix(renderSpace);
+    invCameraMatrices[0] = Matrix4(0,0,1,0,-1,0,-1,0,0);
+    invCameraMatrices[1] = Matrix4(0,0,-1,0,-1,0,1,0,0);
+    invCameraMatrices[2] = Matrix4(1,0,0,0,0,1,0,1,0);
+    invCameraMatrices[3] = Matrix4(1,0,0,0,0 ,-1,0,-1,0);
+    invCameraMatrices[4] = Matrix4(1,0,0,0,-1,0, 0,0,1);
+    invCameraMatrices[5] = Matrix4(-1,0,0,0,-1,0,0,0,-1);
+    
+    invCameraMatrices[0] = invCubeFaceCamera(mCube, invCameraMatrices[0] );
+    invCameraMatrices[1] = invCubeFaceCamera(mCube, invCameraMatrices[1] );
+    invCameraMatrices[2] = invCubeFaceCamera(mCube, invCameraMatrices[2] );
+    invCameraMatrices[3] = invCubeFaceCamera(mCube, invCameraMatrices[3] );
+    invCameraMatrices[4] = invCubeFaceCamera(mCube, invCameraMatrices[4] );
+    invCameraMatrices[5] = invCubeFaceCamera(mCube, invCameraMatrices[5] );
+    #else
+    Matrix4 mLightInv = WorldObjectMatrix(renderSpace);
+    invCameraMatrices[0] = Matrix4(0,0,1,0,-1,0,-1,0,0);
+    invCameraMatrices[1] = Matrix4(0,0,-1,0,-1,0,1,0,0);
+    invCameraMatrices[2] = Matrix4(1,0,0,0,0,1,0,1,0);
+    invCameraMatrices[3] = Matrix4(1,0,0,0,0 ,-1,0,-1,0);
+    invCameraMatrices[4] = Matrix4(1,0,0,0,-1,0, 0,0,1);
+    invCameraMatrices[5] = Matrix4(-1,0,0,0,-1,0,0,0,-1);
+
+    for (int i = 0; i < 6; i++) {
+        invCameraMatrices[i] = invCameraMatrices[i] * mLightInv;
+    }
+    #endif
+    return invCameraMatrices;
 }
 
 // This will make it so that the light now has a texture attached
@@ -737,7 +759,7 @@ void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
         light->cubeArgs.res = 500;
     }
     // (TODO) could just have the far plane be after attenuates fully
-    CubeMapRender(models, light->lightSpace, 1.0f, 20.0f, &light->cubeArgs  );
+    CubeMapRender(models, light->lightSpace, 1.0f, 40.0f, &light->cubeArgs  );
     for (int i = 0; i < models->sz; ++i) {
         renderModel(&(*models)[i], light);
     }
@@ -756,7 +778,7 @@ Matrix4 Renderer::shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 fa
 // don't try to reuse the plumbing for some of the other ones
 void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
     
-    Matrix4 proj = glProjectionMatrix(PI / 4, 1.0f, n, f);
+    Matrix4 proj = glProjectionMatrix(PI / 2, 1.0f, n, f);
     Matrix4 m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 vm = (invCameraMatrix * m);
     Matrix4 modelViewProjection =  proj * vm;
@@ -788,7 +810,7 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     RECT rect;
     
     GetWindowRect(context.windowHandle, &rect);
-    Array<CoordinateSpace> coordinateSpaces =  cubeMapCS(renderCS);
+    Array<Matrix4> inverseFaceMatrices = cubeMapMatrices(renderCS);
     if (renderArgs->tex == -1) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
@@ -812,16 +834,13 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
         glViewport(0, 0, renderArgs->res, renderArgs->res);
         glClearDepth(1.0f);
         glClear(GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_POLYGON_OFFSET_FILL);
-        glPolygonOffset(2.0f, 4.0f);
+        //glEnable(GL_POLYGON_OFFSET_FILL);
+        //glPolygonOffset(2.0f, 4.0f);
         for (int k = 0; k < models->sz; ++k) {
             // TODO: can quickly cull most of the models. Just skip them with bounding boxes if possible
             if (renderArgs->shader == context.shadowMappingShader) {
-                Matrix4 invCamera  = WorldObjectMatrix(coordinateSpaces[i]);
-                // Directions need to be consistent when we sample these.
-                // Directions are consistent because they use the same directions (the lights for shadows)
-                // object's for env mapping
-                depthRender(&(*models)[k], invCamera, renderArgs->res, 1.0f, 20.0f);
+                Matrix4 invFaceMatrix  = inverseFaceMatrices[i];
+                depthRender(&(*models)[k], invFaceMatrix, renderArgs->res, 3.0f, 40.0f);
             }
         }
         glFramebufferTexture2D(GL_FRAMEBUFFER, renderArgs->attachment,GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0);
@@ -835,7 +854,7 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    coordinateSpaces.release();
+    inverseFaceMatrices.release();
     
 }
 

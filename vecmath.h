@@ -18,7 +18,15 @@ typedef float f32;
 #end
 #endif
 
-
+struct Vector2 {
+    union {
+        struct {
+            f32 x, y;
+        };
+        f32 data[2];
+    };
+    
+};
 
 struct Vector3 {
     union {
@@ -901,8 +909,20 @@ inline CoordinateSpace lookAtCoordSpace( Vector3 &at, const Vector3 &eye) {
     return coordSpace;
 
 }
-
-
-
+#if 1
+static Vector2 GetABPointShadow(f32 f, f32 n) {
+    Vector2 AB;
+    AB.x = -(f+n)/(f -n);
+    AB.y = -2*(n * f)/(f - n);
+    return AB;
+}
+#else
+static Vector2 GetABPointShadow(f32 f, f32 n) {
+    Vector2 AB;
+    AB.x = -(f)/(f -n);
+    AB.y = -(n * f)/(f - n);
+    return AB;
+}
+#endif
 
 #endif
