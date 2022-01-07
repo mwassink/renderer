@@ -646,6 +646,7 @@ void Renderer::renderModel(Model* model, PointLight* light) {
     } break;
     }
     CHECKGL("error when drawing cube map");
+    glDepthFunc(GL_LESS);
     setDrawModel(model);
 }
 

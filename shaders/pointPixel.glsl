@@ -61,8 +61,8 @@ float getDepth(vec4 pIn) {
 float fetchCoeff(vec4 posIn) {
     
     
-    vec4 posNew = vec4(posIn.xyz, getDepth(posIn));
-
+//    vec4 posNew = vec4(posIn.x, posIn.y, posIn.z, getDepth(posIn) - .0005);
+      vec4 posNew = vec4(posIn.x, posIn.y, posIn.z, 1.0);
     float s = texture(depthMap, posNew); // do not need to divide by w, just use direction vector to sample the cube map
 
     return s;

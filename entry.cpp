@@ -262,10 +262,12 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                 }
                 
                 spotLights[0].lightSpace = lookAtCoordSpace(models[0].modelSpace.origin, spotLights[0].lightSpace.origin);
+                /*
                 testShadow(&models, &spotLights[0]);
                 Vector3 yellow = Vector3(1.0f, 1.0f, 0.0f);
                 renderer.RenderSkybox(box);
                 renderer.DrawBoundingSphere(&lightOne);
+                */
                 TestPointShadow(&renderer);
                 
                 
