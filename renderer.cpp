@@ -245,6 +245,8 @@ void RendererUtil::defaultTexParams(GLenum target) {
     glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, border);
     glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    //glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
     
 }
 
@@ -835,8 +837,8 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
         glViewport(0, 0, renderArgs->res, renderArgs->res);
         glClearDepth(1.0f);
         glClear(GL_DEPTH_BUFFER_BIT);
-        //glEnable(GL_POLYGON_OFFSET_FILL);
-        //glPolygonOffset(2.0f, 4.0f);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2.0f, 4.0f);
         for (int k = 0; k < models->sz; ++k) {
             // TODO: can quickly cull most of the models. Just skip them with bounding boxes if possible
             if (renderArgs->shader == context.shadowMappingShader) {

@@ -83,13 +83,14 @@ void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
     wall5.modelSpace.origin = o5;
     carmodel.modelSpace.rotate(r3);
     barrel2.modelSpace.rotate(r1);
-    models->push(barrel1);//models->push(barrel2);
-    //models->push(barrel3); //models->push(carmodel);
-    //models->push(wall1);
-    //models->push(wall2);
-    //models->push(wall3);
-    //models->push(wall4);
-    //models->push(wall5);    
+    models->push(barrel1);models->push(barrel2);
+    models->push(barrel3); models->push(carmodel);
+    models->push(wall1);
+    models->push(wall2);
+    models->push(wall3);
+    models->push(wall4);
+    models->push(wall5);
+    
 }
 
 
