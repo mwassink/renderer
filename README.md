@@ -17,7 +17,8 @@ Use the most recent release to try and run the program. To build, navigate to th
 Currently, the demo from the release (v1) has several barrels floating in the air with a light source denoted by a green sphere. This should showcase the features that can be obtained (those up above), although the demo isn't good. Pressing 1 on the keyboard should toggle bounding volumes. 
 <br>
 <img src=samples/bounding.PNG width="338" height="150" /> <img src=samples/no_bounding.PNG width="338" height="150" />
-*Should have point shadows working... just need to create a demo*
+
+*I should also have point shadows working... I just need to create a demo*
 ## Other Notes
 - Working on more realistic features
 - Learned many algorithms from Eric Lengyel's FGED 2 book. Methods for bounding sphere creation and mesh tangents were taken pretty closely from that book.
