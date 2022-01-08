@@ -19,6 +19,6 @@ Currently, the demo from the release (v1) has several barrels floating in the ai
 <img src=samples/bounding.PNG width="338" height="150" /> <img src=samples/no_bounding.PNG width="338" height="150" />
 *Should have point shadows working... just need to create a demo*
 ## Other Notes
-- Still working on more realistic features
-- Method for creating mesh tangents was created (I think) by Eric Lengyel. Since I read a couple of his books, some other ideas might be similar.
+- Working on more realistic features
+- Learned many algorithms from Eric Lengyel's FGED 2 book. Methods for bounding sphere creation and mesh tangents were taken pretty closely from that book.
 - Method for intrinsic hash function was learned from a series called Handmade Hero, and so was setting up an OpenGL context.
