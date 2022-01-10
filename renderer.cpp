@@ -82,6 +82,10 @@ RendererContext::RendererContext() {
     skyboxShader = tmp.setShaders("../shaders/vskybox.glsl", "../shaders/pskybox.glsl");
     quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/pquad.glsl");
     sphereShader = tmp.CreateComputeShader("../shaders/sphere.glsl");
+    structureBufferShader = tmp.setShaders("../shaders/structureBufferVertex.glsl",
+                                                    "../shaders/structureBufferPixel.glsl");
+    
+
     
     f32 vertices[] = {
         -1.0f, -1.0f,
@@ -101,9 +105,13 @@ RendererContext::RendererContext() {
     
     computeTarget = Texture();
     glGenFramebuffers(1, &shadowMappingFramebuffer);
+    glGenFramebuffers(1, &ssaoFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    ssaoStructureBuffer = Texture();
+    
 }
 
 
@@ -765,8 +773,7 @@ Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
     return invCameraMatrices;
 }
 
-// This will make it so that the light now has a texture attached
-void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
+void Renderer::MakeDepthMap(Array<Model>* models, PointLight* light) {
     #define SHADOWRES 1024
     if (light->cubeArgs.tex == -1) {
         light->cubeArgs.internalFormat = GL_DEPTH_COMPONENT32;
@@ -776,8 +783,11 @@ void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
         light->cubeArgs.res = SHADOWRES;
     }
     #undef SHADOWRES
-    // (TODO) could just have the far plane be after attenuates fully
     CubeMapRender(models, light->lightSpace, 3.0f, 40.0f, &light->cubeArgs  );
+}
+
+// This will make it so that the light now has a texture attached
+void Renderer::renderModelsPointLight(Array<Model>* models, PointLight* light) {
     for (int i = 0; i < models->sz; ++i) {
         renderModel(&(*models)[i], light);
     }
@@ -809,7 +819,7 @@ void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 
 }
 
 
-// (TODO) add this later
+// (TODO - 1/10/2021) add this later
 void Renderer::envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f) {
     Matrix4 p = glProjectionMatrix(PI/4, 1.0f, n, f  ), m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 vm = invCameraMatrix * m;
@@ -820,6 +830,7 @@ void Renderer::envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32
 }
 
 
+// (TODO - 1/10/2021) this has shadow specific stuff in it and should probably just be its own
 void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f, CubeArgs* renderArgs) {
     
     
@@ -828,7 +839,7 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     
     GetWindowRect(context.windowHandle, &rect);
     Array<Matrix4> inverseFaceMatrices = cubeMapMatrices(renderCS);
-    if (renderArgs->tex == -1) {
+    if (renderArgs->tex == -1 && renderArgs->shader == context.shadowMappingShader) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
         utilHelper.ShadowTexParams(GL_TEXTURE_CUBE_MAP);
@@ -1254,5 +1265,24 @@ bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix, f32 
 f32 Renderer::farPlaneSpotLight(SpotLight* s) {
     f32 dSquared = s->irradiance / MINLIGHT;
     return sqrt(dSquared);
+}
+
+
+// Accumulate the positions as before, and use them to do SSAO
+// This is a little wasteful, but do not want to change the shaders...
+void Renderer::SSAOPass(Array<Model>* models, GLuint currentImage) {
+    if (context.ssaoStructureBuffer.id == -1) {
+        context.ssaoStructureBuffer = utilHelper.RenderTarget();
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, context.ssaoFramebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           context.ssaoStructureBuffer.id, 0);
+    GLuint shader = context.ssaoStructureBuffer;
+    glUseProgram(shader);
+    uplumbMatrix4(shader, mv, "mv");
+    uplumbMatrix4(shader, mvp, "mvp");
+
+        
 }
 

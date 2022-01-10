@@ -12,15 +12,19 @@ struct RendererContext {
     u32 shadowMappingShader;
     u32 texturedShadowShader;
     u32 shadowMappingFramebuffer;
+    u32 ssaoFramebuffer;
     u32 skyboxShader;
     u32 sphereShader;
     u32 quadShader;
     u32 ballTracerShader;
+    u32 structureBufferShader;
     Texture computeTarget;
     HWND windowHandle;
     GLuint quadVAO;
     GLuint quadVBO;
     u32 texturedPointShadowShader;
+    Texture ssaoStructureBuffer;
+    
     RendererContext();
 };
 
@@ -75,7 +79,7 @@ struct Renderer {
     void ShadowPass(Model* models, SpotLight* light, u32 numModels);
     Matrix4 invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace);
     Array<Matrix4> cubeMapMatrices(CoordinateSpace& renderSpace);
-    void renderPointShadow(Array<Model>* models, PointLight* light);
+    void renderModelsPointLight(Array<Model>* models, PointLight* light);
     Matrix4 shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane );
     void depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f);
     void envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f);
@@ -96,5 +100,8 @@ struct Renderer {
     f32 farPlaneSpotLight(SpotLight* s);
     u32 ShaderFlags(Model* model, bool s);
     Vector2 GetABPointShadow(f32 f , f32 n);
+    //(TODO) avoid unsafe type casts and code duplication with a little bit of inheritance
+    void SSAOPass(Array<Model>* models, GLuint currentImage);
+    void MakeDepthMap(Array<Model>* mls, PointLight* light);
 };
 

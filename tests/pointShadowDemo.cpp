@@ -104,7 +104,8 @@ void InitialPointDemoSetup(Renderer* r) {
 
 void TestPointShadow(Renderer* r) {
 
-    r->renderPointShadow(&globalBarrels, &plDemoTest);
+    r->MakeDepthMap(&globalBarrels, &plDemoTest);
+    r->renderModelsPointLight(&globalBarrels, &plDemoTest);
     r->DrawBoundingSphere(&lightModel);
     
 }
