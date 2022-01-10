@@ -56,6 +56,7 @@ struct RendererUtil {
     void depthRenderCleanup(void);
     void addMeshTangents(Mesh* mesh);
     int InitializeCubeMaps(const char* fileNames[6]);
+    void ShadowTexParams(GLenum target);
     Texture RenderTarget();
 };
 

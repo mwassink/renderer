@@ -54,6 +54,7 @@ void setPixelAttrs(HDC windowDC);
 #define GL_SHADER_IMAGE_ACCESS_BARRIER_BIT 0x00000020
 #define GL_WRITE_ONLY                     0x88B9
 #define GL_COMPUTE_SHADER                 0x91B9
+#define GL_TEXTURE_WRAP_R                 0x8072
 
 typedef ptrdiff_t GLsizeiptr;
 typedef ptrdiff_t GLintptr;

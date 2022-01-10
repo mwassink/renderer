@@ -250,6 +250,19 @@ void RendererUtil::defaultTexParams(GLenum target) {
     
 }
 
+void RendererUtil::ShadowTexParams(GLenum target) {
+    f32 border[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    
+    //glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, border);
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
 void RendererUtil::createShadowMapTexture(SpotLight* light, u32 res) {
     GLuint depthTex;
     
@@ -754,15 +767,17 @@ Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
 
 // This will make it so that the light now has a texture attached
 void Renderer::renderPointShadow(Array<Model>* models, PointLight* light) {
+    #define SHADOWRES 1024
     if (light->cubeArgs.tex == -1) {
         light->cubeArgs.internalFormat = GL_DEPTH_COMPONENT32;
         light->cubeArgs.format = GL_DEPTH_COMPONENT;
         light->cubeArgs.shader = context.shadowMappingShader;
         light->cubeArgs.attachment = GL_DEPTH_ATTACHMENT;
-        light->cubeArgs.res = 500;
+        light->cubeArgs.res = SHADOWRES;
     }
+    #undef SHADOWRES
     // (TODO) could just have the far plane be after attenuates fully
-    CubeMapRender(models, light->lightSpace, 1.0f, 40.0f, &light->cubeArgs  );
+    CubeMapRender(models, light->lightSpace, 3.0f, 40.0f, &light->cubeArgs  );
     for (int i = 0; i < models->sz; ++i) {
         renderModel(&(*models)[i], light);
     }
@@ -785,7 +800,7 @@ void Renderer::depthRender(Model* model, Matrix4& invCameraMatrix, int res, f32 
     Matrix4 m = ObjectWorldMatrix(model->modelSpace);
     Matrix4 vm = (invCameraMatrix * m);
     Matrix4 modelViewProjection =  proj * vm;
-    GLint err = glGetError();
+    
     GLint mvpLoc = glGetUniformLocation(context.shadowMappingShader, "modelViewProjection");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (f32*)modelViewProjection.data[0]);
     
@@ -801,7 +816,6 @@ void Renderer::envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32
     Matrix4 modelViewProjection =  p * vm;
     glViewport(0, 0, res, res);
     glClear(GL_COLOR_BUFFER_BIT);
-    GLint err = glGetError();
     
 }
 
@@ -817,11 +831,10 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     if (renderArgs->tex == -1) {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
-        utilHelper.defaultTexParams(GL_TEXTURE_CUBE_MAP);
+        utilHelper.ShadowTexParams(GL_TEXTURE_CUBE_MAP);
         for (int i = 0; i < 6; ++i) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, renderArgs->internalFormat, renderArgs->res, renderArgs->res, 0, renderArgs->format, GL_FLOAT, 0);   
-            GLint err = glGetError();
-            err = glGetError();
+            
         }
         renderArgs->tex = id;
     }
@@ -863,7 +876,7 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
 
 
 Renderer::Renderer() {
-#define DEPTHTEXRES 500
+
     context = RendererContext();
     utilHelper.context = &context;
     

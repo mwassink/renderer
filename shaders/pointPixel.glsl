@@ -62,7 +62,7 @@ float fetchCoeff(vec4 posIn) {
     
       
       vec4 posNew = vec4(posIn.x, posIn.y, -posIn.z, getDepth(posIn));
-      //vec4 posNew = vec4(-posIn.x, posIn.y, posIn.z, 0.95);
+      
     float s = texture(depthMap, posNew); // do not need to divide by w, just use direction vector to sample the cube map
 
     return s;
@@ -91,8 +91,8 @@ void main(void) {
     vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;
     vec3 ambient = ambientCoeff * diffColor;
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
-    color = vec4(zTest/10000 + s);
-    //colorFace(shadowCoord.xyz);
+    //color = vec4(zTest/10000 + s);
+
     
     
 }
