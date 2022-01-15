@@ -107,9 +107,10 @@ RendererContext::RendererContext() {
     glGenFramebuffers(1, &shadowMappingFramebuffer);
     glGenFramebuffers(1, &ssaoFramebuffer);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    
+    //glEnable(GL_FRAMEBUFFER_SRGB);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     ssaoStructureBuffer = Texture();
     
 }
@@ -669,7 +670,7 @@ void Renderer::renderModel(Model* model, PointLight* light) {
     } break;
     }
     CHECKGL("error when drawing cube map");
-    glDepthFunc(GL_LESS);
+    
     setDrawModel(model);
 }
 
@@ -1176,6 +1177,7 @@ Vector3* GetVertices(Model* model) {
 }
 
 void Renderer::DrawBoundingSphere(Model* model) {
+
     if (model->mesh.boundingSphere.radius < 0) {
         Vector3* verts = GetVertices(model);
         model->mesh.boundingSphere = GetBoundingSphere(verts, model->mesh.numVertices);
@@ -1196,7 +1198,7 @@ void Renderer::DrawBoundingSphere(Model* model) {
         color = Vector3(1.0f, 0.0f, 0.0f );
     }
     RayTraceBoundingSphere(&s, &color);
-    
+
 }
 
 Model Renderer::CreateLightModel(SpotLight* s, f32 radius = 0.3f) {
@@ -1270,6 +1272,7 @@ f32 Renderer::farPlaneSpotLight(SpotLight* s) {
 
 // Accumulate the positions as before, and use them to do SSAO
 // This is a little wasteful, but do not want to change the shaders...
+#if 0
 void Renderer::SSAOPass(Array<Model>* models, GLuint currentImage) {
     if (context.ssaoStructureBuffer.id == -1) {
         context.ssaoStructureBuffer = utilHelper.RenderTarget();
@@ -1285,4 +1288,4 @@ void Renderer::SSAOPass(Array<Model>* models, GLuint currentImage) {
 
         
 }
-
+#endif

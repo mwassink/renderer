@@ -3,6 +3,7 @@
 #they should be the obj files for use with the parsing
 ../tests/models/barrel/barrel.obj
 ../tests/models/plane/plane.obj
+../tests/models/plane/plane2.obj
 #../tests/models/stanford-dragon-obj/stanford-dragon.obj
 #../tests/models/tiefighter/star-wars-vader-tie-fighter.obj
 #../tests/models/car/car_obj.obj

@@ -56,11 +56,14 @@ void PointShadowDemo(Renderer* renderer, PointLight* s, Array<Model> *models ) {
     Vector3 y = Vector3(0,1,0);
     Vector3 z = Vector3(0,0,1);
     Vector3 o = Vector3(0, 0, -55);
+    #if 1
     Model wall1 = MakeNormalPlane(&renderer->utilHelper, x, y, z, o, "../tests/models/plane/white.bmp"); // flat
     Model wall2 =MakeNormalPlane(&renderer->utilHelper, x, y, z, o, "../tests/models/plane/purple.bmp");
     Model wall3 =MakeNormalPlane(&renderer->utilHelper, x, y, z, o, "../tests/models/plane/yellow.bmp");
     Model wall4 = MakeNormalPlane(&renderer->utilHelper, x, y, z, o, "../tests/models/plane/green.bmp");
     Model wall5 = MakeNormalPlane(&renderer->utilHelper, x, y, z, o, "../tests/models/plane/blue.bmp");
+#endif
+   
     Matrix3 r1 = rotateZ3(3.14 / 2); // good
     Matrix3 r2 = rotateZ3(-1 * 3.14 / 2); // good
     Matrix3 r3 = rotateY3(3.14 / 2); // good

@@ -91,7 +91,7 @@ void main(void) {
     vec3 specRefl = s * spec * lightIntensity * lightColor * specularColor;
     vec3 ambient = ambientCoeff * diffColor;
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
-    //color = vec4(zTest/10000 + s);
+    //color = vec4(diffColor, 1);
 
     
     
