@@ -794,6 +794,12 @@ void Renderer::renderModelsPointLight(Array<Model>* models, PointLight* light) {
     }
 }
 
+void Renderer::renderModelsSpotLight(Array<Model>* models, SpotLight* light) {
+    for (int i = 0;  i < models->sz; i++) {
+        renderModel(&(*models)[i], light);
+    }
+}
+
 // this is not just the regular projection matrix
 Matrix4 Renderer::shadowMapProj(f32 vFOV, f32 aspectRatio, f32 nearPlane, f32 farPlane ) {
     f32 c = 1.0f/ tanf(vFOV/2);
@@ -896,7 +902,7 @@ Renderer::Renderer() {
 
 
 
-int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
+int RendererUtil::InitializeCubeMaps(char* fileNames[6]) {
     
     GLuint tex;
     void* textureData[6];
@@ -946,7 +952,7 @@ int RendererUtil::InitializeCubeMaps(const char* fileNames[6]) {
 }
 
 
-Skybox Renderer::MakeSkybox(const char* fileNames[6]) {
+Skybox Renderer::MakeSkybox(char* fileNames[6]) {
     
     
     
@@ -1400,7 +1406,8 @@ void SimpleScene::ProcessSkybox(char* line, Renderer* r) {
     StripArrows(line);
     Skybox box;
 
-    char xplus[256], char xminus[256],  char yplus[256], char yminus[256], char zplus[256], char zminus[256];
+    char xplus[256]; char xminus[256];  char yplus[256];
+    char yminus[256]; char zplus[256]; char zminus[256];
 
     sscanf(line, "%s %s %s %s %s %s", xplus, xminus, yplus, yminus, zplus, zminus);
     
@@ -1416,5 +1423,9 @@ void Renderer::RenderScene(SimpleScene* s) {
     for (int i = 0; i < s->pointLights.sz; i++) {
         MakeDepthMap(&s->models, &s->pointLights[i]);
         renderModelsPointLight(&s->models, &s->pointLights[i]);
+    }
+    for (int i = 0; i < s->spotLights.sz; i++) {
+        ShadowPass(s->models.data, s->spotLights.data, s->models.sz);
+        renderModelsSpotLight(&s->models, &s->spotLights[i]);
     }
 }

@@ -60,7 +60,7 @@ struct RendererUtil {
     int setupBitmapTexture(const char* textureString, u32* width, u32* height, u32* bitsPerPixel);
     void depthRenderCleanup(void);
     void addMeshTangents(Mesh* mesh);
-    int InitializeCubeMaps(const char* fileNames[6]);
+    int InitializeCubeMaps(char* fileNames[6]);
     void ShadowTexParams(GLenum target);
     Texture RenderTarget();
 };
@@ -86,7 +86,7 @@ struct Renderer {
     void envMapRender(Model* model, Matrix4& invCameraMatrix, int res, f32 n, f32 f);
     void CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f32 n, f32 f, CubeArgs* renderArgs);
     Renderer();
-    Skybox MakeSkybox(const char* fileNames[6]);
+    Skybox MakeSkybox(char* fileNames[6]);
     void RenderSkybox(Skybox& box);
     Sphere OKBoundingSphere(Vector3* verts, int nVerts);
     void AdjustBoundingSphere(Sphere *sp, Vector3* vertices, int nVerts);
@@ -105,6 +105,7 @@ struct Renderer {
     void SSAOPass(Array<Model>* models, GLuint currentImage);
     void MakeDepthMap(Array<Model>* mls, PointLight* light);
     void RenderScene(SimpleScene* s);
+    void renderModelsSpotLight(Array<Model>* models, SpotLight* light);
 };
 
 

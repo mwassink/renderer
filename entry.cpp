@@ -244,15 +244,15 @@ int CALLBACK WinMain(HINSTANCE hInstance,
                     models.push(car(0, -25, -60));
                     spotLights.push(s);
                     // r, l, t, b, f, b
-                    const char* px = "../tests/resources/SunnyDay_px.bmp";
-                    const char* nx = "../tests/resources/SunnyDay_nx.bmp";
-                    const char* py = "../tests/resources/SunnyDay_py.bmp";
-                    const char* ny = "../tests/resources/SunnyDay_ny.bmp";
-                    const char* pz = "../tests/resources/SunnyDay_pz.bmp";
-                    const char* nz = "../tests/resources/SunnyDay_nz.bmp";
+                    char px[] = "../tests/resources/SunnyDay_px.bmp";
+                    char nx[] = "../tests/resources/SunnyDay_nx.bmp";
+                     char py[] = "../tests/resources/SunnyDay_py.bmp";
+                     char ny[] = "../tests/resources/SunnyDay_ny.bmp";
+                     char pz[] = "../tests/resources/SunnyDay_pz.bmp";
+                     char nz[] = "../tests/resources/SunnyDay_nz.bmp";
                     
                     
-                    const char* files[6] = {px, nx, py, ny, pz, nz};
+                    char* files[6] = {px, nx, py, ny, pz, nz};
                     box = renderer.MakeSkybox(files);
                     renderer.context.cameraSpace = lookAtCoordSpace(models[0].modelSpace.origin, renderer.context.cameraSpace.origin);
                     lightOne = renderer.CreateLightModel(&spotLights[0], 0.3f);
