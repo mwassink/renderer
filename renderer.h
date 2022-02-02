@@ -3,6 +3,7 @@
 #define NORMALMAPPING 2
 #define SHADOWS 4
 
+struct SimpleScene;
 
 struct RendererContext {
     f32 vFOV, aspectRatio, znear, zfar;
@@ -103,5 +104,28 @@ struct Renderer {
     //(TODO) avoid unsafe type casts and code duplication with a little bit of inheritance
     void SSAOPass(Array<Model>* models, GLuint currentImage);
     void MakeDepthMap(Array<Model>* mls, PointLight* light);
+    void RenderScene(SimpleScene* s);
 };
 
+
+
+// Flat array of models and lights
+struct SimpleScene {
+    Array<Model> models;
+    Array<SpotLight> spotLights;
+    Array<PointLight> pointLights;
+    Array<Skybox> skyboxes;
+    RendererUtil* helperUtil; // be careful about these
+    bool valid;
+
+    SimpleScene() = default;
+    SimpleScene(const char* file, Renderer* util);
+    void StripArrows(char* line);
+    void ProcessLinePointLight(char* line);
+    void ProcessLineSpotLight(char* line);
+    void ProcessLineModel(char* line, RendererUtil* util);
+    void ProcessSkybox(char* line, Renderer* r);
+    int Split(char* line, int start, char delim);
+
+    
+};

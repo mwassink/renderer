@@ -207,6 +207,15 @@ struct SpotLight {
         lightSpace.t = t;
         lightSpace.origin = o;
     }
+    
+    SpotLight(Vector3 o, Vector3 ri, Vector3 si, Vector3 ti, Vector3 c) {
+        worldSpaceCoord = o;
+        r = ri;
+        s = si;
+        t = ti;
+        color = c;
+        cubeArgs.tex = -1;
+    }
     union {
         struct {
             Vector3 worldSpaceCoord;
@@ -223,6 +232,15 @@ struct SpotLight {
 
 struct PointLight {
     PointLight() {
+        cubeArgs.tex = -1;
+    }
+
+    PointLight(Vector3 o, Vector3 ri, Vector3 si, Vector3 ti, Vector3 c) {
+        worldSpaceCoord = o;
+        r = ri;
+        s = si;
+        t = ti;
+        color  = c;
         cubeArgs.tex = -1;
     }
     union {

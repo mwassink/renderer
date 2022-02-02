@@ -110,5 +110,9 @@ void TestPointShadow(Renderer* r) {
     r->MakeDepthMap(&globalBarrels, &plDemoTest);
     r->renderModelsPointLight(&globalBarrels, &plDemoTest);
     r->DrawBoundingSphere(&lightModel);
-    
+    if (boundingVolumesVisible) {
+        for (int i = 0; i < 4; i++) {
+            r->DrawBoundingSphere(&globalBarrels[i]);
+        }
+    }
 }

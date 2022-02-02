@@ -1289,3 +1289,132 @@ void Renderer::SSAOPass(Array<Model>* models, GLuint currentImage) {
         
 }
 #endif
+
+
+
+SimpleScene::SimpleScene(const char* file, Renderer* r) {
+
+    FILE* fp = fopen(file, "r");
+    if (!fp) {
+        return;
+    }
+    char line[100];
+    
+    while (fgets(line, 100, fp)) {
+        char typ = line[0];
+        switch (typ) {
+        case 'S':
+            ProcessLineSpotLight(line);
+        case 'P':
+            ProcessLinePointLight(line);
+            break;
+        case 'M':
+            ProcessLineModel(line, &r->utilHelper);
+            break;
+        case 'B':
+            ProcessSkybox(line, r);
+            
+        }
+    }
+    
+}
+
+void SimpleScene::StripArrows(char* line) {
+    char* copy = line;
+    while (*copy != 0) {
+        if (*copy == '<' || *copy == '>') {
+            *copy = ' ';
+        }
+        copy++;
+    }
+}
+
+int SimpleScene::Split(char* line, int start, char delim) {
+    char* copy = line;
+    for (int i = start; copy[i] != 0; i++) {
+        if (copy[i] == delim) {
+            copy[i] = 0;
+            return i + 1;
+        }
+    }
+    return -1;
+}
+
+void SimpleScene::ProcessLinePointLight(char* line) {
+    StripArrows(line);
+    f32 irrad;
+    char ch;
+    Vector3 o;
+    Vector3 c;
+    
+    sscanf(line, "%c %f %f %f %f %f %f %f", &ch, &irrad, &o[0], &o[1], &o[2], &c[0], &c[1], &c[2]);
+    Vector3 r = Vector3(1, 0, 0), s = Vector3(0, 1, 0), t = Vector3(0, 0, 1);
+    PointLight p(o, r, s, t, c);
+
+    pointLights.push(p);
+    
+}
+
+void SimpleScene::ProcessLineSpotLight(char* line) {
+    StripArrows(line);
+    
+    f32 irrad;
+    char ch;
+    Vector3 o, r, s, t;
+    Vector3 c;
+    sscanf(line, "%c %f %f %f %f %f %f %f", &ch, &irrad, &o[0], &o[1], &o[2], &c[0], &c[1], &c[2]);
+    
+    line = line + Split(line, 0, '@');
+    sscanf(line, "%f %f %f %f %f %f %f %f %f", &r[0], &r[1], &r[2],  &s[0], &s[1], &s[2], &t[0], &t[1], &t[2]);
+
+    SpotLight sl(o, r, s, t, c);
+    spotLights.push(sl);
+    
+    
+}
+
+
+void  SimpleScene::ProcessLineModel(char* line, RendererUtil* util) {
+    StripArrows(line);
+
+    char model[256];
+    char img[256];
+    char normals[256];
+    
+    
+    f32 irrad;
+    char ch;
+    Vector3 o, r, s, t, c;
+    sscanf(line, "%c %f %f %f", &ch, &o[0], &o[1], &o[2]);
+
+    line = line + Split(line, 0, '@');
+    sscanf(line, "%f %f %f %f %f %f %f %f %f", &r[0], &r[1], &r[2],  &s[0], &s[1], &s[2], &t[0], &t[1], &t[2]);
+
+    line = line + Split(line, 0, '!');
+    sscanf(line, "%s %s %s", model, img, normals);
+
+    
+}
+
+void SimpleScene::ProcessSkybox(char* line, Renderer* r) {
+    StripArrows(line);
+    Skybox box;
+
+    char xplus[256], char xminus[256],  char yplus[256], char yminus[256], char zplus[256], char zminus[256];
+
+    sscanf(line, "%s %s %s %s %s %s", xplus, xminus, yplus, yminus, zplus, zminus);
+    
+    char* faces[] = {xplus, xminus, yplus, yminus, zplus, zminus};
+    box = r->MakeSkybox(faces);
+    skyboxes.push(box);
+    
+}
+
+
+void Renderer::RenderScene(SimpleScene* s) {
+    
+    for (int i = 0; i < s->pointLights.sz; i++) {
+        MakeDepthMap(&s->models, &s->pointLights[i]);
+        renderModelsPointLight(&s->models, &s->pointLights[i]);
+    }
+}
