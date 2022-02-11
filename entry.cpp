@@ -172,9 +172,9 @@ LRESULT CALLBACK MainCallback(HWND window,
 
 
 int CALLBACK WinMain(HINSTANCE hInstance,
-                     HINSTANCE prevInstance,
-                     LPSTR commandLine,
-                     int showCode)
+    HINSTANCE prevInstance,
+    LPSTR commandLine,
+    int showCode)
 
 {
     loadInitialContext();
@@ -191,101 +191,45 @@ int CALLBACK WinMain(HINSTANCE hInstance,
     HDC windowDC;
     Model lightOne;
     if (RegisterClass(&WindowClass)) {
-        HWND windowHandle = CreateWindowExA (0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
-                                             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
+        HWND windowHandle = CreateWindowExA(0, "Renderer", "Renderer Test", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, hInstance, 0);
         if (windowHandle) {
-            
+
             initOpenGL(windowHandle);
             Renderer renderer;
-            
+            const char* testFile = "../tests/simplescene1.txt";
+            SimpleScene s(testFile, &renderer, true);
             renderer.context.windowHandle = windowHandle;
+            renderer.context.cameraSpace.origin = Vector3(0, 0, 0);
+
+
             for (; runnable; ) {
                 if (!ran) {
                     windowDC = GetDC(windowHandle);
                 }
+
                 MSG msg = {};
                 BOOL msg_res = PeekMessage(&msg, windowHandle, 0, 0, PM_REMOVE);
+                renderer.RenderScene(&s);
                 if (msg_res > 0) {
-                    
-                    if (msg.message ==  WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP ||
-                        msg.message ==  WM_KEYDOWN || msg.message == WM_KEYUP) {
-#if RUNTESTS
+                    if (msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP ||
+                        msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) {
                         orientCameraFromInput(msg.message, msg.wParam, &renderer.context.cameraSpace);
-#else
-                        orientCameraFromInput(msg.message, msg.wParam, 0);
-#endif
                     }
                     else {
                         TranslateMessage(&msg);
                         DispatchMessage(&msg);
                     }
                 }
-#if RUNTESTS
-                testUtil = &renderer.utilHelper;
-                shadowRenderer = &renderer;
-                shadowRendererUtil = &renderer.utilHelper;
-                Skybox box;
-                
-                if (!ran) {
-                    SpotLight s;
-                    s.worldSpaceCoord = Vector3(0, 5, -60);
-                    s.color = Vector3(1,1,1);
-                    s.irradiance = 50.0f;
-                    s.lightSpace.r = Vector3(1,0,0);
-                    s.lightSpace.s = Vector3(0, 0, -1);
-                    s.lightSpace.t = Vector3(0, 1, 0);
-                    s.lightSpace.origin = Vector3(0, 5, -60);
-#if 1
-                    populateModels(&models);
-                    
-                    models.push(barrel());
-#endif
-                    pointLights.push(pl());
-                    models.push(car(0, -25, -60));
-                    spotLights.push(s);
-                    // r, l, t, b, f, b
-                    char px[] = "../tests/resources/SunnyDay_px.bmp";
-                    char nx[] = "../tests/resources/SunnyDay_nx.bmp";
-                     char py[] = "../tests/resources/SunnyDay_py.bmp";
-                     char ny[] = "../tests/resources/SunnyDay_ny.bmp";
-                     char pz[] = "../tests/resources/SunnyDay_pz.bmp";
-                     char nz[] = "../tests/resources/SunnyDay_nz.bmp";
-                    
-                    
-                    char* files[6] = {px, nx, py, ny, pz, nz};
-                    box = renderer.MakeSkybox(files);
-                    renderer.context.cameraSpace = lookAtCoordSpace(models[0].modelSpace.origin, renderer.context.cameraSpace.origin);
-                    lightOne = renderer.CreateLightModel(&spotLights[0], 0.3f);
-                    
-                    InitialPointDemoSetup(&renderer);
-                    ASSERT(glGetError() == GL_NO_ERROR);
-                }
-                
-                spotLights[0].lightSpace = lookAtCoordSpace(models[0].modelSpace.origin, spotLights[0].lightSpace.origin);
-                /*
-                testShadow(&models, &spotLights[0]);
-                Vector3 yellow = Vector3(1.0f, 1.0f, 0.0f);
-                renderer.RenderSkybox(box);
-                renderer.DrawBoundingSphere(&lightOne);
-                */
-                TestPointShadow(&renderer);
-                
-                
-#if 0
-                if (boundingVolumesVisible) {
-                    for (int i = 0; i < models.sz; i++) {
-                        renderer.DrawBoundingSphere(&models[i]);
-                    }
-                }
-#endif
 
-#endif
+
                 SwapBuffers(windowDC);
-                
+
                 ran = true;
 
                 frames++;
             }
+
         }
         return (0);
     }

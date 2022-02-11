@@ -1,0 +1,3 @@
+P 500 <0 0 -20> <1 1 1>
+M <0 5 -20> @<1 0 0> <0 1 0> <0 0 1> !<../tests/models/barrel/barrel.data> #<../tests/models/barrel/barrel.bmp> ^<../tests/models/barrel/barrelnormals.bmp>
+B <../tests/resources/SunnyDay_px.bmp> <../tests/resources/SunnyDay_nx.bmp> <../tests/resources/SunnyDay_py.bmp> <../tests/resources/SunnyDay_ny.bmp> <../tests/resources/SunnyDay_pz.bmp> <../tests/resources/SunnyDay_nz.bmp>

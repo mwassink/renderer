@@ -15,7 +15,7 @@ S <50> <-40.0 40 -20.6367> <1 0 0> <0 1 0> <0 0 1>
 
 Models:
 M  <World Space location> @<r> <s> <t> !<modelfile> #<texture>  ^<normalmap>
-M <-40.0 40 -20.6367> @<1 0 0> <0 1 0> <0 0 1> !<../tests/models/plane/plane.data> #<texturename> ^<../tests/models/barrel/barrelnormals.bmp> <
+M <-40.0 40 -20.6367> @<1 0 0> <0 1 0> <0 0 1> !<../tests/models/plane/plane.data> #<texturename> ^<../tests/models/barrel/barrelnormals.bmp>
 
 Skybox:
 B <+x> <-x> <+y> <-y> <+z> <-z> 

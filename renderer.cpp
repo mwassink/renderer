@@ -83,9 +83,9 @@ RendererContext::RendererContext() {
     quadShader = tmp.setShaders("../shaders/vquad.glsl", "../shaders/pquad.glsl");
     sphereShader = tmp.CreateComputeShader("../shaders/sphere.glsl");
     structureBufferShader = tmp.setShaders("../shaders/structureBufferVertex.glsl",
-                                                    "../shaders/structureBufferPixel.glsl");
+                                           "../shaders/structureBufferPixel.glsl");
     
-
+    
     
     f32 vertices[] = {
         -1.0f, -1.0f,
@@ -255,7 +255,7 @@ void RendererUtil::defaultTexParams(GLenum target) {
     glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     //glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
+    
     
 }
 
@@ -291,11 +291,11 @@ void RendererUtil::addBasicTexturedVerticesToShader(Vertex* vertices, u32* indic
     
     glGenVertexArrays(1, &names->vao);
     glBindVertexArray(names->vao);
-
+    
     glGenBuffers(1, &names->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*numVertices, vertices, GL_STATIC_DRAW);
-
+    
     glGenBuffers(1, &names->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices* sizeof(u32), indices
@@ -314,14 +314,14 @@ void RendererUtil::addBasicTexturedVerticesToShader(Vertex* vertices, u32* indic
 
 void RendererUtil::addVerticesToShader(VertexLarge* vertices, u32* indices, int numVertices, int numIndices,
                                        u32 positionCoord, u32 positionNorm, u32 positionTangent, u32 positionUV, u32 positionHandedness, glTriangleNames* names) {
- 
+    
     glGenVertexArrays(1, &names->vao);
     glBindVertexArray(names->vao);
- 
+    
     glGenBuffers(1, &names->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, names->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VertexLarge)*numVertices, vertices, GL_STATIC_DRAW);
-
+    
     glGenBuffers(1, &names->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, names->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(u32), indices, GL_STATIC_DRAW);
@@ -601,38 +601,38 @@ u32 Renderer::ShaderFlags(Model* model, bool shadows ) {
     u32 flags = 0;
     flags = model->mesh.normalVertices ? NORMALMAPPING : BASIC;
     flags = shadows ? (flags | SHADOWS) : (flags);
-
+    
     return flags;
 }
 
 // Shadow maps need to be set up BEFORE this is called
 void Renderer::renderModel(Model* model, SpotLight* light) {
-
+    
     // (TODO) use bounding sphere instead of origin
     Vector3 v = light->lightSpace.origin - model->modelSpace.origin;
     if (dot(v, v) > (100 * light->irradiance)) {
         return;
     }
-
+    
     u32 flags = ShaderFlags(model, light->shadows != NULL);
     u32 shader;
     switch (flags) {
-    case BASIC: {
-        shader = context.basicLightingShader;
-        utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
-
-    } break;
-    case NORMALMAPPING: {
-        shader = context.texturedLightingShader;
-        utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
-        utilHelper.AddTexturingToShader(model, light, shader);
-    } break;
-    case NORMALMAPPING | SHADOWS : {
-        shader = context.texturedShadowShader;
-        utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
-        utilHelper.AddTexturingToShader(model, light, shader);
-        utilHelper.AddShadowsToShader(model, light, shader);
-    } break;
+        case BASIC: {
+            shader = context.basicLightingShader;
+            utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
+            
+        } break;
+        case NORMALMAPPING: {
+            shader = context.texturedLightingShader;
+            utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
+            utilHelper.AddTexturingToShader(model, light, shader);
+        } break;
+        case NORMALMAPPING | SHADOWS : {
+            shader = context.texturedShadowShader;
+            utilHelper.SetupBasicShader(model, (PointLight*)light, shader);
+            utilHelper.AddTexturingToShader(model, light, shader);
+            utilHelper.AddShadowsToShader(model, light, shader);
+        } break;
     }
     
     setDrawModel(model);    
@@ -640,7 +640,7 @@ void Renderer::renderModel(Model* model, SpotLight* light) {
 }
 
 void Renderer::renderModel(Model* model, PointLight* light) {
-
+    
     CHECKGL("error before drawing cube map");
     GLint err;
     Vector3 l = light->lightSpace.origin - model->modelSpace.origin;
@@ -650,24 +650,24 @@ void Renderer::renderModel(Model* model, PointLight* light) {
     u32 flags = ShaderFlags(model, light->shadows != NULL);
     u32 shader;
     switch (flags) {
-    case BASIC: {
-        shader = context.basicLightingShader;
-        utilHelper.SetupBasicShader(model, light, shader);
-
-    } break;
-    case NORMALMAPPING: {
-        shader = context.texturedLightingShader;
-        utilHelper.SetupBasicShader(model, light, shader);
-        utilHelper.AddTexturingToShader(model, (SpotLight* ) light, shader);
-    } break;
-    case NORMALMAPPING | SHADOWS : {
-        shader = context.texturedPointShadowShader;
-        utilHelper.SetupBasicShader(model, light, shader);
-        utilHelper.AddTexturingToShader(model, (SpotLight*) light, shader);
-        utilHelper.AddShadowsToShader(model, light, shader);
-        err = glGetError();
-
-    } break;
+        case BASIC: {
+            shader = context.basicLightingShader;
+            utilHelper.SetupBasicShader(model, light, shader);
+            
+        } break;
+        case NORMALMAPPING: {
+            shader = context.texturedLightingShader;
+            utilHelper.SetupBasicShader(model, light, shader);
+            utilHelper.AddTexturingToShader(model, (SpotLight* ) light, shader);
+        } break;
+        case NORMALMAPPING | SHADOWS : {
+            shader = context.texturedPointShadowShader;
+            utilHelper.SetupBasicShader(model, light, shader);
+            utilHelper.AddTexturingToShader(model, (SpotLight*) light, shader);
+            utilHelper.AddShadowsToShader(model, light, shader);
+            err = glGetError();
+            
+        } break;
     }
     CHECKGL("error when drawing cube map");
     
@@ -702,15 +702,15 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2.0f, 4.0f);
- 
+    
     
     
     for (int i = 0; i < numModels; ++i) {
-
+        
         if (SphereFrustumCull(&models[i], &light->lightSpace, 40.0f, 1.0f, 1.0f)) {
             continue;
         }
-
+        
         
         Matrix4 modelLightProjection = glModelViewProjection(models[i].modelSpace, light->lightSpace, PI/4.0f,
                                                              1, 1.0f, 40.0f);
@@ -730,7 +730,7 @@ void Renderer::ShadowPass(Model* models, SpotLight* light, u32 numModels) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_DEPTH_BUFFER_BIT);
-
+    
     
 #undef RES
 }
@@ -743,7 +743,7 @@ Matrix4 Renderer::invCubeFaceCamera(Matrix4& mCube, Matrix4& mFace) {
 
 Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
     Array<Matrix4> invCameraMatrices(6);
-    #if 0
+#if 0
     Matrix4 mCube = ObjectWorldMatrix(renderSpace);
     invCameraMatrices[0] = Matrix4(0,0,1,0,-1,0,-1,0,0);
     invCameraMatrices[1] = Matrix4(0,0,-1,0,-1,0,1,0,0);
@@ -758,7 +758,7 @@ Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
     invCameraMatrices[3] = invCubeFaceCamera(mCube, invCameraMatrices[3] );
     invCameraMatrices[4] = invCubeFaceCamera(mCube, invCameraMatrices[4] );
     invCameraMatrices[5] = invCubeFaceCamera(mCube, invCameraMatrices[5] );
-    #else
+#else
     Matrix4 mLightInv = WorldObjectMatrix(renderSpace);
     invCameraMatrices[0] = Matrix4(0,0,1,0,-1,0,-1,0,0);
     invCameraMatrices[1] = Matrix4(0,0,-1,0,-1,0,1,0,0);
@@ -766,16 +766,16 @@ Array<Matrix4> Renderer::cubeMapMatrices(CoordinateSpace& renderSpace) {
     invCameraMatrices[3] = Matrix4(1,0,0,0,0 ,-1,0,-1,0);
     invCameraMatrices[4] = Matrix4(1,0,0,0,-1,0, 0,0,1);
     invCameraMatrices[5] = Matrix4(-1,0,0,0,-1,0,0,0,-1);
-
+    
     for (int i = 0; i < 6; i++) {
         invCameraMatrices[i] = invCameraMatrices[i] * mLightInv;
     }
-    #endif
+#endif
     return invCameraMatrices;
 }
 
 void Renderer::MakeDepthMap(Array<Model>* models, PointLight* light) {
-    #define SHADOWRES 1024
+#define SHADOWRES 1024
     if (light->cubeArgs.tex == -1) {
         light->cubeArgs.internalFormat = GL_DEPTH_COMPONENT32;
         light->cubeArgs.format = GL_DEPTH_COMPONENT;
@@ -783,7 +783,7 @@ void Renderer::MakeDepthMap(Array<Model>* models, PointLight* light) {
         light->cubeArgs.attachment = GL_DEPTH_ATTACHMENT;
         light->cubeArgs.res = SHADOWRES;
     }
-    #undef SHADOWRES
+#undef SHADOWRES
     CubeMapRender(models, light->lightSpace, 3.0f, 40.0f, &light->cubeArgs  );
 }
 
@@ -887,14 +887,14 @@ void Renderer::CubeMapRender(Array<Model>* models, CoordinateSpace& renderCS, f3
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, rect.right - rect.left, rect.bottom - rect.top);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    
     inverseFaceMatrices.release();
     
 }
 
 
 Renderer::Renderer() {
-
+    
     context = RendererContext();
     utilHelper.context = &context;
     
@@ -991,7 +991,7 @@ void Renderer::RenderSkybox(Skybox& box) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthFunc(GL_LESS);
     CHECKGL("Failure rendering skybox")
-    glBindVertexArray(0);
+        glBindVertexArray(0);
 }
 
 // Project onto many different directions and find the most extreme difference
@@ -1071,7 +1071,7 @@ void Renderer::DrawTexture(Texture* texture) {
     glUseProgram(context.quadShader);
     glBindTextureUnit(0, texture->id);
     CHECKGL("ERROR w/ FULL SCREEN QUAD")
-    FullScreenQuad();
+        FullScreenQuad();
 }
 
 Texture RendererUtil::RenderTarget(void) {
@@ -1140,7 +1140,7 @@ void Renderer::RayTraceBoundingSphere(Sphere* s, Vector3* color) {
     int w = TEXTURE_SIZE * ASPECT_RATIO , h = TEXTURE_SIZE;
     RunComputeShader(w, h, 1);
     CHECKGL("ERROR w/ running compute shader")
-    DrawTexture(&context.computeTarget);
+        DrawTexture(&context.computeTarget);
     
     
     
@@ -1150,7 +1150,7 @@ void Renderer::RayTraceBoundingSphere(Sphere* s, Vector3* color) {
 
 // Assumes whatever prior work that needs to be done is already done
 void Renderer::FullScreenQuad(void) {
-
+    
     
     glBindVertexArray(context.quadVAO);
     glDepthFunc(GL_LEQUAL);
@@ -1183,7 +1183,7 @@ Vector3* GetVertices(Model* model) {
 }
 
 void Renderer::DrawBoundingSphere(Model* model) {
-
+    
     if (model->mesh.boundingSphere.radius < 0) {
         Vector3* verts = GetVertices(model);
         model->mesh.boundingSphere = GetBoundingSphere(verts, model->mesh.numVertices);
@@ -1198,18 +1198,18 @@ void Renderer::DrawBoundingSphere(Model* model) {
     spw = toCameraSpace * spw;
     s.p = spw.v3();
     bool cullable = SphereFrustumCull(model, &context.cameraSpace, context.zfar, context.znear,
-        context.aspectRatio);
+                                      context.aspectRatio);
     Vector3 color = Vector3(0.0f, 1.0f, 0.0f );
     if (cullable) {
         color = Vector3(1.0f, 0.0f, 0.0f );
     }
     RayTraceBoundingSphere(&s, &color);
-
+    
 }
 
 Model Renderer::CreateLightModel(SpotLight* s, f32 radius = 0.3f) {
     Model lightModel;
-                
+    
     Sphere lightCapsule;
     lightCapsule.p = Vector3(0, 0,0);
     lightCapsule.radius = radius;
@@ -1220,7 +1220,7 @@ Model Renderer::CreateLightModel(SpotLight* s, f32 radius = 0.3f) {
 
 // Returns whether the model can be culled based on its bounding sphere
 bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix, f32 f, f32 n,
-    f32 aspectRatio ) {
+                                 f32 aspectRatio ) {
     // (TODO) do this when the model is created
     if (model->mesh.boundingSphere.radius < 0) {
         Vector3* verts = GetVertices(model);
@@ -1234,7 +1234,7 @@ bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix, f32 
     spw = toWorldSpace * spw;
     spw = toCameraSpace * spw;
     s.p = spw.v3();
-
+    
     Plane farPlane = Plane(0.0f, 0.0f, 1.0f, f);
     Plane nearPlane = Plane(0.0f, 0.0f, -1.0f, n  );
     f32 yMax = tanf(context.vFOV/2) * f;
@@ -1249,7 +1249,7 @@ bool Renderer::SphereFrustumCull(Model* model, CoordinateSpace* viewMatrix, f32 
     Vector3 leftNormal = left.GetNormal();
     Vector3 rightNormal = right.GetNormal();
     Vector3 x = Vector3(1,0,0);
-
+    
     if (dot(leftNormal, x ) < 0) {
         // wrong way. This is supposed to point to the right
         left = Plane(leftNormal*-1, left.d*-1);
@@ -1283,7 +1283,7 @@ void Renderer::SSAOPass(Array<Model>* models, GLuint currentImage) {
     if (context.ssaoStructureBuffer.id == -1) {
         context.ssaoStructureBuffer = utilHelper.RenderTarget();
     }
-
+    
     glBindFramebuffer(GL_FRAMEBUFFER, context.ssaoFramebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                            context.ssaoStructureBuffer.id, 0);
@@ -1291,33 +1291,33 @@ void Renderer::SSAOPass(Array<Model>* models, GLuint currentImage) {
     glUseProgram(shader);
     uplumbMatrix4(shader, mv, "mv");
     uplumbMatrix4(shader, mvp, "mvp");
-
-        
+    
+    
 }
 #endif
 
 
 
-SimpleScene::SimpleScene(const char* file, Renderer* r) {
-
+SimpleScene::SimpleScene(const char* file, Renderer* r, bool serialize=true) {
+    
     FILE* fp = fopen(file, "r");
     if (!fp) {
         return;
     }
-    char line[100];
+    char line[1000];
     
-    while (fgets(line, 100, fp)) {
+    while (fgets(line, 1000, fp)) {
         char typ = line[0];
         switch (typ) {
-        case 'S':
+            case 'S':
             ProcessLineSpotLight(line);
-        case 'P':
+            case 'P':
             ProcessLinePointLight(line);
             break;
-        case 'M':
-            ProcessLineModel(line, &r->utilHelper);
+            case 'M':
+            ProcessLineModel(line, &r->utilHelper, serialize);
             break;
-        case 'B':
+            case 'B':
             ProcessSkybox(line, r);
             
         }
@@ -1356,7 +1356,8 @@ void SimpleScene::ProcessLinePointLight(char* line) {
     sscanf(line, "%c %f %f %f %f %f %f %f", &ch, &irrad, &o[0], &o[1], &o[2], &c[0], &c[1], &c[2]);
     Vector3 r = Vector3(1, 0, 0), s = Vector3(0, 1, 0), t = Vector3(0, 0, 1);
     PointLight p(o, r, s, t, c);
-
+    p.irradiance = irrad;
+    
     pointLights.push(p);
     
 }
@@ -1372,17 +1373,18 @@ void SimpleScene::ProcessLineSpotLight(char* line) {
     
     line = line + Split(line, 0, '@');
     sscanf(line, "%f %f %f %f %f %f %f %f %f", &r[0], &r[1], &r[2],  &s[0], &s[1], &s[2], &t[0], &t[1], &t[2]);
-
+    
     SpotLight sl(o, r, s, t, c);
+    sl.irradiance = irrad;
     spotLights.push(sl);
     
     
 }
 
 
-void  SimpleScene::ProcessLineModel(char* line, RendererUtil* util) {
+void  SimpleScene::ProcessLineModel(char* line, RendererUtil* util, bool serialize=true) {
     StripArrows(line);
-
+    
     char model[256];
     char img[256];
     char normals[256];
@@ -1392,24 +1394,32 @@ void  SimpleScene::ProcessLineModel(char* line, RendererUtil* util) {
     char ch;
     Vector3 o, r, s, t, c;
     sscanf(line, "%c %f %f %f", &ch, &o[0], &o[1], &o[2]);
-
+    
     line = line + Split(line, 0, '@');
     sscanf(line, "%f %f %f %f %f %f %f %f %f", &r[0], &r[1], &r[2],  &s[0], &s[1], &s[2], &t[0], &t[1], &t[2]);
-
+    
     line = line + Split(line, 0, '!');
-    sscanf(line, "%s %s %s", model, img, normals);
-
+    sscanf(line, "%s", model);
+    line = line + Split(line, 0, '#');
+    sscanf(line, "%s", img);
+    line = line + Split(line, 0, '^');
+    sscanf(line, "%s", normals);
+    Model m = util->addModelNormalMap(model, img, normals, serialize);
+    m.mesh.specColor = Vector3(1.0f, 1.0f, 1.0f);
+    m.modelSpace = CoordinateSpace(r, s, t, o);
+    models.push(m);
+    
     
 }
 
 void SimpleScene::ProcessSkybox(char* line, Renderer* r) {
     StripArrows(line);
     Skybox box;
-
+    
     char xplus[256]; char xminus[256];  char yplus[256];
     char yminus[256]; char zplus[256]; char zminus[256];
-
-    sscanf(line, "%s %s %s %s %s %s", xplus, xminus, yplus, yminus, zplus, zminus);
+    char ch;
+    sscanf(line, "%c %s %s %s %s %s %s", &ch, xplus, xminus, yplus, yminus, zplus, zminus);
     
     char* faces[] = {xplus, xminus, yplus, yminus, zplus, zminus};
     box = r->MakeSkybox(faces);
@@ -1429,3 +1439,5 @@ void Renderer::RenderScene(SimpleScene* s) {
         renderModelsSpotLight(&s->models, &s->spotLights[i]);
     }
 }
+
+

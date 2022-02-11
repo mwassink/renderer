@@ -66,6 +66,6 @@ void main(void) {
     vec3 ambient = ambientCoeff * diffColor;
 
     color = vec4(diffRefl + specRefl + ambient, 1.0f);
-
+	//color = vec4(1.0);
     
 }

@@ -120,11 +120,11 @@ struct SimpleScene {
     bool valid;
 
     SimpleScene() = default;
-    SimpleScene(const char* file, Renderer* util);
+    SimpleScene(const char* file, Renderer* util, bool ser);
     void StripArrows(char* line);
     void ProcessLinePointLight(char* line);
     void ProcessLineSpotLight(char* line);
-    void ProcessLineModel(char* line, RendererUtil* util);
+    void ProcessLineModel(char* line, RendererUtil* util, bool ser);
     void ProcessSkybox(char* line, Renderer* r);
     int Split(char* line, int start, char delim);
 
