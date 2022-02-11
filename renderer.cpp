@@ -920,8 +920,6 @@ int RendererUtil::InitializeCubeMaps(char* fileNames[6]) {
         if (i) {
             ASSERT(widths[i] == widths[i-1]);
             ASSERT(heights[i] == heights[i-1]);
-        } else {
-            writeOutBMP("testOutput.bmp", widths[i], heights[i], (u8*)textureData[i]);
         }
     }
     u32 width = widths[0];
@@ -1438,6 +1436,10 @@ void Renderer::RenderScene(SimpleScene* s) {
         ShadowPass(s->models.data, s->spotLights.data, s->models.sz);
         renderModelsSpotLight(&s->models, &s->spotLights[i]);
     }
+    for (int i = 0; i < s->skyboxes.sz; i++) {
+        RenderSkybox(s->skyboxes[i]);
+    }
+    
 }
 
 
